@@ -582,7 +582,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         const pngBackground = $('pngBG')?.value || 'transparent';
         let pngWidth = parseInt($('svgW')?.value || '0', 10) || 0;
         let pngHeight = parseInt($('svgH')?.value || '0', 10) || 0;
-
+  
         if (pngWidth === 0 || pngHeight === 0) {
           const boundingRect = svgElement.getBoundingClientRect();
           pngWidth = pngWidth || Math.ceil(boundingRect.width) || 1024;
