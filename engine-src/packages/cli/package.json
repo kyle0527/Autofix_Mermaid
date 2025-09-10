@@ -1,0 +1,7 @@
+{
+  "name": "diagrammender",
+  "version": "0.3.0",
+  "bin": { "diagrammender": "dist/index.js" },
+  "dependencies": { "@diagrammender/core": "0.3.0" },
+  "scripts": { "build": "tsc -p tsconfig.json", "test": "echo no-tests" }
+}

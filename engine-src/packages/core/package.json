@@ -1,0 +1,14 @@
+{
+  "name": "@diagrammender/core",
+  "version": "0.3.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@diagrammender/types": "0.3.0",
+    "@diagrammender/parsers-python": "0.3.0",
+    "@diagrammender/analyzers": "0.3.0",
+    "@diagrammender/emitters-mermaid": "0.3.0",
+    "@diagrammender/fix-rules-mermaid-compat": "0.3.0"
+  },
+  "scripts": { "build": "tsc -p tsconfig.json", "test": "echo no-tests" }
+}

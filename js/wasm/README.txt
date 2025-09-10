@@ -1,0 +1,1 @@
+Place web-tree-sitter WASM here if you later switch parser.
