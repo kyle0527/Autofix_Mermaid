@@ -23,10 +23,9 @@
   <option value="classDiagram">classDiagram</option>
   <option value="sequenceDiagram">sequenceDiagram</option>
 </select>
-<input id="svgW" min="0" placeholder="width(px)" type="number" value="0"/>
-<input id="svgH" min="0" placeholder="height(px)" type="number" value="0"/>
-<label>PNG 背景</label><input class="select" id="pngBG" placeholder="#ffffff 或 transparent" style="width:160px" type="text" value="transparent"/><input id="pngWidth" placeholder="寬度(自動)" type="number"/><input id="pngHeight" placeholder="高度(自動)" type="number"/>
+<label>PNG 背景</label><input class="select" id="pngBG" placeholder="#ffffff 或 transparent" style="width:160px" type="text" value="transparent"/><input id="svgW" min="0" placeholder="寬度(自動)" type="number"/><input id="svgH" min="0" placeholder="高度(自動)" type="number"/>
 <label>Security</label><select class="select" id="secLevel"><option selected="" value="strict">strict</option><option value="loose">loose</option></select>
+<button class="btn" disabled="" id="btnExportImage">輸出圖片</button>
 <button class="btn" disabled="" id="btnExportMMD">匯出 MMD</button>
 <button class="btn" disabled="" id="btnExportSVG">匯出 SVG</button>
 <button class="btn" disabled="" id="btnExportPNG">匯出 PNG</button>

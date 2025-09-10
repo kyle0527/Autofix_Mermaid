@@ -212,6 +212,19 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
   }
 
   /**
+   * Enable export buttons after successful rendering
+   */
+  function enableExportButtons() {
+    const exportButtons = ['btnExportImage', 'btnExportMMD', 'btnExportSVG', 'btnExportPNG', 'btnExportErrors', 'btnExportFixlog'];
+    exportButtons.forEach(buttonId => {
+      const button = $(buttonId);
+      if (button) {
+        button.disabled = false;
+      }
+    });
+  }
+
+  /**
    * Main processing function
    * @param {boolean} autoMode - Whether in auto mode
    * @returns {Promise<Object|null>} Processing result
@@ -246,6 +259,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         if (svgContainer) svgContainer.innerHTML = renderResult.svg;
         if (logElement) logElement.textContent = normalizedCode;
         
+        enableExportButtons();
         setStatus(true, 'OK 直接渲染 Mermaid');
         return { code: normalizedCode, errors: [], log: [], dtype: 'mermaid' };
       }
@@ -305,6 +319,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             logElement.textContent = logText + '\n\n' + safeCode;
           }
           
+          enableExportButtons();
           setStatus(true, dtype ? `OK 偵測到圖表：${dtype}` : 'OK');
           resolve({ code: safeCode, errors, log, dtype });
         };
@@ -453,6 +468,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       
       if (svgContainer) svgContainer.innerHTML = renderResult.svg;
       
+      enableExportButtons();
       const diagnostics = log.find(item => item && item.rule === 'worker.diag');
       const webTreeSitter = log.find(item => item && item.rule === 'worker.wts');
       
@@ -486,7 +502,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Input change handlers for auto-render
-    const inputElements = ['src', 'svgW', 'svgH', 'pngWidth', 'pngHeight', 'pngBG', 'diagramType', 'secLevel'];
+    const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'secLevel'];
     
     for (const elementId of inputElements) {
       const element = $(elementId);
@@ -545,6 +561,50 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       downloadFile('fixlog.json', logData, 'application/json');
     });
 
+    // 輸出圖片按鈕 - 提供格式選擇
+    $('btnExportImage')?.addEventListener('click', async () => {
+      const svgElement = document.querySelector('#graphDiv svg') || document.querySelector('#svg svg');
+      if (!svgElement) {
+        alert('沒有可匯出的圖片');
+        return;
+      }
+
+      // 讓用戶選擇輸出格式
+      const format = confirm('選擇輸出格式:\n確定 = PNG\n取消 = SVG') ? 'PNG' : 'SVG';
+      
+      if (format === 'SVG') {
+        // 直接輸出 SVG
+        const svgString = new XMLSerializer().serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        downloadFile('diagram.svg', svgBlob, 'image/svg+xml');
+      } else {
+        // 輸出 PNG
+        const pngBackground = $('pngBG')?.value || 'transparent';
+        let pngWidth = parseInt($('svgW')?.value || '0', 10) || 0;
+        let pngHeight = parseInt($('svgH')?.value || '0', 10) || 0;
+
+        if (pngWidth === 0 || pngHeight === 0) {
+          const boundingRect = svgElement.getBoundingClientRect();
+          pngWidth = pngWidth || Math.ceil(boundingRect.width) || 1024;
+          pngHeight = pngHeight || Math.ceil(boundingRect.height) || 768;
+        }
+
+        const svgString = new XMLSerializer().serializeToString(svgElement);
+        
+        try {
+          const pngBlob = await svgToPNG(svgString, { 
+            width: pngWidth, 
+            height: pngHeight, 
+            background: pngBackground 
+          });
+          downloadFile('diagram.png', pngBlob, 'image/png');
+        } catch (error) {
+          console.error('PNG 輸出失敗：', error);
+          alert(`PNG 輸出失敗：${error?.message || error}`);
+        }
+      }
+    });
+
     $('btnExportPNG')?.addEventListener('click', async () => {
       const svgElement = document.querySelector('#graphDiv svg') || document.querySelector('#svg svg');
       if (!svgElement) {
@@ -553,8 +613,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       }
 
       const pngBackground = $('pngBG')?.value || 'transparent';
-      let pngWidth = parseInt($('pngWidth')?.value || '0', 10) || 0;
-      let pngHeight = parseInt($('pngHeight')?.value || '0', 10) || 0;
+      let pngWidth = parseInt($('svgW')?.value || '0', 10) || 0;
+      let pngHeight = parseInt($('svgH')?.value || '0', 10) || 0;
 
       if (pngWidth === 0 || pngHeight === 0) {
         const boundingRect = svgElement.getBoundingClientRect();
