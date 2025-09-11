@@ -104,7 +104,7 @@ function normalizeHeader(text) {
     break;
   }
   
-  let remainingLines = lines.slice(restIndex);
+  const remainingLines = lines.slice(restIndex);
   
   // If the first few lines in rest still start with a header, strip only the header prefix
   const stripHeaderPrefix = (line) => 
@@ -252,7 +252,9 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
       // Python analysis via Worker
       const files = await collectFiles(inputText);
-      const worker = new Worker(`js/worker.js?v=${Date.now()}`, { type: 'classic' });
+  const workerUrl = (options && (options.useEngine || options.mode === 'engine')) ? `js/worker.js?v=${Date.now()}` : `js/worker.mjs?v=${Date.now()}`;
+  const workerType = (workerUrl.endsWith('.mjs')) ? 'module' : 'classic';
+  const worker = new Worker(workerUrl, { type: workerType });
       const options = { 
         lang: 'python', 
         diagram: diagramType, 
@@ -325,7 +327,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           reject(errorMessage);
         };
 
-        worker.postMessage({ files, options });
+  worker.postMessage({ files, uiOptions: options });
       });
 
       lastResult = result;
@@ -383,7 +385,9 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     
     setStatus(false, '自我檢測中…');
 
-    const worker = new Worker(`js/worker.js?v=${Date.now()}`, { type: 'classic' });
+  const workerUrl = (options && (options.useEngine || options.mode === 'engine')) ? `js/worker.js?v=${Date.now()}` : `js/worker.mjs?v=${Date.now()}`;
+  const workerType = (workerUrl.endsWith('.mjs')) ? 'module' : 'classic';
+  const worker = new Worker(workerUrl, { type: workerType });
     const testFiles = { 
       'main.py': 'def a(x):\n  return x\n\ndef b(y):\n  return a(y)\n' 
     };

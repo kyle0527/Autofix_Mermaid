@@ -10,7 +10,7 @@
 const MERMAID_CONFIG = {
   DEFAULT_THEME_LIGHT: 'default',
   DEFAULT_THEME_DARK: 'dark',
-  SECURITY_LEVEL: 'loose',
+  SECURITY_LEVEL: 'strict',
   START_ON_LOAD: false,
 };
 

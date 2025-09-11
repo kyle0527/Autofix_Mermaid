@@ -1,0 +1,43 @@
+[
+  {
+    "id": "suggest.sequence.bidirectional_autonumber",
+    "applies_to": [
+      "sequenceDiagram"
+    ],
+    "description": "autonumber + <<->> renders poorly; recommend splitting into two directional messages.",
+    "keywords": [
+      "autonumber",
+      "bidirectional",
+      "<<->>"
+    ],
+    "suggest_fix": "Replace `A<<->>B: msg` with `A->>B: msg` and an immediate `B-->>A: ack`.",
+    "source": "compiled"
+  },
+  {
+    "id": "suggest.flow.elk_graph_word",
+    "applies_to": [
+      "flowchart"
+    ],
+    "description": "When flowchart.defaultRenderer=elk, node text 'graph' may parse as a keyword.",
+    "keywords": [
+      "elk",
+      "defaultRenderer",
+      "graph"
+    ],
+    "suggest_fix": "Wrap node labels containing the word `graph` in backticks or quotes, e.g., `[\"graph\"]`.",
+    "source": "compiled"
+  },
+  {
+    "id": "suggest.gantt.excludes_datetime",
+    "applies_to": [
+      "gantt"
+    ],
+    "description": "excludes with 'YYYY-MM-DD HH:mm:ss' may be ignored.",
+    "keywords": [
+      "excludes",
+      "dateFormat"
+    ],
+    "suggest_fix": "Use date-only excludes or align excludes to start-of-day; alternatively split the task range.",
+    "source": "compiled"
+  }
+]

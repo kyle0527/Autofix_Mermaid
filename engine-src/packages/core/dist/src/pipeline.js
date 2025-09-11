@@ -6,7 +6,7 @@ const analyzers_1 = require("@diagrammender/analyzers");
 const emitters_mermaid_1 = require("@diagrammender/emitters-mermaid");
 const fix_rules_mermaid_compat_1 = require("@diagrammender/fix-rules-mermaid-compat");
 async function runPipeline(files, opts) {
-    var _a;
+    let _a;
     let ir;
     switch (opts.lang) {
         case 'python':

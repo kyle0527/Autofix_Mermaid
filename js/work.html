@@ -1,0 +1,31 @@
+// js/worker.js
+importScripts('js/vendor/web-tree-sitter.js');
+
+let Parser;
+
+async function loadParser() {
+    await TreeSitter.init();
+    Parser = new TreeSitter();
+    const lang = await TreeSitter.Language.load('js/wasm/tree-sitter-python.wasm');
+    Parser.setLanguage(lang);
+}
+
+self.onmessage = async (event) => {
+    if (!Parser) {
+        await loadParser();
+    }
+
+    const { files } = event.data;
+    const mainPy = files["main.py"];
+
+    const tree = Parser.parse(mainPy);
+
+    const mockResult = {
+        code: tree.rootNode.toString(), // 示範性的解析結果
+        errors: [],
+        log: [{ rule: "parser.run", msg: "解析完成" }],
+        dtype: "graph"
+    };
+
+    self.postMessage(mockResult);
+};

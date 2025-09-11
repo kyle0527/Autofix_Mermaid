@@ -2,11 +2,23 @@
 
 <html lang="zh-Hant"><head><link href="css/styles.css" rel="stylesheet"/>
 <meta charset="utf-8"/><meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Mermaid AutoFix V2.2a（Label () fix）</title>
+<title> AutoFixMermaid</title>
 </head><body>
 <header>
+  <select id="engineSelect">
+  <option value="rules">Rules（規則）</option>
+  <option value="ai">AI</option>
+</select>
+
+<select id="aiProvider">
+  <option value="ollama">Ollama</option>
+  <option value="webllm">WebLLM</option>
+  <option value="none">None</option>
+</select>
 <h1>Mermaid AutoFix V2.2a（Label () fix）</h1>
 <div class="toolbar">
+<button class="btn" id="btnDebug">除錯</button>
+<button class="btn" id="btnRules">規則</button>
 <button class="btn" id="btnRender">直接渲染</button>
 <button class="btn" id="btnFixRender">自動修正＋渲染</button>
 <button class="btn" id="btnSelfTest">自我檢測</button>
@@ -40,6 +52,15 @@
 </header>
 <div class="notice" id="notice"></div>
 <main>
+<section id="debugPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
+  <header>除錯面板</header>
+  <pre id="debugLog" style="background:#f8f8f8;max-height:200px;overflow:auto;"></pre>
+</section>
+<section id="rulesPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
+  <header>規則設定</header>
+  <textarea id="rulesConfig" style="width:100%;height:120px;" placeholder="可在此編輯/新增優化規則(JSON)"></textarea>
+  <button id="btnSaveRules">儲存規則</button>
+</section>
 <section><header>輸入</header><textarea id="src" placeholder="在此貼上 Mermaid 代碼..." spellcheck="false"></textarea></section>
 <section><header>錯誤 / 修正日誌</header><pre id="log"></pre></section>
 <section><header>預覽（SVG）</header><div id="graphDiv"><div id="svg"></div></div></section>

@@ -1,0 +1,104 @@
+[
+  {
+    "id": "fix.class.empty_braces_whitespace",
+    "applies_to": [
+      "classDiagram"
+    ],
+    "match": {
+      "regex": "classDiagram"
+    },
+    "description": "Class with empty body requires whitespace between { } in certain mermaid versions.",
+    "detect": {
+      "regex": "class\\s+[`\\w:~<>]+\\s*\\{\\s*\\}"
+    },
+    "fix": {
+      "regex": "(\\{\\s*\\})",
+      "replace": "{ }"
+    },
+    "confidence": 0.85,
+    "source": "compiled from known issues"
+  },
+  {
+    "id": "fix.pie.negative_to_zero",
+    "applies_to": [
+      "pie"
+    ],
+    "match": {
+      "regex": "\\npie\\b"
+    },
+    "description": "Pie slices must be ≥ 0. Replace negative values with 0.",
+    "detect": {
+      "regex": ":\\s*-\\d+"
+    },
+    "fix": {
+      "regex": ":\\s*-(\\d+)",
+      "replace": ": 0"
+    },
+    "confidence": 0.8,
+    "source": "compiled from known issues"
+  },
+  {
+    "id": "fix.normalize.line_endings",
+    "applies_to": [
+      "unknown",
+      "flowchart",
+      "classDiagram",
+      "sequenceDiagram",
+      "gantt",
+      "erDiagram",
+      "mindmap",
+      "timeline",
+      "pie",
+      "stateDiagram",
+      "block",
+      "treemap",
+      "packet",
+      "architecture"
+    ],
+    "match": {
+      "regex": ".*"
+    },
+    "description": "Normalize CRLF/LF to LF.",
+    "detect": {
+      "regex": "\\r\\n"
+    },
+    "fix": {
+      "regex": "\\r\\n",
+      "replace": "\n"
+    },
+    "confidence": 0.99,
+    "source": "general"
+  },
+  {
+    "id": "fix.trim.bom",
+    "applies_to": [
+      "unknown",
+      "flowchart",
+      "classDiagram",
+      "sequenceDiagram",
+      "gantt",
+      "erDiagram",
+      "mindmap",
+      "timeline",
+      "pie",
+      "stateDiagram",
+      "block",
+      "treemap",
+      "packet",
+      "architecture"
+    ],
+    "match": {
+      "regex": ".*"
+    },
+    "description": "Trim UTF-8 BOM at start of document.",
+    "detect": {
+      "regex": "^\\ufeff"
+    },
+    "fix": {
+      "regex": "^\\ufeff",
+      "replace": ""
+    },
+    "confidence": 0.99,
+    "source": "general"
+  }
+]

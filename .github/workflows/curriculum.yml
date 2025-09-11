@@ -1,0 +1,19 @@
+name: Curriculum Random Two
+on: [push, workflow_dispatch]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm i
+      - run: npx playwright install --with-deps
+      - run: npm run test:curriculum
+        env:
+          LEVEL: ${{ inputs.LEVEL || '' }}   # 可手動指定；預設依 run 次數遞增
+          SEED:  ${{ github.sha }}          # 讓每個 commit 可重現
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diagrams
+          path: test-output/*.png

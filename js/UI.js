@@ -19,6 +19,15 @@ const MERMAID_PATTERNS = {
   DIAGRAM_SYNTAX: /(-->|\-\->|==>|o\-\-|subgraph\s+|end\s*$|\[[^\]]+\]|\([^\)]+\)|\{[^\}]+\})/m,
 };
 
+// Debounce to avoid excessive re-rendering while typing
+function debounce(fn, delay = 300) {
+  let t = null;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
+
 /**
  * Check if text appears to be Mermaid diagram code
  * @param {string} text - Text to analyze
@@ -67,7 +76,12 @@ function normalizeHeader(text) {
   // Collect leading init/comment/blank lines (keep them)
   while (currentIndex < lines.length) {
     const line = lines[currentIndex].trim();
-    if (line === '' || /^%%\{.*\}%%$/.test(line)) {
+    // keep blanks, init directive lines, and regular %% comments
+    if (
+      line === '' ||
+      /^%%\{.*\}%%$/.test(line) ||
+      /^%%(?!\{)/.test(line)
+    ) {
       initLines.push(lines[currentIndex]);
       currentIndex += 1;
       continue;
@@ -104,7 +118,7 @@ function normalizeHeader(text) {
     break;
   }
   
-  let remainingLines = lines.slice(restIndex);
+  const remainingLines = lines.slice(restIndex);
   
   // If the first few lines in rest still start with a header, strip only the header prefix
   const stripHeaderPrefix = (line) => 
@@ -143,6 +157,7 @@ function normalizeHeader(text) {
  */
 function initializeUI(renderMermaid, svgToPNG, initMermaid) {
   let lastResult = { code: '', svg: '', errors: [], log: [], dtype: '' };
+  const STORAGE_KEY = 'autofix_mermaid_ui_v1';
 
   /**
    * Set application status
@@ -152,14 +167,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
   function setStatus(isOk, message) {
     const statusElement = $('status');
     const messageElement = $('statusMsg');
-    
-    if (statusElement) {
-      statusElement.textContent = isOk ? 'OK' : 'WORKING';
-    }
-    
-    if (messageElement) {
-      messageElement.textContent = message || '';
-    }
+    if (statusElement) statusElement.textContent = isOk ? 'OK' : 'WORKING';
+    if (messageElement) messageElement.textContent = message || '';
   }
 
   /**
@@ -172,6 +181,26 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     
     noticeElement.textContent = message || '';
     noticeElement.style.display = message ? 'block' : 'none';
+  }
+
+  // Persist a snapshot of current UI settings
+  function saveSettingsSnapshot() {
+    try {
+      const sourceMode = (document.querySelector('input[name="sourceMode"]:checked') || { value: 'auto' }).value;
+      const data = {
+        src: $('src')?.value || '',
+        svgW: $('svgW')?.value || '',
+        svgH: $('svgH')?.value || '',
+        pngBG: $('pngBG')?.value || 'transparent',
+        diagramType: $('diagramType')?.value || 'flowchart',
+        secLevel: $('secLevel')?.value || 'strict',
+        engineSelect: $('engineSelect')?.value || 'rules',
+        aiProvider: $('aiProvider')?.value || 'none',
+        autoRender: !!$('autoRender')?.checked,
+        sourceMode
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {}
   }
 
   /**
@@ -245,10 +274,13 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       const height = parseInt($('svgH')?.value || '0', 10) || 0;
 
       const sourceMode = (document.querySelector('input[name="sourceMode"]:checked') || { value: 'auto' }).value;
+      const engineMode = $('engineSelect')?.value || 'rules'; // rules | ai
+      const aiProvider = $('aiProvider')?.value || 'none';
       const inputText = $('src')?.value || '';
+      const hasFiles = !!($('fileInput')?.files && $('fileInput').files.length > 0);
 
       // Direct Mermaid rendering path
-      if (sourceMode === 'mermaid' || (sourceMode === 'auto' && isLikelyMermaid(inputText))) {
+      if (!hasFiles && (sourceMode === 'mermaid' || (sourceMode === 'auto' && isLikelyMermaid(inputText)))) {
         const normalizedCode = normalizeHeader(inputText);
         const renderResult = await renderMermaid(normalizedCode, { width, height });
         
@@ -264,16 +296,36 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         return { code: normalizedCode, errors: [], log: [], dtype: 'mermaid' };
       }
 
-      // Python analysis via Worker
+      // Decide worker path and message payload by engine selection
       const files = await collectFiles(inputText);
-      const worker = new Worker(`js/worker.js?v=${Date.now()}`, { type: 'classic' });
-      const options = { 
-        lang: 'python', 
-        diagram: diagramType, 
-        mode: 'python', 
-        useWTS: true, 
-        wasmBase: 'js/wasm' 
-      };
+      let workerUrl = '';
+      let workerType = 'classic';
+      let postPayload = {};
+
+      if (engineMode === 'ai' || engineMode === 'rules') {
+        // Classic worker: rules/ai path
+        workerUrl = `js/worker.js?v=${Date.now()}`;
+        workerType = 'classic';
+        const options = {
+          lang: 'python',
+          diagram: diagramType,
+          provider: aiProvider,
+          seedMermaid: undefined
+        };
+        postPayload = { files, mode: engineMode, options };
+      } else {
+        // Fallback: ESM worker (engine pipeline path)
+        workerUrl = `js/worker.mjs?v=${Date.now()}`;
+        workerType = 'module';
+        const uiOptions = {
+          mode: 'engine',
+          diagram: diagramType,
+          mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' }
+        };
+        postPayload = { files, uiOptions };
+      }
+
+      const worker = new Worker(workerUrl, { type: workerType });
 
       const result = await new Promise((resolve, reject) => {
         let isSettled = false;
@@ -339,8 +391,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           const errorMessage = error instanceof Error ? error : new Error(String(error?.message || error));
           reject(errorMessage);
         };
-
-        worker.postMessage({ files, options });
+        // Post using the payload shaped for the selected worker type
+        worker.postMessage(postPayload);
       });
 
       lastResult = result;
@@ -398,7 +450,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     
     setStatus(false, '自我檢測中…');
 
-    const worker = new Worker(`js/worker.js?v=${Date.now()}`, { type: 'classic' });
+  // Self-test uses the ESM worker variant
+  const worker = new Worker(`js/worker.mjs?v=${Date.now()}`, { type: 'module' });
     const testFiles = { 
       'main.py': 'def a(x):\n  return x\n\ndef b(y):\n  return a(y)\n' 
     };
@@ -489,12 +542,15 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
    * Bind event handlers to UI elements
    */
   function bindEventHandlers() {
-    // Auto-render functionality
+    // Auto-render functionality with debounce
     const autoRenderCheckbox = $('autoRender');
-    const triggerRender = () => processInput(false);
+    const triggerRender = debounce(() => {
+      try { processInput(false); } catch {}
+    }, 300);
     
     if (autoRenderCheckbox) {
       autoRenderCheckbox.addEventListener('change', () => {
+        saveSettingsSnapshot();
         if (autoRenderCheckbox.checked) {
           triggerRender();
         }
@@ -502,18 +558,19 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Input change handlers for auto-render
-    const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'secLevel'];
+    const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'secLevel', 'engineSelect', 'aiProvider'];
     
     for (const elementId of inputElements) {
       const element = $(elementId);
       if (element) {
         const autoRenderHandler = () => {
+          saveSettingsSnapshot();
           const autoCheckbox = $('autoRender');
           if (autoCheckbox?.checked) {
             triggerRender();
           }
         };
-        
+        // Persist settings and optionally auto-render
         element.addEventListener('input', autoRenderHandler);
         element.addEventListener('change', autoRenderHandler);
       }
@@ -531,8 +588,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Main action buttons
-    $('btnRender')?.addEventListener('click', () => processInput(false));
-    $('btnFixRender')?.addEventListener('click', () => processInput(true));
+    $('btnRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(false); });
+    $('btnFixRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(true); });
     $('btnSelfTest')?.addEventListener('click', runSelfTest);
 
     // Export buttons
@@ -640,6 +697,34 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
   // Initialize the UI
   bindEventHandlers();
+  window.addEventListener('beforeunload', saveSettingsSnapshot);
+  // Restore basic settings
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if ($('src') && typeof s.src === 'string') $('src').value = s.src;
+    if ($('svgW') && s.svgW) $('svgW').value = s.svgW;
+    if ($('svgH') && s.svgH) $('svgH').value = s.svgH;
+    if ($('pngBG') && s.pngBG) $('pngBG').value = s.pngBG;
+    if ($('diagramType') && s.diagramType) $('diagramType').value = s.diagramType;
+    if ($('secLevel') && s.secLevel) $('secLevel').value = s.secLevel;
+    if ($('engineSelect') && s.engineSelect) $('engineSelect').value = s.engineSelect;
+    if ($('aiProvider') && s.aiProvider) $('aiProvider').value = s.aiProvider;
+    if ($('autoRender')) $('autoRender').checked = !!s.autoRender;
+    if (s.sourceMode) {
+      const radio = document.querySelector(`input[name="sourceMode"][value="${s.sourceMode}"]`);
+      if (radio) radio.checked = true;
+    }
+  } catch {}
+
+  // If first-time/空白輸入，給一段示例並做一次渲染，避免空白畫面
+  try {
+    const srcEl = $('src');
+    if (srcEl && !String(srcEl.value || '').trim()) {
+      srcEl.value = 'flowchart TD\n  A[Mermaid AutoFix] --> B[準備完成]\n  B --> C{開始輸入或上傳檔案}';
+      // 做一次直接渲染（不經 worker）
+      setTimeout(() => { try { document.getElementById('btnRender')?.click(); } catch {} }, 0);
+    }
+  } catch {}
 }
 
 export { initializeUI };
