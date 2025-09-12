@@ -228,8 +228,11 @@ const AutoFix = (() => {
         if(ch==="[") depth++;
         else if(ch==="]"){ depth--; if(depth===0) break; }
       }
-      let content = line.slice(a+1, j).replace(/\\n/g,"<br/>").replace(/<br\\s*\\/?>/gi,"<br/>");
-      const t = content.trim();
+      let content = line.slice(a+1, j);
+        content = content.replace(/\n/g,"<br/>").replace(/<br\s*\/?>/gi,"<br/>");
+     const t = content.trim(); // Ensure proper syntax with a colon
+      // Replace fullwidth colon with ASCII colon
+      content = content.replace(/\uFF1A/g, ":");
       const looksCylinder = t.startsWith("(") && t.endsWith(")");
       if (!looksCylinder){
         content = content.replace(/\(/g,"&#40;").replace(/\)/g,"&#41;");
