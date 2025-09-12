@@ -1,0 +1,21 @@
+{
+  "id": "0002_flow_elk_order",
+  "title": "ELK layout node order stability (smoke)",
+  "diagramType": "flowchart",
+  "labels": ["layout", "elk"],
+  "source": "Mermaid issue: node order is random with ELK",
+  "cases": [
+    {
+      "name": "elk-smoke-renders",
+      "mode": "auto",
+      "config": { "layout": "elk" },
+      "input": "flowchart TB\nA-->n1[\"1\"]\nA-->n2[2]\nA-->n3[\"3\"]\nA-->n4[\"4\"]\n",
+      "expect": {
+        "renderOk": true,
+        "contains": ["<svg"],
+        "snapshotKey": "flow_elk_order_smoke"
+      },
+      "tags": ["nondeterministic"]
+    }
+  ]
+}

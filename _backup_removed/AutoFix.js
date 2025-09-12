@@ -13,6 +13,48 @@ const AutoFix = (() => {
   // Fullwidth to ASCII map (selected punctuation only)
   const FW = {
     "\uFF1A": ":", "\uFF0C": ",", "\uFF08": "(", "\uFF09": ")",
+  //     "\u3002": ".", "\uFF1B": ";", "\u3001": ",", "\uFF01": "!",
+    "\u3002": ".", "\uFF1B": ";", "\u3001": ",", "\uFF01": "!",
+  // [專案架構變換指南]
+  // V3.3 架構
+  // autofix_mermaidV3.3/
+  //   index.html
+  //   css/
+  //   js/
+  //     UI.js
+  //     worker.js
+  // V3.4 架構
+  // autofix_mermaidV3.4/
+  //   index.html
+  //   css/
+  //   js/
+  //     UI.js
+  //     worker.js
+  // V3.5 架構
+  // autofix_mermaidV3.5/
+  //   index.html
+  //   css/
+  //   js/
+  //     UI.js
+  //     worker.js
+  //     rules/
+  //       registry.json
+  //       index.js
+  //     tests/
+  //       cases/
+  //         0001_class_whitespace.json
+  //         0002_flow_elk_order.json
+  //         0003_gantt_excludes.json
+  //         0004_pie_zero_negative.json
+  //       schema.json
+  //       run.js
+  // [V3.5 主要調整紀錄]
+  // 1. 題庫格式全面採用 JSON Schema 驗證（schema.json），確保每題完整性。
+  // 2. 四個題庫檔案（cases/*.json）皆為可程式化驗證格式，支援 renderOk、contains、errorIncludes、ruleSuggestion 等。
+  // 3. 規則庫結構調整為 registry.json（陣列）+ index.js（API 實作），支援自動去重與新增。
+  // 4. worker.js 增加測試執行器，支援 normalizeSvg、runOneCase、runIssueCases 訊息，與 UI/AI 協作。
+  // 5. run.js 實作題庫批次執行，UI 可呼叫 worker 跑所有題目並顯示結果。
+  // 6. 所有調整均已納入本次專案結構與指南。
     "\u3002": ".", "\uFF1B": ";", "\u3001": ",", "\uFF01": "!",
     "\uFF1F": "?", "\uFF02": "\"", "\uFF07": "'", "\uFF5C": "|",
     "\uFF3B": "[", "\uFF3D": "]", "\uFF5B": "{", "\uFF5D": "}",
