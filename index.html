@@ -23,6 +23,11 @@
 <button class="btn" id="btnFixRender">自動修正＋渲染</button>
 <button class="btn" id="btnSelfTest">自我檢測</button>
 <label style="margin-left:8px;">來源</label>
+<label style="margin-left:8px;">引擎</label>
+<select id="engineMode" class="select">
+  <option value="classic" selected>經典（WTS→引擎→Mock）</option>
+  <option value="ai">AI（實驗）</option>
+</select>
 <label><input type="radio" name="sourceMode" value="auto" checked>自動</label>
 <label><input type="radio" name="sourceMode" value="mermaid">Mermaid</label>
 <label><input type="radio" name="sourceMode" value="python">Python</label>

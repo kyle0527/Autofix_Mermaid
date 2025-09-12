@@ -1,0 +1,16 @@
+依照下列步驟進行，完成每一步都要回報
+1.實際分析所有檔案內容(到程式碼)，但是不修正，了解各模組間的關係及模組本身需要的輸入及輸出內容
+2.完成所有檔案的內容分析後，分析跟檢查需要哪些插件(用寬鬆的情況，可以裝了不用，但不能要用時沒有)
+3.再研判真正的問題所在(不一定是紅色的)，在開始修復，特別是如果修完一個錯誤，又出現一個的話，請從第一步重來
+
+# 路徑請照你先前的擺放
+$script = "C:\Users\qqq49\Downloads\py2mermaid.py"
+$dirs = @(
+  "C:\Users\qqq49\Downloads\py2mermaid.py"
+)
+
+foreach ($d in $dirs) {
+  $name = Split-Path $d -Leaf
+  python "$script" "$d" --out "$name.mermaid.md" --max-files 2000 --ignore "venv,.venv,site-packages,__pycache__,.git"
+}
+剛剛沒打完，說明整個專案目前進度如何管理等，基本上就是像目前這樣，各版本的指南則是著重於該版本的情況、遇到的問題等，偏技術面的，這兩種應該要有差異，還有qa應該版本需求為主，例如q8的版本混淆就不用放到版本內的指南中

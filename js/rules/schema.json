@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rule Schema",
+  "type": "object",
+  "properties": {
+    "detect": { "type": "object" },
+    "fix": { "type": "object" },
+    "severity": { "type": "string" },
+    "category": { "type": "string" },
+    "explain": { "type": "string" },
+    "refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["detect", "fix"]
+}

@@ -1,3 +1,15 @@
+  /**
+   * 建立 worker 實例，依 engineMode 切換 classic/AI
+   * @param {string} engineMode - 'rules' | 'ai'
+   * @returns {Worker} worker 實例
+   */
+  function createWorker(engineMode) {
+    if (engineMode === 'ai') {
+      return new Worker(`js/worker.mjs?v=${Date.now()}`, { type: 'module' });
+    }
+    // 預設 classic/rules
+    return new Worker(`js/worker.js?v=${Date.now()}`, { type: 'classic' });
+  }
 /**
  * UI Controller Module
  * @fileoverview Handles user interface interactions and worker communication
@@ -296,36 +308,35 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         return { code: normalizedCode, errors: [], log: [], dtype: 'mermaid' };
       }
 
-      // Decide worker path and message payload by engine selection
+      // 根據 engineMode 建立 worker 與 payload
       const files = await collectFiles(inputText);
-      let workerUrl = '';
-      let workerType = 'classic';
       let postPayload = {};
+      const worker = createWorker(engineMode);
 
-      if (engineMode === 'ai' || engineMode === 'rules') {
-        // Classic worker: rules/ai path
-        workerUrl = `js/worker.js?v=${Date.now()}`;
-        workerType = 'classic';
-        const options = {
-          lang: 'python',
-          diagram: diagramType,
-          provider: aiProvider,
-          seedMermaid: undefined
+      if (engineMode === 'ai') {
+        // AI worker (worker.mjs)
+        postPayload = {
+          files,
+          uiOptions: {
+            mode: 'ai',
+            diagram: diagramType,
+            provider: aiProvider,
+            mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' }
+          }
         };
-        postPayload = { files, mode: engineMode, options };
       } else {
-        // Fallback: ESM worker (engine pipeline path)
-        workerUrl = `js/worker.mjs?v=${Date.now()}`;
-        workerType = 'module';
-        const uiOptions = {
-          mode: 'engine',
-          diagram: diagramType,
-          mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' }
+        // classic/rules worker (worker.js)
+        postPayload = {
+          files,
+          mode: engineMode,
+          options: {
+            lang: 'python',
+            diagram: diagramType,
+            provider: aiProvider,
+            seedMermaid: undefined
+          }
         };
-        postPayload = { files, uiOptions };
       }
-
-      const worker = new Worker(workerUrl, { type: workerType });
 
       const result = await new Promise((resolve, reject) => {
         let isSettled = false;
@@ -558,7 +569,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Input change handlers for auto-render
-    const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'secLevel', 'engineSelect', 'aiProvider'];
+  const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'secLevel', 'engineSelect', 'aiProvider'];
     
     for (const elementId of inputElements) {
       const element = $(elementId);
@@ -570,7 +581,13 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             triggerRender();
           }
         };
-        // Persist settings and optionally auto-render
+        // engineSelect 切換時立即渲染
+        if (elementId === 'engineSelect') {
+          element.addEventListener('change', () => {
+            saveSettingsSnapshot();
+            processInput(false);
+          });
+        }
         element.addEventListener('input', autoRenderHandler);
         element.addEventListener('change', autoRenderHandler);
       }

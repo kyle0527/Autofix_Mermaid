@@ -1,0 +1,9 @@
+{
+  "id": "python.flow",
+  "detect": { "diagram": "sequenceDiagram" },
+  "fix": { "actions": [] },
+  "severity": "info",
+  "category": "python",
+  "explain": "Python 呼叫流程規則",
+  "refs": []
+}

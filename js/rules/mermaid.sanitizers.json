@@ -1,0 +1,9 @@
+{
+  "id": "mermaid.sanitizers",
+  "detect": { "diagram": "mermaid" },
+  "fix": { "actions": [] },
+  "severity": "info",
+  "category": "sanitizer",
+  "explain": "Mermaid 語法清理規則",
+  "refs": []
+}

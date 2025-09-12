@@ -1,9 +1,3 @@
-/* Pluggable analyzer worker (rules | ai)
- * Drop this file as js/worker.js
- * Exposes two engines:
- *   - 'rules' : applies builtin_rules.v1.json on generated Mermaid text
- *   - 'ai'    : calls providers (ollama | webllm) or falls back to rules
- */
 // Use paths relative to this worker's script URL per Worker spec
 importScripts('rules/applyRules.js'); // expects self.applyRules(text, options) -> { code, log, errors }
 importScripts('ai/aiEngine.js');      // expects self.aiAnalyze(files, options) -> Promise<{ code, log, errors, dtype }>
@@ -50,3 +44,4 @@ self.onmessage = async (event) => {
     }
   }
 };
+
