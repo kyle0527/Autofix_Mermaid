@@ -1,7 +1,1 @@
-{
-  "rules": [
-    { "id": "flowchart.core", "file": "flowchart.core.json" },
-    { "id": "python.flow", "file": "python.flow.rules.json" },
-    { "id": "mermaid.sanitizers", "file": "mermaid.sanitizers.json" }
-  []
-}
+[]
