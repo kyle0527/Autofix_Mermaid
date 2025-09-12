@@ -1,0 +1,36 @@
+{
+  "id": "0001_class_whitespace",
+  "title": "classDiagram empty body must contain whitespace",
+  "diagramType": "classDiagram",
+  "labels": ["parser", "whitespace"],
+  "source": "Mermaid issue: newline not treated as whitespace in class diagrams",
+  "notes": "Baseline 失敗是預期；Mender 應在空 body 自動補一個空白。",
+  "cases": [
+    {
+      "name": "baseline-fails-on-empty-body-with-newline",
+      "mode": "baseline",
+      "input": "classDiagram\nclass Foo{}\n",
+      "expect": {
+        "renderOk": false,
+        "errorIncludes": ["Syntax error", "class"]
+      },
+      "tags": ["baseline-fail"]
+    },
+    {
+      "name": "mender-fixes-empty-body",
+      "mode": "mender",
+      "input": "classDiagram\nclass Foo{}\n",
+      "expect": {
+        "renderOk": true,
+        "contains": ["classDiagram"]
+      },
+      "ruleSuggestion": {
+        "id": "rule.class.emptybody.whitespace@v1",
+        "matcher": "classDefinition with empty body {}",
+        "fix": "replace '{}' with '{ }'",
+        "appliesTo": ["classDiagram"],
+        "severity": "warn"
+      }
+    }
+  ]
+}

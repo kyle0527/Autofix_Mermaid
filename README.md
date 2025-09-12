@@ -1,4 +1,4 @@
-# 🎯 AutoFix Mermaid V3.4
+# 🎯 AutoFix Mermaid V3.5
 
 **智能 Python 程式碼轉 Mermaid 圖表工具**
 
