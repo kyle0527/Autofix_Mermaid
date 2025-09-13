@@ -3,6 +3,13 @@
   "include": ["src"],
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "lib": ["es2020"],
+    "baseUrl": "./src",
+    "paths": {
+      "@diagrammender/types": ["../../types/dist/src/index"]
+    },
+  "moduleResolution": "node",
+  "ignoreDeprecations": "6.0"
   }
 }

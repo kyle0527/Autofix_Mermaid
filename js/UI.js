@@ -697,7 +697,12 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       }
 
       const svgString = new XMLSerializer().serializeToString(svgElement);
-      
+      // 檢查 SVG 是否含外部資源（如 <image>、外部 CSS）
+      const hasExternalResource = /<image\s[^>]*xlink:href=["'](http|data:)[^"']+["']/i.test(svgString) || /<link\s[^>]*href=["']http/i.test(svgString);
+      if (hasExternalResource) {
+        alert('PNG 匯出失敗：SVG 內容含外部資源（如圖片或外部 CSS），無法匯出。請移除外部資源後再試。');
+        return;
+      }
       try {
         const pngBlob = await svgToPNG(svgString, { 
           width: pngWidth, 
@@ -707,7 +712,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         downloadFile('diagram.png', pngBlob, 'image/png');
       } catch (error) {
         console.error('PNG 轉出失敗：', error);
-        alert(`PNG 轉出失敗：${error?.message || error}`);
+        alert(`PNG 轉出失敗：${error?.message || error}\n可能原因：SVG 內容含外部資源或瀏覽器安全限制。`);
       }
     });
   }
