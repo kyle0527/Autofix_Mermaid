@@ -1,3 +1,62 @@
+<!-- 多面板 UI 規劃範例 -->
+<div id="workspace" style="display: flex; height: 100vh;">
+    <!-- 左側：程式碼編輯器 -->
+    <div id="editor-panel" style="flex: 1; border-right: 1px solid #ccc; padding: 8px;">
+        <h3>程式碼編輯器</h3>
+        <textarea id="code-editor" style="width: 100%; height: 90%;"></textarea>
+    </div>
+    <!-- 中間：分頁圖表區 -->
+    <div id="diagram-panel" style="flex: 2; border-right: 1px solid #ccc; padding: 8px;">
+        <h3>分頁圖表</h3>
+        <div id="tabs">
+            <button onclick="showTab('arch')">架構圖</button>
+            <button onclick="showTab('flow')">流程圖</button>
+            <button onclick="showTab('seq')">時序圖</button>
+        </div>
+        <div id="tab-content">
+                            <div id="tab-arch" style="display:none;">
+                                <pre><code class="language-mermaid">
+                                classDiagram
+                                class A {
+                                    +foo()
+                                }
+                                class B {
+                                    +bar()
+                                }
+                                A <|-- B
+                                click A "javascript:alert('A 節點被點擊，可展開細部圖表')"
+                                click B "javascript:alert('B 節點被點擊，可展開細部圖表')"
+                                </code></pre>
+                                <!-- 視覺化編輯器區塊（拖曳/節點調整） -->
+                                <div id="visual-editor" style="margin-top:16px; border:1px dashed #aaa; padding:8px;">
+                                    <h4>視覺化編輯器（拖曳/節點調整）</h4>
+                                    <div style="height:200px; background:#f9f9f9; display:flex; align-items:center; justify-content:center;">
+                                        <span>拖曳節點、調整位置（UI示意，實際可串接 Mermaid/SVG）</span>
+                                    </div>
+                                    <button onclick="alert('同步到 Mermaid 語法')">同步到 Mermaid</button>
+                                    <button onclick="alert('從 Mermaid 語法更新編輯器')">從 Mermaid 更新</button>
+                                </div>
+                                <!-- 設計：拖曳/編輯後可雙向同步 Mermaid 語法 -->
+                            </div>
+                    <div id="tab-flow" style="display:none;">[流程圖區]</div>
+                    <div id="tab-seq" style="display:none;">[時序圖區]</div>
+        </div>
+    </div>
+    <!-- 右側：控制面板 -->
+    <div id="control-panel" style="flex: 0.7; padding: 8px;">
+        <h3>控制面板</h3>
+        <button>分析</button>
+        <button>匯出</button>
+        <div>[AI建議/選項/設定]</div>
+    </div>
+</div>
+<script>
+function showTab(tab) {
+    document.getElementById('tab-arch').style.display = (tab === 'arch') ? 'block' : 'none';
+    document.getElementById('tab-flow').style.display = (tab === 'flow') ? 'block' : 'none';
+    document.getElementById('tab-seq').style.display = (tab === 'seq') ? 'block' : 'none';
+}
+</script>
 // js/worker.js
 importScripts('js/vendor/web-tree-sitter.js');
 

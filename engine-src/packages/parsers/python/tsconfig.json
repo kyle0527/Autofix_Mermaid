@@ -9,7 +9,6 @@
     "paths": {
       "@diagrammender/types": ["../../types/dist/src/index"]
     },
-  "moduleResolution": "node",
-  "ignoreDeprecations": "6.0"
+    "moduleResolution": "bundler"
   }
 }
