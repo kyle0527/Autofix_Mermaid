@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RulePack",
+  "type": "object",
+  "required": [
+    "version",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "enabled",
+          "diagram_types",
+          "phase",
+          "pattern_kind",
+          "fix_action"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "diagram_types": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "preprocess",
+              "parse",
+              "analyze",
+              "fix",
+              "emit"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "pattern_kind": {
+            "type": "string",
+            "enum": [
+              "regex",
+              "ast",
+              "token"
+            ]
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "condition_json": {},
+          "fix_action": {
+            "type": "string",
+            "enum": [
+              "replace",
+              "wrap",
+              "escape",
+              "delete",
+              "insert",
+              "reorder",
+              "set",
+              "noop"
+            ]
+          },
+          "fix_params_json": {},
+          "example_in": {
+            "type": "string"
+          },
+          "example_out": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
