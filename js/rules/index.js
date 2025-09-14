@@ -1,4 +1,4 @@
-import registry from './registry.json' assert { type: 'json' };
+import registry from './registry.json';
 
 // 規則實作表：ruleId -> function(code, ctx) => { code, log[] }
 const implementations = {
