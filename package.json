@@ -1,0 +1,14 @@
+{
+  "name": "autofix_mermaid",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint js",
+    "test": "npm run lint && npm run test:curriculum",
+    "test:curriculum": "node test-curriculum.js"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "playwright": "^1.41.2"
+  }
+}
