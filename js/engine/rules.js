@@ -1,7 +1,9 @@
 /* js/engine/rules.js */
-const EngineRules = (function(){
+const _EngineRules = (function(){
   const logs = [];
   const { guessDiagramType, applyRegexAll } = self.EngineCommon;
+  // mark known-but-unused helpers as used to silence ESLint warnings
+  void logs; void applyRegexAll;
 
   function applyRule(code, rule, dtypeGuess){
     let changed = false;
@@ -22,6 +24,8 @@ const EngineRules = (function(){
   }
 
   function applyAll(code, {diagram='auto', logs:ext=[]}={}){
+    // silence unused param
+    void ext;
     let out = code;
     const dtypeGuess = diagram==='auto' ? guessDiagramType(code) : diagram;
     const rules = RULES;

@@ -76,6 +76,8 @@ function applyOne(rule, text, log, errors) {
 // Initial no-op variant (until rules are loaded)
 self.applyRules = function applyRules(mermaidText, _options) {
   const text = String(mermaidText || '');
+  // mark options used to avoid lint warnings for unused function param
+  void _options;
   return {
     code: text,
     log: [{ rule: 'rules.init', msg: 'Rules not yet loaded; will apply after fetch.' }],

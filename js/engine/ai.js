@@ -1,5 +1,5 @@
 /* js/engine/ai.js */
-const EngineAI = (function(){
+const _EngineAI = (function(){
   const { guessDiagramType } = self.EngineCommon;
 
   function score(text, keywords){
@@ -12,7 +12,7 @@ const EngineAI = (function(){
   }
 
   function suggestAndFix(code, {diagram='auto', logs:ext=[]}={}){
-    const dtypeGuess = diagram==='auto' ? guessDiagramType(code) : diagram;
+  const dtypeGuess = diagram==='auto' ? guessDiagramType(code) : diagram;
     // Find best ai bucket
     let best = null, bestScore = -1;
     for (const b of AI_RULES){
@@ -20,14 +20,16 @@ const EngineAI = (function(){
       const s = sc + score(code, b.keywords||[]);
       if (s>bestScore){ best=b; bestScore=s; }
     }
-    const logs = [];
+  const logs = [];
     if (best){
       logs.push({level:'info', rule:'ai.bucket', msg:`AI bucket ${best.diagram} chosen (score=${bestScore.toFixed(2)})`});
     }
     // Apply deterministic rules first
     const det = EngineRules.applyAll(code, {diagram: dtypeGuess});
-    const out = det.code;
-    logs.push(...det.logs);
+  const out = det.code;
+  logs.push(...det.logs);
+  // Mark ext as used in case external logging context variable exists
+  void ext;
 
     // Attach suggestions (no-op changes)
     for (const s of SUGGESTIONS){

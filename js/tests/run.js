@@ -7,9 +7,11 @@ export async function runAllIssueCases(worker, fileUrls) {
 		testDocs.push(JSON.parse(txt));
 	}
 	return new Promise((resolve) => {
-		const results = [];
+	const _results = [];
 		const onMsg = (e) => {
 			const { type, results: r, rule } = e.data || {};
+			// mark results used to silence lint when this runner is adapted
+			void r;
 			if (type === 'issueCasesDone') {
 				worker.removeEventListener('message', onMsg);
 				resolve(r);
