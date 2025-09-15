@@ -13,7 +13,7 @@ function normalizeSvg(svg) {
 async function runOneCase(caseItem, renderFn, applyRulesFn, aiAssistFn) {
   const mode = caseItem.mode || 'auto';
   let code = caseItem.input;
-  let log = [];
+  const log = [];
   let error = null;
   let svg = null;
 

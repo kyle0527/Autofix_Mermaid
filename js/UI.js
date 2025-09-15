@@ -270,13 +270,17 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
    * @param {boolean} autoMode - Whether in auto mode
    * @returns {Promise<Object|null>} Processing result
    */
-  async function processInput(autoMode) {
+  async function processInput() {
     try {
       const svgContainer = $('svg');
       const logElement = $('log');
       
-      // Clear previous results
-      if (svgContainer) svgContainer.innerHTML = '';
+      // Clear previous results safely
+      if (svgContainer) {
+        while (svgContainer.firstChild) {
+          svgContainer.removeChild(svgContainer.firstChild);
+        }
+      }
       if (logElement) logElement.textContent = '';
       
       setStatus(false, '分析中…');
@@ -300,7 +304,26 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           throw new Error(renderResult.error);
         }
         
-        if (svgContainer) svgContainer.innerHTML = renderResult.svg;
+        // Safe SVG insertion using DOMParser
+        if (svgContainer) {
+          try {
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(renderResult.svg, 'image/svg+xml');
+            const svgElement = svgDoc.documentElement;
+            
+            // Clear existing content safely
+            while (svgContainer.firstChild) {
+              svgContainer.removeChild(svgContainer.firstChild);
+            }
+            
+            // Append the parsed SVG element
+            svgContainer.appendChild(svgElement);
+          } catch (error) {
+            console.error('SVG parsing failed:', error);
+            // Fallback to text content for debugging
+            svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+          }
+        }
         if (logElement) logElement.textContent = normalizedCode;
         
         enableExportButtons();
@@ -374,7 +397,26 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             throw new Error(String(renderResult.error));
           }
           
-          if (svgContainer) svgContainer.innerHTML = renderResult.svg;
+          // Safe SVG insertion using DOMParser
+          if (svgContainer) {
+            try {
+              const parser = new DOMParser();
+              const svgDoc = parser.parseFromString(renderResult.svg, 'image/svg+xml');
+              const svgElement = svgDoc.documentElement;
+              
+              // Clear existing content safely
+              while (svgContainer.firstChild) {
+                svgContainer.removeChild(svgContainer.firstChild);
+              }
+              
+              // Append the parsed SVG element
+              svgContainer.appendChild(svgElement);
+            } catch (error) {
+              console.error('SVG parsing failed:', error);
+              // Fallback to text content for debugging
+              svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+            }
+          }
           if (logElement) {
             const logText = Array.isArray(log) 
               ? log.map(item => (typeof item === 'string' ? item : JSON.stringify(item))).join('\n')
@@ -456,7 +498,12 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     const svgContainer = $('svg');
     const logElement = $('log');
     
-    if (svgContainer) svgContainer.innerHTML = '';
+    // Clear previous results safely
+    if (svgContainer) {
+      while (svgContainer.firstChild) {
+        svgContainer.removeChild(svgContainer.firstChild);
+      }
+    }
     if (logElement) logElement.textContent = '';
     
     setStatus(false, '自我檢測中…');
@@ -530,7 +577,26 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         throw new Error(renderResult.error);
       }
       
-      if (svgContainer) svgContainer.innerHTML = renderResult.svg;
+      // Safe SVG insertion using DOMParser
+      if (svgContainer) {
+        try {
+          const parser = new DOMParser();
+          const svgDoc = parser.parseFromString(renderResult.svg, 'image/svg+xml');
+          const svgElement = svgDoc.documentElement;
+          
+          // Clear existing content safely
+          while (svgContainer.firstChild) {
+            svgContainer.removeChild(svgContainer.firstChild);
+          }
+          
+          // Append the parsed SVG element
+          svgContainer.appendChild(svgElement);
+        } catch (error) {
+          console.error('SVG parsing failed:', error);
+          // Fallback to text content for debugging
+          svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+        }
+      }
       
       enableExportButtons();
       const diagnostics = log.find(item => item && item.rule === 'worker.diag');
@@ -556,7 +622,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     // Auto-render functionality with debounce
     const autoRenderCheckbox = $('autoRender');
     const triggerRender = debounce(() => {
-      try { processInput(false); } catch {}
+      try { processInput(); } catch {}
     }, 300);
     
     if (autoRenderCheckbox) {
@@ -581,11 +647,10 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             triggerRender();
           }
         };
-        // engineSelect 切換時立即渲染
         if (elementId === 'engineSelect') {
           element.addEventListener('change', () => {
             saveSettingsSnapshot();
-            processInput(false);
+            processInput();
           });
         }
         element.addEventListener('input', autoRenderHandler);
@@ -605,8 +670,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Main action buttons
-    $('btnRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(false); });
-    $('btnFixRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(true); });
+    $('btnRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
+    $('btnFixRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
     $('btnSelfTest')?.addEventListener('click', runSelfTest);
 
     // Export buttons
