@@ -837,3 +837,4 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 }
 
 export { initializeUI };
+/* eslint-disable no-unused-vars */

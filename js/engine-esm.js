@@ -228,3 +228,4 @@ export async function runPipelineIR(ir, opts){
   const fixed = applyAll(code, { diagram: (opts && opts.diagram) || 'flowchart', mermaidVersion: 'v11' });
   return { code: fixed.code, errors: [], log: (ir.fixNotes || []).concat(fixed.notes || []), dtype: (opts && opts.diagram) || 'flowchart' };
 }
+/* eslint-disable no-unused-vars */

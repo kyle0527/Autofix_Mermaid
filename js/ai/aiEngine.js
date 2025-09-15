@@ -6,6 +6,7 @@
  *   - self.listAIProviders()
  *   - self.AI_CORE_VERSION
  */
+/* eslint-disable no-unused-vars */
 
 // Load registry and built-ins (classic worker compatible)
 try { importScripts('js/ai/providerRegistry.js'); } catch (e) {}

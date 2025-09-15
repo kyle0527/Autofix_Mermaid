@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 
 // P2 full AutoFix pipeline (offline)
 const DIAGRAM_KEYWORDS = [

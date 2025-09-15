@@ -1,5 +1,6 @@
 // js/ai/providers/webllm.js
 // WebLLM provider (must be pre-exposed on worker global as self.webllm)
+/* eslint-disable no-unused-vars */
 
 (function(scope){
   'use strict';

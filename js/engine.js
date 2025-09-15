@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 
 // js/engine.js - Browser engine (self-contained, no build tools required)
 // Implements a simplified DiagramMenderCore with Python fallback parser,
