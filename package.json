@@ -2,12 +2,16 @@
   "name": "autofix_mermaid",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
 
     "lint": "eslint js",
 
     "test": "npm run lint && npm run test:curriculum",
-    "test:curriculum": "node test-curriculum.js"
+  "test:curriculum": "node test-curriculum.cjs",
+    "test:unit": "node --test test/unit/applyFixes.test.mjs",
+    "test:ci": "npm run lint && npm run test:unit",
+    "dev": "node --input-type=module scripts/dev-server.mjs"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

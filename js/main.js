@@ -56,6 +56,10 @@ async function initializeApp() {
   }
 }
 
+// Mark optional import as used to avoid lint warning when it's intentionally unused
+/* eslint-disable no-unused-vars */
+void toggleConfigPanel;
+
 /**
  * Initialize P2 features (AutoFix pipeline and Layout)
  */

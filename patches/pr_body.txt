@@ -1,0 +1,16 @@
+This PR adds unit tests for applyFixes, a CI workflow to run lint and unit tests, a lightweight dev server for local dev that correctly serves .mjs with text/javascript, and robust fixes to js/app.js (mermaid.render compatibility, tolerant DOM selection, safer autofix behaviour).
+
+Notes:
+- package.json now contains "type": "module" (ESM). Please verify this is compatible with your deployment/build.
+- ESLint reports some warnings about unused variables; these are warnings only.
+
+How to test locally:
+1. npm install
+2. npm run test:ci
+3. npm run dev (open http://localhost:8000/index.html)
+
+Files changed:
+- modified: js/app.js, package.json, eslint.config.js
+- added: .github/workflows/ci.yml, test/unit/applyFixes.test.mjs, scripts/dev-server.mjs, patches/*
+
+If you prefer different naming/behaviour (e.g. keep repo as CommonJS), I can revert the "type: module" change and adapt the tests to run under CommonJS.

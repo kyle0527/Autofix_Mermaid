@@ -1,6 +1,8 @@
 // js/worker.mjs
 import { aiAssist } from './ai/ai-assist.js';
 import { runPipeline, runPipelineIR } from './engine-wrapper.mjs';
+// mark imported but optional engine helpers as used to avoid lint warnings
+void runPipelineIR;
 
 self.onmessage = async (event) => {
   const { files = {}, uiOptions = {} } = event.data || {};

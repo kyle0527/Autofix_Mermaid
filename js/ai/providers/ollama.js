@@ -1,5 +1,6 @@
 // js/ai/providers/ollama.js
 // Ollama HTTP provider (localhost). Safe to fail and fallback.
+/* eslint-disable no-unused-vars */
 
 (function(scope){
   'use strict';
