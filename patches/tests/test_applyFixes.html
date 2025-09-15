@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test applyFixes</title>
+</head>
+<body>
+  <h1>applyFixes smoke test</h1>
+  <textarea id="input" style="width:80%;height:120px">graph TD\nA-->B;</textarea>
+  <button id="run">Run applyFixes</button>
+  <pre id="out"></pre>
+  <script type="module">
+    import { applyFixes } from '../js/autofix.js';
+    document.getElementById('run').addEventListener('click', ()=>{
+      const v = document.getElementById('input').value;
+      const r = applyFixes(v);
+      document.getElementById('out').textContent = JSON.stringify(r, null, 2);
+    });
+  </script>
+</body>
+</html>
