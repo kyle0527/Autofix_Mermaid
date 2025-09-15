@@ -9,3 +9,11 @@ section>header{border-bottom:1px solid var(--bd);padding:8px 10px;font-weight:60
 .btn{padding:6px 10px;border:1px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer}.btn[disabled]{opacity:.5;cursor:not-allowed}
 .select{padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:#fff}
 .notice{display:none;background:#fff3cd;border:1px solid #ffe69c;color:#856404;padding:8px 10px;border-radius:6px;margin:8px 16px}
+
+/* P1 Offline Bundle Styles */
+#docsPanel, #configPanel { background: #fff; }
+#docsPanel select, #docsPanel #doc-view { width: 100%; }
+#configPanel form { display: flex; flex-direction: column; gap: 8px; }
+#configPanel label { display: flex; justify-content: space-between; align-items: center; }
+#configPanel select { min-width: 120px; }
+#cfg-json { font-size: 12px; white-space: pre-wrap; }

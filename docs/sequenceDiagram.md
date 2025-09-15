@@ -1,0 +1,1 @@
+# sequenceDiagram.md\n\n(offline minimal placeholder)

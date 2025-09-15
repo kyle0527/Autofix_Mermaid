@@ -1,0 +1,1 @@
+# quadrantChart.md\n\n(offline minimal placeholder)

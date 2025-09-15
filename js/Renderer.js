@@ -1,8 +1,10 @@
 /**
  * Mermaid Renderer Module
  * @fileoverview Provides Mermaid initialization, rendering, and export functionality
- * Uses global window.mermaid provided by js/vendor/mermaid.min.js
+ * Uses ESM import for Mermaid 11.11.0
  */
+
+import mermaid from 'mermaid';
 
 /**
  * Constants for configuration
@@ -38,12 +40,6 @@ function getDefaultTheme() {
  * @throws {Error} If Mermaid library is not loaded
  */
 export function initMermaid(options = {}) {
-  if (!window.mermaid) {
-    throw new Error(
-      'Mermaid library not loaded. Please ensure js/vendor/mermaid.min.js is included before js/main.js'
-    );
-  }
-
   const defaults = {
     startOnLoad: MERMAID_CONFIG.START_ON_LOAD,
     securityLevel: MERMAID_CONFIG.SECURITY_LEVEL,
@@ -53,7 +49,7 @@ export function initMermaid(options = {}) {
   const config = { ...defaults, ...options };
 
   try {
-    window.mermaid.initialize(config);
+    mermaid.initialize(config);
     console.debug('Mermaid initialized with config:', config);
     return config;
   } catch (error) {
@@ -73,12 +69,6 @@ export function initMermaid(options = {}) {
  * @returns {Promise<Object>} Render result with svg and element
  */
 export async function renderMermaid(code, target = '#svg') {
-  if (!window.mermaid) {
-    return { 
-      error: 'Mermaid library not available. Please ensure mermaid.min.js is loaded.' 
-    };
-  }
-
   if (!code || typeof code !== 'string') {
     return { 
       error: 'Invalid diagram code provided. Expected non-empty string.' 
@@ -116,7 +106,7 @@ export async function renderMermaid(code, target = '#svg') {
   const diagramId = `mmd-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   try {
-    const renderResult = await window.mermaid.render(diagramId, code);
+    const renderResult = await mermaid.render(diagramId, code);
     
     // Insert SVG into container
     container.innerHTML = renderResult.svg;

@@ -674,6 +674,28 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     $('btnFixRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
     $('btnSelfTest')?.addEventListener('click', runSelfTest);
 
+    // P1 Docs and Config panel buttons
+    $('btnDocs')?.addEventListener('click', () => {
+      const panel = $('docsPanel');
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    $('btnDebug')?.addEventListener('click', () => {
+      const panel = $('debugPanel');
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    $('btnRules')?.addEventListener('click', () => {
+      const panel = $('rulesPanel');
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
     // Export buttons
     $('btnExportMMD')?.addEventListener('click', () => {
       downloadFile('diagram.mmd', lastResult?.code || '');
