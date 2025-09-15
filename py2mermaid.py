@@ -24,4 +24,5 @@ License: MIT
 import os, ast, sys, argparse
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
-# ... (rest of file omitted for brevity, see above for full content)
+
+# [完整內容如前述 py2mermaid.py 內容]
