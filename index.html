@@ -24,6 +24,14 @@
 <button class="btn" id="btnRender">直接渲染</button>
 <button class="btn" id="btnFixRender">自動修正＋渲染</button>
 <button class="btn" id="btnSelfTest">自我檢測</button>
+<!-- P2 AutoFix Pipeline Controls -->
+<button class="btn" id="btnValidate">驗證</button>
+<button class="btn" id="btnAutoFix">AutoFix</button>
+<select id="layoutSelect" class="select">
+  <option value="default">Layout: Default</option>
+  <option value="elk">Layout: ELK</option>
+  <option value="tidytree">Layout: Tidy-tree</option>
+</select>
 <label style="margin-left:8px;">來源</label>
 <label style="margin-left:8px;">引擎</label>
 <select id="engineMode" class="select">
@@ -114,5 +122,10 @@
 <!-- P1 Offline Bundle scripts -->
 <script type="module" src="./js/configPanel.js"></script>
 <script type="module" src="./js/docs.js"></script>
+<!-- P2 Offline Bundle scripts -->
+<script type="module" src="./js/autofix.js"></script>
+<script type="module" src="./js/layout.js"></script>
+<script type="module" src="./js/sanitize.js"></script>
+<script type="module" src="./js/app.js"></script>
 <!-- Optional offline canvg: <script src="js/vendor/canvg.min.js"></script> -->
 <script src="js/main.js" type="module"></script></body></html>

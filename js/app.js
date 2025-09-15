@@ -1,55 +1,40 @@
 
 import mermaid from 'mermaid';
 import { sanitize } from './sanitize.js';
-import { loadDocList, loadDocInto } from './docs.js';
-import { bindConfigPanel } from './configPanel.js';
+import { applyFixes } from './autofix.js';
+import { applyLayoutSelection } from './layout.js';
 
-// P1 Docs and Config integration for Autofix_Mermaid
-export function initP1Features() {
-  // Bind config panel if exists
-  const configForm = document.getElementById('config-form');
-  if (configForm && typeof bindConfigPanel === 'function') {
-    bindConfigPanel(mermaid);
-  }
+mermaid.initialize({ startOnLoad:false, securityLevel:'strict' });
 
-  // Bind docs functionality if exists
-  const docSelect = document.getElementById('doc-select');
-  const docView = document.getElementById('doc-view');
-  if (docSelect && docView && typeof loadDocList === 'function') {
-    loadDocList().then(list => {
-      if (list && list.length > 0) {
-        // Clear existing options
-        docSelect.innerHTML = '';
-        // Add new options
-        for(const f of list){
-          const opt = document.createElement('option');
-          opt.value = f;
-          opt.textContent = f;
-          docSelect.appendChild(opt);
-        }
-        // Set default and load first doc
-        docSelect.value = list[0];
-        loadDocInto(docView, list[0]);
-        // Bind change event
-        docSelect.onchange = () => loadDocInto(docView, docSelect.value);
-      }
-    }).catch(err => {
-      console.warn('Failed to load docs:', err);
-    });
-  }
+const $=(q)=>document.querySelector(q);
+const editor=$('#editor'), errors=$('#errors'), preview=$('#preview'), themeSel=$('#theme'), layoutSel=$('#layout');
+
+async function validate(code){
+  errors.textContent='';
+  try { await mermaid.parse(code); return true; }
+  catch(e){ errors.textContent=(e&&e.str)?e.str:String(e); return false; }
+}
+async function render(){
+  let { code, notes } = applyFixes(editor.value);
+  editor.value = code; // keep in sync
+  const theme = themeSel.value;
+  applyLayoutSelection(mermaid, layoutSel.value);
+  mermaid.initialize({ startOnLoad:false, securityLevel:'strict', theme });
+  if(!(await validate(code))){ preview.innerHTML=''; return; }
+  const { svg } = await mermaid.render('mmd-'+Date.now(), code);
+  preview.innerHTML = sanitize(svg);
 }
 
-// Toggle panels functionality
-export function toggleDocsPanel() {
-  const panel = document.getElementById('docsPanel');
-  if (panel) {
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  }
-}
+document.getElementById('btn-validate').onclick = async ()=>{ await validate(editor.value); };
+document.getElementById('btn-render').onclick = render;
+document.getElementById('btn-autofix').onclick = ()=>{ const r = applyFixes(editor.value); editor.value = r.code; errors.textContent = r.notes.join('\n'); };
 
-export function toggleConfigPanel() {
-  const panel = document.getElementById('configPanel');
-  if (panel) {
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  }
-}
+themeSel.addEventListener('change', render);
+layoutSel.addEventListener('change', render);
+
+editor.value = `graph TD
+  A([ Start: passthrough(payload) ]) --> B["Work"]
+  B --> C{{"OK?"}}
+  C -->|Yes| D([ End ]) 
+  C -->|No| A
+`;
