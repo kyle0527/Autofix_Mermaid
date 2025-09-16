@@ -18,6 +18,7 @@ section>header{border-bottom:1px solid var(--bd);padding:8px 10px;font-weight:60
 #configPanel select { min-width: 120px; }
 #cfg-json { font-size: 12px; white-space: pre-wrap; }
 
+
 /* P2 Offline Bundle Styles - Dark Theme & Layout */
 :root {
   --p2-bg: #0b0d10;
