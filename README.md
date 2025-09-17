@@ -1,9 +1,9 @@
-# 🎯 AutoFix Mermaid V3.5
+# 🎯 AutoFix Mermaid v3.6
 
 **智能 Python 程式碼轉 Mermaid 圖表工具**
 
-![Version](https://img.shields.io/badge/version-3.4-blue.svg)
-![Updated](https://img.shields.io/badge/updated-2025.09.11-green.svg)
+![Version](https://img.shields.io/badge/version-3.6-blue.svg)
+![Updated](https://img.shields.io/badge/updated-2025.09.16-green.svg)
 ![Tree-sitter](https://img.shields.io/badge/tree--sitter-enabled-orange.svg)
 
 ---
