@@ -1,7 +1,0 @@
-# Archived: patches/pr_body.txt
-
-This PR description was archived on 2025-09-16 and moved to `doc/archive/pr_body.txt`.
-
-If you need the original content, please open the archived copy in `doc/archive/`.
-
--- archived by automated assistant
