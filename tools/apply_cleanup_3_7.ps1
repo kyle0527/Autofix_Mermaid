@@ -1,150 +1,124 @@
 param(
-  [switch]$DryRun  # 先用 -DryRun 預覽變更
+  [string]$TargetBranch = 'release/3.7',
+  [string]$ReleaseZip   = 'release-3.7.zip'
 )
 
-# === 基本設定 ===
-$Repo = Get-Location
-$BranchTarget = 'release/3.7'
-$ArchiveDir   = '__not_shipped__'
-$NowVersion   = '3.7.0'
-$OldVersions  = @('3.6.0')   # 如有其它舊字串, 可再加
+Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Write-Host "Repo: $Repo" -ForegroundColor Cyan
+function Info($m){ Write-Host "[INFO] $m" -ForegroundColor Cyan }
+function Warn($m){ Write-Host "[WARN] $m" -ForegroundColor Yellow }
+function Err ($m){ Write-Host "[ERROR] $m" -ForegroundColor Red }
 
-# 0) 分支與工作樹檢查
+# 0) 基本檢查與切分支
+git rev-parse --is-inside-work-tree | Out-Null
 git fetch --all --tags --prune | Out-Null
+
 $cur = (git rev-parse --abbrev-ref HEAD).Trim()
-if ($cur -ne $BranchTarget) {
-  Write-Host "切換到 $BranchTarget ..." -ForegroundColor Yellow
-  git checkout $BranchTarget | Out-Null
+if ($cur -ne $TargetBranch) {
+  Warn "Switching to $TargetBranch ..."
+  git checkout $TargetBranch | Out-Null
 }
 git pull --ff-only | Out-Null
 
-# 1) 準備集中資料夾
-$dirs = @(
-  "$ArchiveDir",
-  "$ArchiveDir/docs",
-  "$ArchiveDir/data",
-  "$ArchiveDir/patches",
-  "$ArchiveDir/misc"
-)
-foreach ($d in $dirs) { if (!(Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null } }
+# 1) 清掉殘留的 py2mermaid 文字參考（不動 __not_shipped__ / .git / node_modules）
+$excludeRegexes = @('\.git\\','node_modules\\','__not_shipped__\\')
 
-# 2) 刪除 py2 腳本
-$py2 = @('py2mermaid.py','py2mermaid_v2.py')
-foreach ($f in $py2) {
-  if (Test-Path $f) {
-    if ($DryRun) { Write-Host "[DryRun] Remove $f" -ForegroundColor DarkYellow }
-    else { Remove-Item $f -Force }
-  }
+# 1.1 run_v3_then_combine.py：更新註解敘述（若存在）
+if (Test-Path '.\run_v3_then_combine.py') {
+  $txt = Get-Content .\run_v3_then_combine.py -Raw
+  $txt = $txt -replace 'Step 1: run py2mermaid[_\w\d\-]*.*','Step 1: run the built-in parser/engine to generate MD/HTML'
+  $txt | Set-Content -Encoding UTF8 .\run_v3_then_combine.py
+  Info "Updated comment in run_v3_then_combine.py"
 }
 
-# 3) 調整文件：若有舊文件或大型資料，集中到 __not_shipped__
-$moveList = @(
-  @('docs/archives','docs'),         # 整個資料夾
-  @('patches','patches'),
-  @('_backup_removed','misc'),
-  @('issues.json','data'),
-  @('issues_2020_07.json','data'),
-  @('diagram_knowledge_pack.xlsx','data')
-)
-foreach ($pair in $moveList) {
-  $src = $pair[0]; $dst = Join-Path $ArchiveDir $pair[1]
-  if (Test-Path $src) {
-    if ($DryRun) { Write-Host "[DryRun] Move $src -> $dst" -ForegroundColor DarkYellow }
-    else { 
-      if (Test-Path $dst) { } else { New-Item -ItemType Directory -Path $dst | Out-Null }
-      # 資料夾或檔案皆處理
-      if ((Get-Item $src).PSIsContainer) { robocopy $src $dst /E /MOVE | Out-Null }
-      else { Move-Item $src $dst }
-    }
-  }
+# 1.2 js/prompt.txt：刪除任何含 py2mermaid 的行（若存在）
+if (Test-Path '.\js\prompt.txt') {
+  $p = Get-Content .\js\prompt.txt -Raw
+  $p2 = ($p -replace '(?im)^.*py2mermaid.*$\r?\n?','')
+  $p2 | Set-Content -Encoding UTF8 .\js\prompt.txt
+  Info "Purged py2mermaid lines in js/prompt.txt"
 }
 
-# 4) .gitattributes：定義發佈排除
-$gitattrib = @"
-__not_shipped__/**         export-ignore
-assets/**/*.map             export-ignore
-node_modules/**             export-ignore
-.github/**                  export-ignore
+# 1.3 二次掃描殘留字樣
+$scanFiles = Get-ChildItem -Recurse -File | Where-Object {
+  ($_.FullName -notmatch $excludeRegexes[0]) -and
+  ($_.FullName -notmatch $excludeRegexes[1]) -and
+  ($_.FullName -notmatch $excludeRegexes[2])
+}
+$refs = $scanFiles | Select-String -SimpleMatch 'py2mermaid'
+if ($refs) {
+  Err "Residual 'py2mermaid' references still found. Please fix manually and re-run:"
+  $refs | ForEach-Object { Write-Host (" - " + $_.Path + " : " + $_.Line) }
+  exit 1
+}
+
+# 2) 行尾規則（可穩定 CRLF/LF 警告）：若沒有則補上
+$gitattribPath = '.gitattributes'
+$needEol = $true
+if (Test-Path $gitattribPath) {
+  $ga = Get-Content $gitattribPath -Raw
+  if ($ga -match '\* *text=auto') { $needEol = $false }
+}
+if ($needEol) {
+  $append = @"
+*               text=auto
+*.sh            eol=lf
+*.js            eol=lf
+*.ts            eol=lf
+*.css           eol=lf
+*.html          eol=lf
+*.md            eol=lf
 "@
-if ($DryRun) { Write-Host "[DryRun] Write .gitattributes with export-ignore rules" -ForegroundColor DarkYellow }
-else { $gitattrib | Out-File -FilePath '.gitattributes' -Encoding UTF8 }
-
-# 5) .gitignore：確保不追蹤 node_modules
-$gitignorePath = '.gitignore'
-$giAdd = @"
-node_modules/
-"@
-if (Test-Path $gitignorePath) {
-  $gi = Get-Content $gitignorePath -Raw
-  if ($gi -notmatch 'node_modules/') {
-    if ($DryRun) { Write-Host "[DryRun] Append node_modules/ to .gitignore" -ForegroundColor DarkYellow }
-    else { Add-Content $gitignorePath $giAdd }
-  }
-} else {
-  if ($DryRun) { Write-Host "[DryRun] Create .gitignore" -ForegroundColor DarkYellow }
-  else { $giAdd | Out-File $gitignorePath -Encoding UTF8 }
+  Add-Content $gitattribPath $append
+  Info "Appended EOL normalization rules to .gitattributes"
 }
 
-# 6) package.json 版本提升
-if (Test-Path 'package.json') {
-  $pkg = Get-Content 'package.json' -Raw | ConvertFrom-Json
-  $pkg.version = $NowVersion
-  $json = $pkg | ConvertTo-Json -Depth 100
-  if ($DryRun) { Write-Host "[DryRun] Set package.json version -> $NowVersion" -ForegroundColor DarkYellow }
-  else { $json | Out-File 'package.json' -Encoding UTF8 }
-}
+# 3) 顯示將要提交的變更摘要
+git status
+git diff --stat
 
-# 7) 全倉版本字串替換（排除 .git / node_modules / __not_shipped__）
-$includeExt = @('*.md','*.yml','*.yaml','*.json','*.html','*.css','*.js','*.ts')
-$excludes = @('\.git\\','node_modules\\',"${ArchiveDir}\\")
-$files = Get-ChildItem -Recurse -File -Include $includeExt | Where-Object {
-  ($_.FullName -notmatch $excludes[0]) -and
-  ($_.FullName -notmatch $excludes[1]) -and
-  ($_.FullName -notmatch $excludes[2])
-}
-foreach ($old in $OldVersions) {
-  foreach ($f in $files) {
-    $txt = Get-Content $f.FullName -Raw
-    if ($txt -match [regex]::Escape($old)) {
-      if ($DryRun) { Write-Host "[DryRun] Replace $old -> $NowVersion in $($f.FullName)" -ForegroundColor DarkYellow }
-      else { ($txt -replace [regex]::Escape($old), $NowVersion) | Out-File $f.FullName -Encoding UTF8 }
-    }
-  }
-}
-
-# 8) 檢查是否仍有 py2mermaid 參考（排除 not_shipped 和 .git / node_modules）
-$ref = Get-ChildItem -Recurse -File | Where-Object {
-  ($_.FullName -notmatch $excludes[0]) -and
-  ($_.FullName -notmatch $excludes[1]) -and
-  ($_.FullName -notmatch $excludes[2])
-} | Select-String -Pattern 'py2mermaid' -SimpleMatch
-if ($ref) {
-  Write-Host "仍有 py2mermaid 參考，請人工檢整（清單如下）：" -ForegroundColor Red
-  $ref | ForEach-Object { Write-Host (" - " + $_.Path + " : " + $_.Line) }
-  if (-not $DryRun) { Write-Host "中止提交，請先移除上述參考後重跑腳本。" -ForegroundColor Red; exit 1 }
-}
-
-# 9) npm 驗證（可選）
-if (-not $DryRun) {
-  try {
-    npm ci
-    npm run lint --if-present
-    # e2e 如需：npx playwright install; npm test --if-present
-  } catch {
-    Write-Host "npm 驗證出錯：$($_.Exception.Message)" -ForegroundColor Yellow
-  }
-}
-
-# 10) 產出提交
+# 4) 提交並推送
 git add -A
-if ($DryRun) {
-  Write-Host "[DryRun] 將會提交訊息：" -ForegroundColor DarkYellow
-  Write-Host "release(3.7): remove py2 scripts, centralize non-runtime into __not_shipped__, add export-ignore, bump to $NowVersion" -ForegroundColor DarkYellow
+$hasChanges = (git diff --cached --name-only) -ne $null
+if (-not $hasChanges) {
+  Warn "No staged changes. Nothing to commit."
 } else {
-  git commit -m "release(3.7): remove py2 scripts, centralize non-runtime into __not_shipped__, add export-ignore, bump to $NowVersion"
+  git commit -m "chore(3.7): purge residual py2mermaid refs; normalize line-endings rules"
+  Info "Committed."
+}
+git push -u origin $TargetBranch
+Info "Pushed to origin/$TargetBranch"
+
+# 5) 用 .gitattributes export-ignore 產生發佈包（不帶 __not_shipped__/ *.map / node_modules）
+if (Test-Path $ReleaseZip) { Remove-Item $ReleaseZip -Force }
+git archive -o $ReleaseZip HEAD
+Info "Release zip created: $ReleaseZip"
+
+# 6) 快速驗證：zip 內容不得含 __not_shipped__ / *.map / node_modules
+$tempCheck = Join-Path $env:TEMP ('release_check_' + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $tempCheck | Out-Null
+try {
+  # Windows 有 tar；或用 Expand-Archive（但 git archive 產的是 tar-like zip，這裡用 tar）
+  tar -xf $ReleaseZip -C $tempCheck
+
+  $bad1 = Get-ChildItem -Recurse "$tempCheck\__not_shipped__" -ErrorAction SilentlyContinue
+  $bad2 = Get-ChildItem -Recurse $tempCheck | Where-Object { $_.FullName -match '\\assets\\.*\.map$' }
+  $bad3 = Get-ChildItem -Recurse "$tempCheck\node_modules" -ErrorAction SilentlyContinue
+
+  if ($bad1 -or $bad2 -or $bad3) {
+    Err "Validation failed: release zip still contains excluded content."
+    if ($bad1) { Err " - __not_shipped__ present" }
+    if ($bad2) { Err " - *.map present under assets/" }
+    if ($bad3) { Err " - node_modules present" }
+    exit 1
+  } else {
+    Info "Validation OK: release zip has no __not_shipped__/ *.map / node_modules."
+  }
+}
+finally {
+  Remove-Item $tempCheck -Recurse -Force
 }
 
-Write-Host "完成（$($DryRun ? '預覽' : '已寫入')）。" -ForegroundColor Green
+Info "All done."
+

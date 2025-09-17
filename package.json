@@ -5,9 +5,9 @@
     "type":  "module",
     "scripts":  {
                     "lint":  "eslint js",
-                    "test":  "npm run lint \u0026\u0026 npm run test:curriculum",
+                    "test":  "npm run lint \u0026\u0026 npm run test:curriculum \u0026\u0026 npm run test:unit",
                     "test:curriculum":  "node test-curriculum.cjs",
-                    "test:unit":  "node --test test/unit/applyFixes.test.mjs",
+                    "test:unit":  "node --test \"test/unit/*.mjs\"",
                     "test:ci":  "npm run lint \u0026\u0026 npm run test:unit",
                     "dev":  "node --input-type=module scripts/dev-server.mjs"
                 },
