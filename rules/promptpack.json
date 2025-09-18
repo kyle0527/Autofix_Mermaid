@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "prompts": [
+    {
+      "prompt_id": "P-LINT-001",
+      "intent": "lint_suggest",
+      "input_type": "mermaid",
+      "template": "You are a Mermaid linting assistant. Given the following code, find problems and propose JSON fixes that conform to schema 'lint_suggestion.schema.json'.\nCODE:\n{code}",
+      "schema_ref": "schemas/lint_suggestion.schema.json",
+      "system_instructions": "Return STRICT JSON that matches the schema. Do not include prose."
+    },
+    {
+      "prompt_id": "P-REWRITE-001",
+      "intent": "rewrite",
+      "input_type": "mermaid",
+      "template": "Rewrite the Mermaid code to satisfy these style and lint rules:\n{rules}\n\nCODE:\n{code}\n\nReturn only the rewritten code.",
+      "schema_ref": "",
+      "system_instructions": "Return only code, no explanations."
+    }
+  ]
+}

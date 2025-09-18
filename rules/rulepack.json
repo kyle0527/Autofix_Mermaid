@@ -1,0 +1,97 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "R-001-CLASS-EMPTY-BODY-WHITESPACE",
+      "title": "Ensure at least one whitespace between {} in empty class bodies",
+      "category": "workaround",
+      "diagram_types": "classDiagram",
+      "phase": "preprocess",
+      "severity": "warning",
+      "enabled": true,
+      "pattern_kind": "regex",
+      "pattern": "class\\s+([^\\s{]+)\\s*\\{\\s*\\}",
+      "condition_json": {},
+      "fix_action": "replace",
+      "fix_params_json": {
+        "replacement": "class \\1 { }"
+      },
+      "example_in": "classDiagram\n  class Foo{}\n",
+      "example_out": "classDiagram\n  class Foo { }\n",
+      "notes": "Avoids parser failures for empty class bodies with no whitespace in some Mermaid versions.",
+      "origin": "seed",
+      "version": "1.0.0",
+      "created_at": "2025-09-12",
+      "updated_at": "2025-09-12"
+    },
+    {
+      "rule_id": "R-002-FLOW-ELK-GRAPH-LABEL-ESCAPE",
+      "title": "Escape literal word 'graph' in node labels when ELK is default renderer",
+      "category": "workaround",
+      "diagram_types": "flowchart",
+      "phase": "preprocess",
+      "severity": "warning",
+      "enabled": true,
+      "pattern_kind": "regex",
+      "pattern": "(\\[[^\\]]*?)\\bgraph\\b([^\\]]*\\])",
+      "condition_json": {
+        "config.flowchart.defaultRenderer": "elk"
+      },
+      "fix_action": "replace",
+      "fix_params_json": {
+        "replacement": "\\1`graph`\\2"
+      },
+      "example_in": "flowchart TB\n  A[graph]\n",
+      "example_out": "flowchart TB\n  A[`graph`]\n",
+      "notes": "Workaround for ELK + 'graph' token in labels causing parse errors in some versions.",
+      "origin": "seed",
+      "version": "1.0.0",
+      "created_at": "2025-09-12",
+      "updated_at": "2025-09-12"
+    },
+    {
+      "rule_id": "R-003-PIE-NEGATIVE-VALUES",
+      "title": "Reject negative values in pie slices with a clear error",
+      "category": "linter",
+      "diagram_types": "pie",
+      "phase": "analyze",
+      "severity": "error",
+      "enabled": true,
+      "pattern_kind": "regex",
+      "pattern": "^\\s*\\\".*?\\\"\\s*:\\s*-\\d+",
+      "condition_json": {},
+      "fix_action": "noop",
+      "fix_params_json": {},
+      "example_in": "pie\n  \"Bad\" : -10\n",
+      "example_out": "[ERROR] Negative values are not allowed in pie slices",
+      "notes": "Provide early, clear diagnostics instead of cryptic parser errors.",
+      "origin": "seed",
+      "version": "1.0.0",
+      "created_at": "2025-09-12",
+      "updated_at": "2025-09-12"
+    },
+    {
+      "rule_id": "R-004-PIE-ZERO-LABEL-HIDE",
+      "title": "Hide label for 0% pie slices to avoid overlapping",
+      "category": "emitter",
+      "diagram_types": "pie",
+      "phase": "emit",
+      "severity": "info",
+      "enabled": true,
+      "pattern_kind": "token",
+      "pattern": "slice:value==0",
+      "condition_json": {},
+      "fix_action": "set",
+      "fix_params_json": {
+        "labelVisible": false
+      },
+      "example_in": "pie\n  \"Zero\" : 0\n  \"Valid\" : 30\n",
+      "example_out": "pie\n  %% zero slice hidden label\n  \"Zero\" : 0\n  \"Valid\" : 30\n",
+      "notes": "Render-time hint to avoid awkward 0% label placement.",
+      "origin": "seed",
+      "version": "1.0.0",
+      "created_at": "2025-09-12",
+      "updated_at": "2025-09-12"
+    }
+  ]
+}
