@@ -676,6 +676,59 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     $('btnRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
     $('btnFixRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
     $('btnSelfTest')?.addEventListener('click', runSelfTest);
+    // 健康檢測：檢查模型 JSON、worker、Ollama
+    $('btnHealth')?.addEventListener('click', async () => {
+      setStatus(false, '健康檢測中…');
+      const lines = [];
+      const push = (ok, label, extra='') => lines.push(`${ok ? '✅' : '❌'} ${label}${extra ? ' - ' + extra : ''}`);
+      try {
+        // 1. 模型 JSON
+        const modelFiles = ['rules_v1.json','knowledge_index_v1.json','qa_templates_v1.json'];
+        for (const f of modelFiles) {
+          try {
+            const r = await fetch(`js/models/${f}`, { cache: 'no-store' });
+            push(r.ok, `models/${f}`, r.ok ? '' : `HTTP ${r.status}`);
+          } catch (e) {
+            push(false, `models/${f}`, String(e));
+          }
+        }
+        // 2. worker module (HEAD)
+        try {
+          const r = await fetch('js/worker.mjs', { method: 'GET', cache: 'no-store' });
+          push(r.ok, 'worker.mjs', r.ok ? '' : `HTTP ${r.status}`);
+        } catch (e) { push(false, 'worker.mjs', String(e)); }
+        // 3. worker classic
+        try {
+          const r = await fetch('js/worker.js', { method: 'GET', cache: 'no-store' });
+          push(r.ok, 'worker.js', r.ok ? '' : `HTTP ${r.status}`);
+        } catch (e) { push(false, 'worker.js', String(e)); }
+        // 4. Ollama (只在 provider=ollama 時提示)
+        const providerSel = $('aiProvider')?.value || 'none';
+        if (providerSel === 'ollama') {
+          try {
+            const ctrl = new AbortController();
+            const t = setTimeout(()=>ctrl.abort(), 2500);
+            const r = await fetch('http://localhost:11434/api/version', { signal: ctrl.signal });
+            clearTimeout(t);
+            push(r.ok, 'Ollama /api/version', r.ok ? '' : `HTTP ${r.status}`);
+          } catch (e) {
+            push(false, 'Ollama /api/version', String(e.name === 'AbortError' ? 'timeout' : e));
+          }
+        } else {
+          push(true, 'Ollama（略過）', '非選用');
+        }
+        // 5. 同源判斷 (避免 file://)
+        push(location.protocol.startsWith('http'), 'HTTP(S) 協議', location.protocol);
+        // 顯示結果
+        const logElement = $('log');
+        if (logElement) logElement.textContent = lines.join('\n');
+        setStatus(true, '健康檢測完成');
+      } catch (e) {
+        const logElement = $('log');
+        if (logElement) logElement.textContent = lines.concat(['錯誤: '+ (e?.message||e)]).join('\n');
+        setStatus(false, '健康檢測失敗');
+      }
+    });
 
     // P1 Docs and Config panel buttons
     $('btnDocs')?.addEventListener('click', () => {
