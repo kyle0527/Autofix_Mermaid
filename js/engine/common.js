@@ -26,12 +26,17 @@ function applyRegexAll(code, re, repl){
   return code.replace(R, repl);
 }
 
-// 暴露 API（self 供瀏覽器環境）
-self.EngineCommon = {
+// 暴露 API（支援多環境：瀏覽器 self 和 Node.js globalThis）
+const globalScope = (typeof self !== 'undefined') ? self : 
+                   (typeof globalThis !== 'undefined') ? globalThis : 
+                   (typeof global !== 'undefined') ? global : {};
+
+globalScope.EngineCommon = {
   guessDiagramType,
   applyRegexAll,
   // 測試用途：可觀察已註冊偵測器
   _diagramDetectors
 };
 
-export { guessDiagramType }; // 供 ESM / 單元測試導入
+// ES6 模組匯出（供 Node.js import 使用）
+export { guessDiagramType, applyRegexAll, _diagramDetectors };
