@@ -7,40 +7,32 @@
 //   analyze(files: Record<string,string>, options: object): Promise<{ code, errors, log, dtype }>
 // }
 
-(function(scope){
-  'use strict';
+// ESM provider registry - intended for module workers and browser ESM
+const providers = new Map();
 
-  const REGISTRY_KEY = '__AI_PROVIDER_REGISTRY__';
-  if (scope[REGISTRY_KEY]) return; // idempotent
+function validate(name, impl){
+  if (!name || typeof name !== 'string') throw new Error('AI provider must have a string name');
+  if (!impl || typeof impl.analyze !== 'function') throw new Error('AI provider must implement analyze(files, options)');
+}
 
-  const providers = new Map();
-
-  function validate(name, impl){
-    if (!name || typeof name !== 'string') throw new Error('AI provider must have a string name');
-    if (!impl || typeof impl.analyze !== 'function') throw new Error('AI provider must implement analyze(files, options)');
+export const registry = {
+  version: '1.0.0',
+  register(name, impl){
+    validate(name, impl);
+    providers.set(String(name).toLowerCase(), { name, version: impl.version || '0.0.0', analyze: impl.analyze });
+    return true;
+  },
+  get(name){
+    if (!name) return null;
+    return providers.get(String(name).toLowerCase()) || null;
+  },
+  list(){
+    return Array.from(providers.values()).map(p => ({ name: p.name, version: p.version }));
   }
+};
 
-  const registry = {
-    version: '1.0.0',
-    register(name, impl){
-      validate(name, impl);
-      providers.set(name.toLowerCase(), { name, version: impl.version || '0.0.0', analyze: impl.analyze });
-      return true;
-    },
-    get(name){
-      if (!name) return null;
-      return providers.get(String(name).toLowerCase()) || null;
-    },
-    list(){
-      return Array.from(providers.values()).map(p => ({ name: p.name, version: p.version }));
-    }
-  };
-
-  scope[REGISTRY_KEY] = registry;
-  // Friendly aliases on worker global
-  scope.AIRegistry = registry;
-  scope.registerAIProvider = (name, impl) => registry.register(name, impl);
-  scope.listAIProviders = () => registry.list();
-  scope.AI_CORE_VERSION = registry.version;
-})(self);
+// Convenience helpers for legacy code expecting globals
+export function registerAIProvider(name, impl){ return registry.register(name, impl); }
+export function listAIProviders(){ return registry.list(); }
+export const AI_CORE_VERSION = registry.version;
 
