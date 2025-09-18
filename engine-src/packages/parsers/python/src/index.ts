@@ -1,19 +1,57 @@
-import { IRProject, IRModule, IRFunction, IRClass, IRStatement } from '@diagrammender/types';
+import {
+  IRProject,
+  IRModule,
+  IRFunction,
+  IRClass,
+  IRStatement,
+  ParserPlugin,
+  ParserParseOptions,
+  ParserDetectionResult,
+} from '@diagrammender/types';
+
+declare const require: (id: string) => any;
 
 function relModuleName(p: string): string {
   return p.replace(/\\/g,'/').replace(/\.py$/, '').replace(/\/(?:__init__)?$/, '').replace(/\//g,'.');
 }
 
-export function parsePythonProject(files: Record<string,string>): IRProject {
-  // prefer Node tree-sitter if present
-  try {
-    const Parser = require('tree-sitter');
-    const Python = require('tree-sitter-python');
-    return parseWithTreeSitter(Parser, Python, files);
-  } catch (e) {
-    // fallback
-    return parseWithFallback(files);
+const PYTHON_PLUGIN_VERSION = '0.3.0';
+
+function shouldUseTreeSitter(options?: ParserParseOptions): boolean {
+  if (options?.preferTreeSitter === false) return false;
+  if (options?.runtime === 'browser') return false;
+  return true;
+}
+
+function parsePythonProjectInternal(files: Record<string,string>, options?: ParserParseOptions): IRProject {
+  if (shouldUseTreeSitter(options)) {
+    try {
+      const Parser = require('tree-sitter');
+      const Python = require('tree-sitter-python');
+      return parseWithTreeSitter(Parser, Python, files);
+    } catch (e) {
+      // swallow and fallback below
+    }
   }
+  return parseWithFallback(files);
+}
+
+function detectPythonProject(files: Record<string,string>): ParserDetectionResult | null {
+  const matched = Object.keys(files).filter((f) => f.endsWith('.py'));
+  if (matched.length === 0) return null;
+  const reason = matched.length === 1
+    ? `Found Python file ${matched[0]}`
+    : `Found ${matched.length} Python files`;
+  return {
+    lang: 'python',
+    confidence: 'high',
+    reason,
+    matchedFiles: matched.slice(0, 5),
+  };
+}
+
+export function parsePythonProject(files: Record<string,string>, options?: ParserParseOptions): IRProject {
+  return parsePythonProjectInternal(files, options);
 }
 
 function parseWithFallback(files: Record<string,string>): IRProject {
@@ -55,6 +93,25 @@ function parseWithFallback(files: Record<string,string>): IRProject {
   }
   return { modules, fixNotes: [] };
 }
+
+export const pythonParserPlugin: ParserPlugin = {
+  lang: 'python',
+  version: PYTHON_PLUGIN_VERSION,
+  aliases: ['py'],
+  parseProject: (files: Record<string, string>, options?: ParserParseOptions) =>
+    parsePythonProjectInternal(files, options),
+  detect: detectPythonProject,
+  capabilities: {
+    treeSitter: true,
+    fallback: true,
+    incremental: false,
+  },
+  treeSitterModule: 'tree-sitter-python',
+};
+
+export const parserPlugin = pythonParserPlugin;
+
+export default pythonParserPlugin;
 
 function parseWithTreeSitter(Parser: any, Python: any, files: Record<string,string>): IRProject {
   const modules: Record<string, IRModule> = {};

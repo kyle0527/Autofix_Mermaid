@@ -1,43 +1,92 @@
-import { IRProject } from '@diagrammender/types';
+import { IRProject, MermaidFragment } from '@diagrammender/types';
+import { composeMermaid } from './compose';
 
-export function emitSequenceDiagram(ir: IRProject): string {
-  const out: string[] = ['sequenceDiagram'];
-  const added = new Set<string>();
-  // list all functions as potential callers
+function safeId(label: string): string {
+  return label.split('.').join('_');
+}
+
+export function emitSequenceFragments(ir: IRProject): MermaidFragment[] {
+  const participantLines: string[] = [];
+  const seenParticipants = new Set<string>();
   for (const mod of Object.values(ir.modules)) {
     for (const fn of mod.functions) {
       const caller = `${mod.name}.${fn.name}`;
-      if (!added.has(caller)) {
-        out.push(`participant ${caller.split('.').join('_')} as ${caller}`); // safe ID
-        added.add(caller);
+      if (!seenParticipants.has(caller)) {
+        participantLines.push(`participant ${safeId(caller)} as ${caller}`);
+        seenParticipants.add(caller);
       }
     }
   }
-  // participants from callGraph or calls
-  const participants = new Set<string>();
-  if (ir.callGraph) {
-    for (const e of ir.callGraph.edges) participants.add(e.toName);
-  } else {
-    for (const mod of Object.values(ir.modules)) for (const fn of mod.functions)
-      for (const c of fn.calls) participants.add(c);
-  }
-  for (const p of participants) out.push(`participant ${p.split('.').join('_')} as ${p}`);
 
-  // messages
+  const additionalParticipants = new Set<string>();
   if (ir.callGraph) {
-    for (const e of ir.callGraph.edges) {
-      const from = e.from.split('.').join('_');
-      const to = (e.toId || e.toName).split('.').join('_');
-      out.push(`${from}->>${to}: call()`);
+    for (const edge of ir.callGraph.edges) {
+      if (!seenParticipants.has(edge.toName)) {
+        additionalParticipants.add(edge.toName);
+      }
     }
   } else {
     for (const mod of Object.values(ir.modules)) {
       for (const fn of mod.functions) {
-        const from = `${mod.name}.${fn.name}`.split('.').join('_');
-        for (const c of fn.calls) out.push(`${from}->>${c.split('.').join('_')}: call()`);
+        for (const call of fn.calls) {
+          if (!seenParticipants.has(call)) {
+            additionalParticipants.add(call);
+          }
+        }
       }
     }
   }
-  if (out.length === 1) out.push('Note over X: no data');
-  return out.join('\n');
+  for (const participant of additionalParticipants) {
+    participantLines.push(`participant ${safeId(participant)} as ${participant}`);
+    seenParticipants.add(participant);
+  }
+
+  const messageLines: string[] = [];
+  if (ir.callGraph) {
+    for (const edge of ir.callGraph.edges) {
+      const from = safeId(edge.from);
+      const to = safeId(edge.toId || edge.toName);
+      messageLines.push(`${from}->>${to}: call()`);
+    }
+  } else {
+    for (const mod of Object.values(ir.modules)) {
+      for (const fn of mod.functions) {
+        const from = safeId(`${mod.name}.${fn.name}`);
+        for (const call of fn.calls) {
+          messageLines.push(`${from}->>${safeId(call)}: call()`);
+        }
+      }
+    }
+  }
+
+  const fragments: MermaidFragment[] = [];
+  if (participantLines.length > 0) {
+    fragments.push({
+      id: 'sequence-participants',
+      title: 'Participants',
+      diagram: 'sequenceDiagram',
+      code: participantLines.join('\n'),
+    });
+  }
+  if (messageLines.length > 0) {
+    fragments.push({
+      id: 'sequence-messages',
+      title: 'Messages',
+      diagram: 'sequenceDiagram',
+      code: messageLines.join('\n'),
+    });
+  }
+  if (fragments.length === 0) {
+    fragments.push({
+      id: 'sequence-empty',
+      title: 'empty',
+      diagram: 'sequenceDiagram',
+      code: 'Note over X: no data',
+    });
+  }
+  return fragments;
+}
+
+export function emitSequenceDiagram(ir: IRProject): string {
+  return composeMermaid('sequenceDiagram', emitSequenceFragments(ir));
 }
