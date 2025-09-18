@@ -1,20 +1,47 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parserPlugin = exports.pythonParserPlugin = void 0;
 exports.parsePythonProject = parsePythonProject;
 function relModuleName(p) {
     return p.replace(/\\/g, '/').replace(/\.py$/, '').replace(/\/(?:__init__)?$/, '').replace(/\//g, '.');
 }
-function parsePythonProject(files) {
-    // prefer Node tree-sitter if present
-    try {
-        const Parser = require('tree-sitter');
-        const Python = require('tree-sitter-python');
-        return parseWithTreeSitter(Parser, Python, files);
+const PYTHON_PLUGIN_VERSION = '0.3.0';
+function shouldUseTreeSitter(options) {
+    if (options?.preferTreeSitter === false)
+        return false;
+    if (options?.runtime === 'browser')
+        return false;
+    return true;
+}
+function parsePythonProjectInternal(files, options) {
+    if (shouldUseTreeSitter(options)) {
+        try {
+            const Parser = require('tree-sitter');
+            const Python = require('tree-sitter-python');
+            return parseWithTreeSitter(Parser, Python, files);
+        }
+        catch (e) {
+            // swallow and fallback below
+        }
     }
-    catch (e) {
-        // fallback
-        return parseWithFallback(files);
-    }
+    return parseWithFallback(files);
+}
+function detectPythonProject(files) {
+    const matched = Object.keys(files).filter((f) => f.endsWith('.py'));
+    if (matched.length === 0)
+        return null;
+    const reason = matched.length === 1
+        ? `Found Python file ${matched[0]}`
+        : `Found ${matched.length} Python files`;
+    return {
+        lang: 'python',
+        confidence: 'high',
+        reason,
+        matchedFiles: matched.slice(0, 5),
+    };
+}
+function parsePythonProject(files, options) {
+    return parsePythonProjectInternal(files, options);
 }
 function parseWithFallback(files) {
     const modules = {};
@@ -55,6 +82,21 @@ function parseWithFallback(files) {
     }
     return { modules, fixNotes: [] };
 }
+exports.pythonParserPlugin = {
+    lang: 'python',
+    version: PYTHON_PLUGIN_VERSION,
+    aliases: ['py'],
+    parseProject: (files, options) => parsePythonProjectInternal(files, options),
+    detect: detectPythonProject,
+    capabilities: {
+        treeSitter: true,
+        fallback: true,
+        incremental: false,
+    },
+    treeSitterModule: 'tree-sitter-python',
+};
+exports.parserPlugin = exports.pythonParserPlugin;
+exports.default = exports.pythonParserPlugin;
 function parseWithTreeSitter(Parser, Python, files) {
     const modules = {};
     const parser = new Parser();
@@ -119,7 +161,6 @@ function parseWithTreeSitter(Parser, Python, files) {
             const body = [];
             const calls = [];
             function stmt(n) {
-                var _a, _b;
                 switch (n.type) {
                     case 'if_statement': {
                         const cond = n.childForFieldName('condition');
@@ -168,8 +209,8 @@ function parseWithTreeSitter(Parser, Python, files) {
                     }
                     case 'try_statement': {
                         const b = n.childForFieldName('body');
-                        const handlers = ((_a = n.namedChildren) === null || _a === void 0 ? void 0 : _a.filter((x) => x.type === 'except_clause')) || [];
-                        const fin = (_b = n.namedChildren) === null || _b === void 0 ? void 0 : _b.find((x) => x.type === 'finally_clause');
+                        const handlers = n.namedChildren?.filter((x) => x.type === 'except_clause') || [];
+                        const fin = n.namedChildren?.find((x) => x.type === 'finally_clause');
                         const body = [];
                         if (b)
                             for (const c of b.namedChildren || []) {

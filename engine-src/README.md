@@ -6,9 +6,9 @@ This repository implements the agreed architecture **without relying on `py2merm
 - **Analyzers** — **CFG** (control-flow graph) and **CallGraph**.
 - **Emitters (Mermaid)** — `flowchart`, `classDiagram`, `sequenceDiagram`, powered by the analyses.
 - **Fix Rules** — Mermaid compat fixes + `EnsureParticipants` for sequence diagrams; returns **notes**.
-- **Core Pipeline** — `runPipeline(files, {lang, diagram})` orchestrating parse → analyze → emit → fix.
+- **Core Pipeline** — `runPipeline(files, {lang, diagram})` orchestrating parse → analyze → emit → fix while surfacing raw Mermaid, fragments, and a stage trace for debugging/composition.
 - **Renderer (web)** — strict-mode Mermaid wrapper (for UI integration later).
-- **CLI** — `diagrammender emit ... --format mmd|html`
+- **CLI** — `diagrammender emit ... --format mmd|html [--debug] [--fragments-dir <dir>]`
 
 > Parser is structured to **switch to web-tree-sitter** for browser workers with minimal changes.
 
@@ -25,6 +25,12 @@ node packages/cli/dist/index.js emit -i samples/python-demo --lang python --diag
 # HTML preview
 node packages/cli/dist/index.js emit -i samples/python-demo --lang python --diagram flowchart --format html --out out/flow.html
 ```
+
+### Debugging & Composition
+
+- Use `--debug` with the CLI to print parser capabilities plus a stage-by-stage trace (`detect`, `parse`, `analyze`, `emit`, `fix`) with timing data.
+- Use `--fragments-dir <dir>` to export each Mermaid fragment and a `manifest.json` (including IDs, titles, source metadata, anchor nodes, and cross-fragment links) so you can recombine them via `composeMermaid(diagram, fragments, { links })`.
+- Programmatic callers can inspect `runPipeline(...).rawCode`, `.fragments`, `.links`, and `.trace` to troubleshoot incorrect diagrams or compose custom Mermaid outputs.
 
 ## Architecture
 

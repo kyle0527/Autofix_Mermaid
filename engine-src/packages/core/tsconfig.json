@@ -2,7 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "include": ["src"],
   "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "./dist"
+    "rootDir": "src",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@diagrammender/types": ["../types/dist/index"],
+      "@diagrammender/analyzers": ["../analyzers/dist/index"],
+      "@diagrammender/emitters-mermaid": ["../emitters/mermaid/dist/index"],
+      "@diagrammender/fix-rules-mermaid-compat": ["../fix-rules/mermaid-compat/dist/index"]
+    }
   }
 }

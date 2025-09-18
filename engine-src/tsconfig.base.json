@@ -1,12 +1,29 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "types": ["node"],
     "module": "commonjs",
     "declaration": true,
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@diagrammender/types": ["packages/types/dist/index"],
+      "@diagrammender/types/*": ["packages/types/dist/*"],
+      "@diagrammender/analyzers": ["packages/analyzers/dist/index"],
+      "@diagrammender/analyzers/*": ["packages/analyzers/dist/*"],
+      "@diagrammender/emitters-mermaid": ["packages/emitters/mermaid/dist/index"],
+      "@diagrammender/emitters-mermaid/*": ["packages/emitters/mermaid/dist/*"],
+      "@diagrammender/fix-rules-mermaid-compat": ["packages/fix-rules/mermaid-compat/dist/index"],
+      "@diagrammender/fix-rules-mermaid-compat/*": ["packages/fix-rules/mermaid-compat/dist/*"],
+      "@diagrammender/parsers-python": ["packages/parsers/python/dist/index"],
+      "@diagrammender/parsers-python/*": ["packages/parsers/python/dist/*"],
+      "@diagrammender/core": ["packages/core/dist/index"],
+      "@diagrammender/core/*": ["packages/core/dist/*"]
+    }
   }
 }

@@ -2,13 +2,9 @@
   "extends": "../../../tsconfig.base.json",
   "include": ["src"],
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "./dist",
     "lib": ["es2020"],
-    "baseUrl": "./src",
-    "paths": {
-      "@diagrammender/types": ["../../types/dist/src/index"]
-    },
     "moduleResolution": "node"
   }
 }

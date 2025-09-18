@@ -10,5 +10,8 @@
     "@diagrammender/emitters-mermaid": "0.3.0",
     "@diagrammender/fix-rules-mermaid-compat": "0.3.0"
   },
-  "scripts": { "build": "tsc -p tsconfig.json", "test": "echo no-tests" }
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test dist/__tests__"
+  }
 }

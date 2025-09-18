@@ -200,3 +200,140 @@ export interface CallGraph {
  * Supported diagram types
  */
 export type DiagramKind = 'flowchart' | 'classDiagram' | 'sequenceDiagram';
+
+/**
+ * Anchor points that other fragments or links can target when composing diagrams.
+ *
+ * - `entry` typically maps to the first logical node in the fragment (e.g., CFG start).
+ * - `exit` maps to the terminating node of the fragment.
+ * - `center` can be used for class/sequence diagrams to point at a stable element.
+ */
+export interface MermaidFragmentAnchors {
+  entry?: string;
+  exit?: string;
+  center?: string;
+}
+
+/**
+ * Describes a connection between two fragments so the composer can weave them together.
+ */
+export interface MermaidLink {
+  /** Diagram that the link belongs to. */
+  diagram: DiagramKind;
+  /** Fragment providing the source anchor for the link. */
+  fromFragment: string;
+  /** Fragment providing the destination anchor for the link. */
+  toFragment: string;
+  /** Optional anchor hint on the source fragment (`entry`, `exit`, `center`). */
+  fromAnchor?: keyof MermaidFragmentAnchors;
+  /** Optional anchor hint on the destination fragment (`entry`, `exit`, `center`). */
+  toAnchor?: keyof MermaidFragmentAnchors;
+  /** Optional label that will be rendered on the link (implementation specific). */
+  label?: string;
+  /** Optional style hint (solid | dashed | dotted). */
+  style?: 'solid' | 'dashed' | 'dotted';
+}
+
+/**
+ * Reusable chunk of Mermaid syntax that can be composed into larger diagrams.
+ */
+export interface MermaidFragment {
+  /** Stable identifier for the fragment. */
+  id: string;
+  /** Human readable label for UIs. */
+  title: string;
+  /** Diagram type this fragment belongs to. */
+  diagram: DiagramKind;
+  /** Mermaid syntax representing the fragment body (no header). */
+  code: string;
+  /** Optional source attribution for debugging. */
+  source?: {
+    module?: string;
+    function?: string;
+    class?: string;
+    path?: string;
+  };
+  /** Anchor metadata used for downstream composition utilities. */
+  anchors?: MermaidFragmentAnchors;
+}
+
+/**
+ * Supported parser runtime targets
+ */
+export type ParserRuntime = 'node' | 'browser';
+
+/**
+ * Optional parsing options that can be provided to parser plugins.
+ * They express high level intents (prefer tree-sitter, allow incremental parsing, etc.).
+ */
+export interface ParserParseOptions {
+  /**
+   * Hint for the parser to attempt tree-sitter when available. Defaults to true in Node.
+   */
+  preferTreeSitter?: boolean;
+  /**
+   * Whether the caller is requesting incremental parsing support (if the plugin implements it).
+   */
+  incremental?: boolean;
+  /**
+   * Runtime environment where the parser executes.
+   */
+  runtime?: ParserRuntime;
+}
+
+/**
+ * Confidence score returned by parser detection heuristics.
+ */
+export type ParserDetectConfidence = 'low' | 'medium' | 'high';
+
+/**
+ * Result of running detection logic on an arbitrary file set.
+ */
+export interface ParserDetectionResult {
+  /** Resolved language identifier. */
+  lang: string;
+  /** Confidence level of the detection. */
+  confidence: ParserDetectConfidence;
+  /** Short human readable reason. */
+  reason?: string;
+  /** Representative files used for detection. */
+  matchedFiles?: string[];
+}
+
+/**
+ * Capabilities advertised by the parser plugin.
+ */
+export interface ParserCapabilities {
+  /** Supports incremental parsing. */
+  incremental?: boolean;
+  /** Uses tree-sitter internally (Node build). */
+  treeSitter?: boolean;
+  /** Provides a fallback parser when tree-sitter is unavailable. */
+  fallback?: boolean;
+}
+
+/**
+ * Parser plugin contract used by the core pipeline.
+ */
+export interface ParserPlugin {
+  /** Primary language identifier (e.g. `python`). */
+  lang: string;
+  /** Plugin semantic version. */
+  version: string;
+  /** Optional alternative identifiers. */
+  aliases?: string[];
+  /** Execute parsing and return an IR project. */
+  parseProject(files: Record<string, string>, options?: ParserParseOptions): IRProject | Promise<IRProject>;
+  /**
+   * Optional detection hook that can auto-detect if a plugin applies to the provided files.
+   */
+  detect?(files: Record<string, string>): ParserDetectionResult | null;
+  /**
+   * Optional capabilities metadata describing the parser implementation.
+   */
+  capabilities?: ParserCapabilities;
+  /**
+   * Optional tree-sitter module name (Node build) for dynamic loading hints.
+   */
+  treeSitterModule?: string;
+}
