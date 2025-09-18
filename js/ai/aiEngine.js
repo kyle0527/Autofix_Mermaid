@@ -8,7 +8,8 @@
  */
 
 // Load registry and built-ins (classic worker compatible)
-try { importScripts('js/ai/providerRegistry.js'); } catch (e) {}
+// Use the legacy registry implementation for importScripts environments
+try { importScripts('js/ai/providerRegistry.legacy.js'); } catch (e) {}
 try { importScripts('js/ai/providers/none.js'); } catch (e) {}
 try { importScripts('js/ai/providers/ollama.js'); } catch (e) {}
 try { importScripts('js/ai/providers/webllm.js'); } catch (e) {}

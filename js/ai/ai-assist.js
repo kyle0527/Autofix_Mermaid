@@ -1,5 +1,9 @@
 // js/ai/ai-assist.js
-const AI_MODELS_BASE = 'js/models/';
+// NOTE: This file resides at js/ai/ai-assist.js. When executed inside a module worker (js/worker.mjs),
+// relative fetch paths are resolved against the module file URL (the importer / current module path).
+// Using 'js/models/' here produced an incorrect doubled path like: /js/js/models/....
+// Correct relative path from js/ai/ to js/models/ is '../models/'.
+const AI_MODELS_BASE = '../models/';
 
 async function loadJSON(path) {
   const res = await fetch(path);
