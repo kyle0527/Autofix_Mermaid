@@ -1,10 +1,12 @@
-# 🎯 AutoFix Mermaid V3.5
+# 🎯 AutoFix Mermaid v3.7
 
 **智能 Python 程式碼轉 Mermaid 圖表工具**
 
-![Version](https://img.shields.io/badge/version-3.4-blue.svg)
-![Updated](https://img.shields.io/badge/updated-2025.09.11-green.svg)
+![Version](https://img.shields.io/badge/version-3.7-blue.svg)
+![Updated](https://img.shields.io/badge/updated-2025.09.16-green.svg)
 ![Tree-sitter](https://img.shields.io/badge/tree--sitter-enabled-orange.svg)
+
+> 延伸詳細功能與里程碑請見： [FEATURES_AND_ROADMAP.md](./FEATURES_AND_ROADMAP.md)
 
 ---
 
@@ -46,6 +48,119 @@ python -m http.server 8080
 - **即時預覽**：輸入時自動渲染
 - **智能按鈕**：成功後啟用匯出功能
 - **格式選擇**：一鍵切換 SVG/PNG 輸出
+
+---
+
+---
+
+## 🧭 商用願景與目標 (Business Vision)
+
+本專案正向「可商用的全程 UI 自動化程式架構→Mermaid 圖表平台」演進，核心價值：
+1. 多語言程式碼靜態/半動態分析
+2. 自動生成並修正符合規範的 Mermaid 語法
+3. 視覺化預覽 + 互動調整 + 圖檔匯出
+4. 可插拔規則 (Rule Pack) 與提示模板 (Prompt Pack) 擴充
+5. 企業級使用情境：團隊共用、知識沉澱、文件即程式架構真實狀態
+
+---
+
+## 🧬 核心能力對應需求
+
+| 使用者需求 | 對應能力 | 現況 | 規劃 |
+|-------------|----------|------|------|
+| 1. 分析不同程式語言 | Tree-sitter 多語法 / 語言適配層 | Python 部分 | 擴充到 JS/TS、Java、Go、C#, 以插件形式載入 grammar |
+| 2. 解析程式架構 | AST → 中介模型 (Intermediate Representation, IR) | 初步類別/函式抽取 | 引入關聯 (呼叫圖 / 依賴圖) 聚合與分層視圖 |
+| 3. 產出與修正 Mermaid | Autofix 規則 + 正則/AST 修復 | Flowchart/Class 基礎 | 規範檢查 (lint) + 自動格式化 + 視覺差異提示 |
+| 4. 排列組合/渲染/匯出 | Mermaid.js + 自訂佈局策略 | 基礎渲染 + PNG/SVG | 多視圖 (模組依賴 / 呼叫圖 / 時序) + PDF + 批次匯出 |
+| 5. 商用 + 全 UI 操作 | Web 前端 + Worker | 單頁工具 | 多專案管理 / 角色權限 / 報表匯出 |
+
+---
+
+## 🏗️ 架構解析流程 (高層 Pipeline)
+
+```mermaid
+flowchart LR
+    A[輸入來源\n1. 上傳資料夾\n2. 貼上程式碼\n3. Mermaid 語法] --> B[語言偵測 / 模式選擇]
+    B --> C[語法解析層\nTree-sitter / Fallback Parser]
+    C --> D[AST 正規化\n→ IR 統一抽象模型]
+    D --> E[規則引擎\nRulePack + PromptPack]
+    E --> F[Mermaid 生成器]
+    F --> G[自動修正 / Lint / 格式化]
+    G --> H[即時預覽渲染]
+    H --> I{使用者操作?}
+    I -->|調整樣式/篩選| F
+    I -->|匯出| J[SVG / PNG / (未來) PDF / ZIP]
+```
+
+---
+
+## 🧩 Mermaid 語法生成策略
+
+1. AST 映射：以語言中立 IR（類別、介面、函式、模組）映射到 Mermaid 類型 (classDiagram / flowchart / sequenceDiagram / erDiagram …)。
+2. 規則層：
+     - Lint：檢查標頭、方向、命名格式
+     - Autofix：缺失宣告補齊、過時語法升級 (graph → flowchart) 、節點標籤正規化
+3. 格式化：行寬控制、節點排序（字母序 / 依依賴拓樸 / 分群）。
+4. 未來：自訂佈局策略（分層 / 分群 / 隱藏低權重節點）。
+
+---
+
+## 🛠️ 排列組合 / 互動調整
+未來提供 UI 操作介面：
+- 節點顯示/隱藏 (Filter)
+- 聚合 (Collapse Modules / Packages)
+- Tag / Domain 分色
+- 自訂布局：LR / TB 以及自動層級分群
+- 多個 Diagram 批次產出（例：Class + Call + Sequence）
+
+---
+
+## 📤 匯出與整合計畫
+| 格式 | 現況 | 規劃 | 技術要點 |
+|------|------|------|----------|
+| SVG | ✅ | 強化樣式內嵌 | Mermaid 原生 + Cleanup + metadata |
+| PNG | ✅ | 支援透明/背景設定 | Canvas drawImage + toBlob |
+| PDF | 🔜 | 單圖 / 多頁合併 | pdf-lib / jsPDF |
+| ZIP | 🔜 | 整批打包 | JSZip |
+| JSON IR | 🔜 | 開放 API | IR schema export |
+
+---
+
+## 🔐 商用延伸 (Enterprise Roadmap)
+| 項目 | 階段 | 描述 |
+|------|------|------|
+| 使用者 / 角色 | Phase 2 | Viewer / Editor / Admin 權限 |
+| 專案工作區 | Phase 2 | 多專案隔離、標籤、版本快照 |
+| 差異比對 | Phase 3 | 兩個 Git commit 產生架構 Diff Mermaid |
+| 自動週報 | Phase 3 | 排程重新解析 + 生成更新報表 |
+| API / SaaS | Phase 4 | REST / GraphQL 提供雲端解析與圖表生成 |
+| SSO / RBAC | Phase 4 | 企業整合 (OIDC / SAML) |
+
+---
+
+## 🧪 測試策略 (未來擴充)
+| 類型 | 範例 | 工具 |
+|------|------|------|
+| 單元 | 修正器、語法偵測 | node:test / vitest |
+| 快照 | Mermaid 文字輸出 | snapshot files |
+| 互動 | UI 產出 / 匯出按鈕 | Playwright |
+| 整合 | 上傳 → 解析 → 生成 → 匯出 | Playwright + Mock FS |
+| 效能 | 大型程式碼庫解析 | Benchmark runner |
+
+---
+
+## 🗺️ 短中長期 Roadmap 摘要
+| 時程 | 重點 | 內容 |
+|------|------|------|
+| 短期 (0-1月) | 多語言起步 | 加 JS/TS Grammar、IR 雛形、Flowchart/Class 強化 |
+| 中期 (1-3月) | 擴充架構 | 呼叫圖、依賴圖、Batch 匯出、CLI 工具 |
+| 中長期 (3-6月) | 協作 & 商用 | 專案管理、差異分析、雲端 API、權限 |
+| 長期 (6月+) | 平台化 | SaaS、多租戶、插件市集 |
+
+---
+
+## 🧾 授權 & 商用聲明
+基礎核心以 MIT 釋出；未來企業附加模組（RBAC、多專案同步、雲端 API）可能採雙授權模式。若有商用需求可先行提出 Issue 洽談。
 
 ---
 

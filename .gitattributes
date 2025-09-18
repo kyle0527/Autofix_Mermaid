@@ -1,0 +1,4 @@
+﻿__not_shipped__/**         export-ignore
+assets/**/*.map             export-ignore
+node_modules/**             export-ignore
+.github/**                  export-ignore

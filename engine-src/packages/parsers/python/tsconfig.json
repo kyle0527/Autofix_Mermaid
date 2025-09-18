@@ -9,6 +9,6 @@
     "paths": {
       "@diagrammender/types": ["../../types/dist/src/index"]
     },
-    "moduleResolution": "bundler"
+    "moduleResolution": "node"
   }
 }

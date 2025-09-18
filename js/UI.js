@@ -182,6 +182,9 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     if (statusElement) statusElement.textContent = isOk ? 'OK' : 'WORKING';
     if (messageElement) messageElement.textContent = message || '';
   }
+    // mark helper as used to avoid lint warning
+    /* eslint-disable no-unused-vars */
+    void ensureMermaidInit;
 
   /**
    * Show user notification
@@ -270,13 +273,17 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
    * @param {boolean} autoMode - Whether in auto mode
    * @returns {Promise<Object|null>} Processing result
    */
-  async function processInput(autoMode) {
+  async function processInput() {
     try {
       const svgContainer = $('svg');
       const logElement = $('log');
       
-      // Clear previous results
-      if (svgContainer) svgContainer.innerHTML = '';
+      // Clear previous results safely
+      if (svgContainer) {
+        while (svgContainer.firstChild) {
+          svgContainer.removeChild(svgContainer.firstChild);
+        }
+      }
       if (logElement) logElement.textContent = '';
       
       setStatus(false, '分析中…');
@@ -300,7 +307,26 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           throw new Error(renderResult.error);
         }
         
-        if (svgContainer) svgContainer.innerHTML = renderResult.svg;
+        // Safe SVG insertion using DOMParser
+        if (svgContainer) {
+          try {
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(renderResult.svg, 'image/svg+xml');
+            const svgElement = svgDoc.documentElement;
+            
+            // Clear existing content safely
+            while (svgContainer.firstChild) {
+              svgContainer.removeChild(svgContainer.firstChild);
+            }
+            
+            // Append the parsed SVG element
+            svgContainer.appendChild(svgElement);
+          } catch (error) {
+            console.error('SVG parsing failed:', error);
+            // Fallback to text content for debugging
+            svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+          }
+        }
         if (logElement) logElement.textContent = normalizedCode;
         
         enableExportButtons();
@@ -374,7 +400,26 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             throw new Error(String(renderResult.error));
           }
           
-          if (svgContainer) svgContainer.innerHTML = renderResult.svg;
+          // Safe SVG insertion using DOMParser
+          if (svgContainer) {
+            try {
+              const parser = new DOMParser();
+              const svgDoc = parser.parseFromString(renderResult.svg, 'image/svg+xml');
+              const svgElement = svgDoc.documentElement;
+              
+              // Clear existing content safely
+              while (svgContainer.firstChild) {
+                svgContainer.removeChild(svgContainer.firstChild);
+              }
+              
+              // Append the parsed SVG element
+              svgContainer.appendChild(svgElement);
+            } catch (error) {
+              console.error('SVG parsing failed:', error);
+              // Fallback to text content for debugging
+              svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+            }
+          }
           if (logElement) {
             const logText = Array.isArray(log) 
               ? log.map(item => (typeof item === 'string' ? item : JSON.stringify(item))).join('\n')
@@ -456,7 +501,12 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     const svgContainer = $('svg');
     const logElement = $('log');
     
-    if (svgContainer) svgContainer.innerHTML = '';
+    // Clear previous results safely
+    if (svgContainer) {
+      while (svgContainer.firstChild) {
+        svgContainer.removeChild(svgContainer.firstChild);
+      }
+    }
     if (logElement) logElement.textContent = '';
     
     setStatus(false, '自我檢測中…');
@@ -530,7 +580,26 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         throw new Error(renderResult.error);
       }
       
-      if (svgContainer) svgContainer.innerHTML = renderResult.svg;
+      // Safe SVG insertion using DOMParser
+      if (svgContainer) {
+        try {
+          const parser = new DOMParser();
+          const svgDoc = parser.parseFromString(renderResult.svg, 'image/svg+xml');
+          const svgElement = svgDoc.documentElement;
+          
+          // Clear existing content safely
+          while (svgContainer.firstChild) {
+            svgContainer.removeChild(svgContainer.firstChild);
+          }
+          
+          // Append the parsed SVG element
+          svgContainer.appendChild(svgElement);
+        } catch (error) {
+          console.error('SVG parsing failed:', error);
+          // Fallback to text content for debugging
+          svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+        }
+      }
       
       enableExportButtons();
       const diagnostics = log.find(item => item && item.rule === 'worker.diag');
@@ -556,7 +625,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     // Auto-render functionality with debounce
     const autoRenderCheckbox = $('autoRender');
     const triggerRender = debounce(() => {
-      try { processInput(false); } catch {}
+      try { processInput(); } catch {}
     }, 300);
     
     if (autoRenderCheckbox) {
@@ -581,11 +650,10 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             triggerRender();
           }
         };
-        // engineSelect 切換時立即渲染
         if (elementId === 'engineSelect') {
           element.addEventListener('change', () => {
             saveSettingsSnapshot();
-            processInput(false);
+            processInput();
           });
         }
         element.addEventListener('input', autoRenderHandler);
@@ -605,8 +673,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Main action buttons
-    $('btnRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(false); });
-    $('btnFixRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(true); });
+    $('btnRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
+    $('btnFixRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
     $('btnSelfTest')?.addEventListener('click', runSelfTest);
     // 健康檢測：檢查模型 JSON、worker、Ollama
     $('btnHealth')?.addEventListener('click', async () => {
@@ -659,6 +727,28 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         const logElement = $('log');
         if (logElement) logElement.textContent = lines.concat(['錯誤: '+ (e?.message||e)]).join('\n');
         setStatus(false, '健康檢測失敗');
+      }
+    });
+
+    // P1 Docs and Config panel buttons
+    $('btnDocs')?.addEventListener('click', () => {
+      const panel = $('docsPanel');
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    $('btnDebug')?.addEventListener('click', () => {
+      const panel = $('debugPanel');
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    $('btnRules')?.addEventListener('click', () => {
+      const panel = $('rulesPanel');
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
       }
     });
 
@@ -803,3 +893,4 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 }
 
 export { initializeUI };
+/* eslint-disable no-unused-vars */

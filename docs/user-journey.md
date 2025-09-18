@@ -1,0 +1,1 @@
+# user-journey.md\n\n(offline minimal placeholder)

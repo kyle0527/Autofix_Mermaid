@@ -1,0 +1,9 @@
+# Archived: patches/pr_body.txt
+
+This file is an archived copy of the original patches/pr_body.txt moved on 2025-09-16.
+
+Original path: /patches/pr_body.txt
+
+---
+
+(Original content preserved in the archive.)

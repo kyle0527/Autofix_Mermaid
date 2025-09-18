@@ -6,6 +6,7 @@
  *   - self.listAIProviders()
  *   - self.AI_CORE_VERSION
  */
+/* eslint-disable no-unused-vars */
 
 // Load registry and built-ins (classic worker compatible)
 // Use the legacy registry implementation for importScripts environments

@@ -1,31 +1,37 @@
 /* js/engine/common.js */
-self.EngineCommon = {
-  guessDiagramType(code){
-    const s = (code||'').toLowerCase();
-    if (/^\s*sequenceDiagram/i.test(code)) return 'sequenceDiagram';
-    if (/^\s*classDiagram/i.test(code)) return 'classDiagram';
-    if (/^\s*stateDiagram/i.test(code)) return 'stateDiagram';
-    if (/^\s*erDiagram/i.test(code)) return 'erDiagram';
-    if (/^\s*pie\b/i.test(code)) return 'pie';
-    if (/^\s*gantt\b/i.test(code)) return 'gantt';
-    if (/^\s*timeline\b/i.test(code)) return 'timeline';
-    if (/^\s*block(\-| )?beta/i.test(code)) return 'block';
-    if (/^\s*flowchart\b|\bgraph\s+(TB|TD|LR|RL|BT)\b/i.test(code)) return 'flowchart';
-    return 'unknown';
-  },
-  applyRegexAll(code, re, repl){
-    const R = new RegExp(re.source, re.flags.replace('g','')+'g');
-    return code.replace(R, repl);
-  },
-  loadJsonSync(path){
-    // In Worker, we can fetch via importScripts side channel:
-    try {
-      // This hack uses importScripts to get text, then eval JSON
-      const txt = '';
-      try {
-        importScripts(path + '?_=' + Date.now()); // cache-bust
-        // If the file was a JS, it executed; for JSON, this won't work.
-      } catch(e) {}
-    } catch(e) {}
+// 可擴充的圖表偵測規則 (順序代表優先級)
+const _diagramDetectors = [
+  { type: 'sequenceDiagram', re: /^\s*sequenceDiagram/i },
+  { type: 'classDiagram', re: /^\s*classDiagram/i },
+  { type: 'stateDiagram', re: /^\s*stateDiagram/i },
+  { type: 'erDiagram', re: /^\s*erDiagram/i },
+  { type: 'pie', re: /^\s*pie\b/i },
+  { type: 'gantt', re: /^\s*gantt\b/i },
+  { type: 'timeline', re: /^\s*timeline\b/i },
+  { type: 'block', re: /^\s*block(?:-| )?beta/i },
+  // 修正原本 /flowchart|graph/ 的優先序問題，改成括號包裹整體 group
+  { type: 'flowchart', re: /^(?:\s*flowchart\b|\s*graph\s+(TB|TD|LR|RL|BT)\b)/i }
+];
+
+function guessDiagramType(code = ''){
+  const s = code.trimStart();
+  for (const d of _diagramDetectors){
+    if (d.re.test(s)) return d.type;
   }
+  return 'unknown';
+}
+
+function applyRegexAll(code, re, repl){
+  const R = new RegExp(re.source, re.flags.replace('g','')+'g');
+  return code.replace(R, repl);
+}
+
+// 暴露 API（self 供瀏覽器環境）
+self.EngineCommon = {
+  guessDiagramType,
+  applyRegexAll,
+  // 測試用途：可觀察已註冊偵測器
+  _diagramDetectors
 };
+
+export { guessDiagramType }; // 供 ESM / 單元測試導入

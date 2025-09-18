@@ -230,3 +230,9 @@ npm run build
 **維護者：** kyle0527  
 **GitHub：** https://github.com/kyle0527/Autofix_Mermaid  
 **更新日期：** 2025年9月11日
+
+---
+
+(Archived) 此檔案已移至 doc/archive/README_V3.4_TECHNICAL.md（備份日期：2025-09-16）。
+
+請開啟 doc/archive/README_V3.4_TECHNICAL.md 以檢視完整內容。

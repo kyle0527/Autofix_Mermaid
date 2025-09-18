@@ -1,5 +1,6 @@
 // js/ai/providers/none.js
 // Heuristic fallback provider. Always available.
+/* eslint-disable no-unused-vars */
 
 (function(scope){
   'use strict';

@@ -1,0 +1,5 @@
+(Archived copy) Original file: patches/pr_body.txt
+Moved on: 2025-09-16
+Original path: /patches/pr_body.txt
+
+Archived PR body text into doc/archives/misc.

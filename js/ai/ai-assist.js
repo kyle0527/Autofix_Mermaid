@@ -78,7 +78,8 @@ function matchRules(rulesPack, diagramType, code, configSnapshot) {
 // 套用簡單的文字補丁
 function applyTextPatches(code, rule) {
   const actions = rule.fix?.actions || [];
-  let patched = code, changes = [];
+  let patched = code;
+  const changes = [];
   for (const act of actions) {
     if (act.type === 'text_patch' && act.pattern) {
       const before = patched;
