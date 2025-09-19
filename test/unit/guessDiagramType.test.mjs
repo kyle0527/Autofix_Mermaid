@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { guessDiagramType } from '../../js/engine/common.js';
+import { guessDiagramType } from '../../js/engine/_diagramDetectors.js';
 
 const cases = [
   { input: 'sequenceDiagram\nA->>B: hi', expect: 'sequenceDiagram' },

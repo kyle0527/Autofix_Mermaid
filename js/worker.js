@@ -64,8 +64,61 @@ async function renderMermaidInWorker(code, cfg) {
   return await renderMermaid(code, cfg);
 }
 
+// 嘗試載入輕量複雜度估算器（非必要，失敗可略）
+try {
+  importScripts('./complexity-lite.js');
+} catch (e) {
+  // 在某些情境（跨源或未部署檔案）可能失敗，安全忽略
+}
+// expects global function estimateFlowchartComplexity（由 complexity-lite.js 以全域方式掛載）
+
+// --- Minimal in-worker rule implementations (mirrors src/core/rules subset) ---
+function rule_legacy_to_flowchart(code){
+  return code.replace(/^\s*graph\b/gi,'flowchart');
+}
+function rule_flow_direction(code){
+  if(!/^flowchart/m.test(code)) return code;
+  if(/^flowchart\s+(LR|RL|TB|BT|TD)/m.test(code)) return code;
+  return code.replace(/^(flowchart)(?!\s+(LR|RL|TB|BT|TD))/m, '$1 LR');
+}
+function rule_id_normalize(code){
+  const lines = code.split(/\n/).map(line=>{
+    const m = line.match(/^\s*([A-Za-z0-9_\u0080-\uFFFF]+)(?=[\[(]|-->|===|:::|\s)/);
+    if(!m) return line;
+    const rawId = m[1];
+    const norm = rawId.replace(/[^A-Za-z0-9_]/g,'_');
+    if(norm===rawId) return line;
+    return line.replace(rawId,norm);
+  });
+  return lines.join('\n');
+}
+function rule_label_truncate(code){
+  // naive: truncate labels inside [ ... ] or ( ... ) if > 60 chars
+  return code.replace(/(\[[^\]]+\]|\([^\)]+\))/g, seg => {
+    const raw = seg.slice(1,-1);
+    if(raw.length <= 60) return seg;
+    return seg[0] + raw.slice(0,57) + '…' + seg[seg.length-1];
+  });
+}
+const RULE_IMPL = {
+  'legacy-syntax-upgrade': rule_legacy_to_flowchart,
+  'flow-direction': rule_flow_direction,
+  'id-normalize': rule_id_normalize,
+  'label-truncate': rule_label_truncate
+};
+function applySelectedRules(code, enabled){
+  const applied = [];
+  (enabled||[]).forEach(id=>{
+    const fn = RULE_IMPL[id];
+    if(!fn) return;
+    const next = fn(code);
+    if(next!==code){ applied.push(id); code = next; }
+  });
+  return { code, applied };
+}
+
 self.onmessage = async (event) => {
-  const { type, payload } = event.data || {};
+  const { type, payload, files, uiConfig, mode, options } = event.data || {};
   if (type === 'runIssueCases') {
     const { testDocs, opts } = payload; // testDocs 是多個 JSON 題檔已讀進來的物件陣列
     const results = [];
@@ -88,7 +141,42 @@ self.onmessage = async (event) => {
     return;
   }
 
-  // ...你現有的其他訊息類型（分析/渲染等）保持原狀...
-  // 例如原本的 rules/ai 分析流程可保留
+  // Default path: handle classic rules mode basic transformation to mermaid (placeholder)
+  if (files) {
+    // naive: pick first file content
+    const firstKey = Object.keys(files)[0];
+    let code = files[firstKey];
+    // Apply rules if provided
+    let appliedRules = [];
+    if (uiConfig && Array.isArray(uiConfig.enabledRules) && uiConfig.enabledRules.length){
+      const r = applySelectedRules(code, uiConfig.enabledRules);
+      code = r.code;
+      appliedRules = r.applied;
+    }
+    // attempt complexity (flowchart only heuristic)
+    let complexitySummary = null;
+    try {
+      if (typeof estimateFlowchartComplexity === 'function') {
+        complexitySummary = estimateFlowchartComplexity(code);
+      }
+      if (uiConfig && uiConfig.limits) {
+        const { maxNodes, maxEdges, maxDepth } = uiConfig.limits;
+        if (complexitySummary) {
+          complexitySummary.exceed = (complexitySummary.nodes > maxNodes) || (complexitySummary.edges > maxEdges) || (complexitySummary.depth > maxDepth);
+          if (complexitySummary.exceed) {
+            const reasons = [];
+              if (complexitySummary.nodes > maxNodes) reasons.push('nodes>'+maxNodes);
+              if (complexitySummary.edges > maxEdges) reasons.push('edges>'+maxEdges);
+              if (complexitySummary.depth > maxDepth) reasons.push('depth>'+maxDepth);
+            complexitySummary.reasons = reasons;
+          }
+        }
+      }
+    } catch {}
+    const log = [{ rule:'worker.info', msg:'processed basic' }];
+    if(appliedRules.length) log.push({ rule:'worker.rules', msg:'applied '+appliedRules.join(',') });
+    self.postMessage({ code, errors: [], log, dtype: 'flowchart', complexitySummary, appliedRules });
+    return;
+  }
 };
 

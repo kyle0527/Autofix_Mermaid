@@ -2,13 +2,16 @@
   "name": "diagrammender-ts-goal",
   "private": true,
   "version": "0.3.0",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "npm -ws run build",
     "test": "npm -ws run test",
     "start:cli": "node packages/cli/dist/index.js"
   },
   "devDependencies": {
+    "@types/node": "^24.5.2",
     "typescript": "^5.4.5"
   }
 }

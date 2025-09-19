@@ -1,0 +1,220 @@
+import { applyRules, rule_flow_direction, rule_legacy_to_flowchart, rule_id_normalize } from '../src/core/rules';
+
+const diagrams: string[] = [
+// 7 (與 2 類似)
+`flowchart TD
+    n0([" Start: main() / Start: main() "])
+    n1([" End / 結束 "])
+    n2["ap = argparse.ArgumentParser() / ap = argparse.ArgumentParser()"]
+    n3["ap.add_argument('--in', dest='infile', required=False, help='path to apis.json') / ap.add_argument('--in', dest='infile', required=False, help='path to apis.json')"]
+    n4["ap.add_argument('--checks', default='idor,oauth') / ap.add_argument('--checks', default='idor,oauth')"]
+    n5["ap.add_argument('--out', dest='outfile', default='out/findings.jsonl') / ap.add_argument('--out', dest='outfile', default='out/findings.jsonl')"]
+    n6["args = ap.parse_args() / args = ap.parse_args()"]
+    n7["checks = [c.strip() for c in args.checks.split(',') if c.strip()] / checks = [c.strip() for c in args.checks.split(',') if c.strip()]"]
+    n8["classes = [REGISTRY[c] for c in checks if c in REGISTRY] / classes = [REGISTRY[c] for c in checks if c in REGISTRY]"]
+    n9["apis = None / apis = None"]
+    n10{"if args.infile / 如果 args.infile"}
+    n11["try / 嘗試"]
+    n12["With / With"]
+    n13["except Exception / 例外"]
+    n14["apis = None / apis = None"]
+    n15["after try / try 後"]
+    n16["merge / 合併"]
+    n17["out_lines: List[str] = [] / out_lines: List[str] = []"]
+    n18{"for Cls in classes / for Cls in classes"}
+    n19["inst = Cls() / inst = Cls()"]
+    n20{"for finding in inst.run(apis=apis) / for finding in inst.run(apis=apis)"}
+    n21["out_lines.append(finding.to_json()) / out_lines.append(finding.to_json())"]
+    n22["after for / for 後"]
+    n23["after for / for 後"]
+    n24["Import / 導入"]
+    n25["os.makedirs(os.path.dirname(args.outfile), exist_ok=True) / os.makedirs(os.path.dirname(args.outfile), exist_ok=True)"]
+    n26["With / With"]
+    n27["print(f'wrote {len(out_lines)} findings to {args.outfile}') / print(f'wrote {len(out_lines)} findings to {args.outfile}')"]
+    n0 --> n2
+    n2 --> n3
+    n3 --> n4
+    n4 --> n5
+    n5 --> n6
+    n6 --> n7
+    n7 --> n8
+    n8 --> n9
+    n9 --> n10
+    n10 -->|True| n11
+    n10 -->|False| n16
+    n11 --> n12
+    n11 --> n13
+    n12 --> n15
+    n13 --> n14
+    n14 --> n15
+    n15 --> n16
+    n16 --> n17
+    n17 --> n18
+    n18 -->|True| n19
+    n18 -->|False| n23
+    n19 --> n20
+    n20 -->|True| n21
+    n20 -->|False| n22
+    n21 --> n20
+    n22 --> n18
+    n23 --> n24
+    n24 --> n25
+    n25 --> n26
+    n26 --> n27
+    n27 --> n1`,
+// 8
+`flowchart TD
+    n0(Start)
+    n1(End / 結束)
+    n2(Create ArgumentParser)
+    n3(Add metrics argument)
+    n4(Parse arguments)
+    n5(Load metrics from JSON file)
+    n6(Print score)
+    n0 --> n2
+    n2 --> n3
+    n3 --> n4
+    n4 --> n5
+    n5 --> n6
+    n6 --> n1`,
+// 9
+`flowchart TD
+    n0([Start: nuclei.py module / Start: nuclei.py module])
+    n1([End / 結束])
+    n2["ImportFrom / 導入自"]
+    n3["Import / 導入"]
+    n4["ImportFrom / 導入自"]
+    n5["def run_nuclei(...) / 定義"]
+    n0 --> n2
+    n2 --> n3
+    n3 --> n4
+    n4 --> n5
+    n5 --> n1`,
+// 10
+`flowchart TD
+    n0(["Start: run_nuclei(targets_file, templates_dir)"])
+    n1(["End"])
+    n2["cmd = ['nuclei', '-l', targets_file, '-jsonl']"]
+    n3{"if templates_dir"}
+    n4["cmd += ['-t', templates_dir]"]
+    n5["merge"]
+    n6["try"]
+    n7["p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)"]
+    n8["except FileNotFoundError"]
+    n9["return []"]
+    n10["after try"]
+    n11["out: List[Dict] = []"]
+    n12["decoder = codecs.getincrementaldecoder('utf-8')('replace')"]
+    n13{"for raw in p.stdout or []"}
+    n14["line = decoder.decode(raw).strip()"]
+    n15{"if not line"}
+    n16["continue"]
+    n17["merge"]
+    n18["try"]
+    n19["j = json.loads(line)"]
+    n20["out.append({'target': j.get('host') or j.get('matched-at'), 'vector': {'protocol': 'http', 'location': 'nuclei', 'param': None}, 'payload': j.get('info', {}).get('name'), 'tool': 'nuclei', 'evidence': {'matcher': j.get('matcher-name'), 'template': j.get('template-id')}, 'severity': j.get('info', {}).get('severity') or 'medium', 'url': j.get('matched-at')})"]
+    n21["except Exception"]
+    n22["continue"]
+    n23["after try"]
+    n24["after for"]
+    n25["return out"]
+    n0 --> n2
+    n2 --> n3
+    n3 -->|True| n4
+    n3 -->|False| n5
+    n4 --> n5
+    n5 --> n6
+    n6 --> n7
+    n6 --> n8
+    n7 --> n10
+    n8 --> n9
+    n9 --> n1
+    n9 --> n10
+    n10 --> n11
+    n11 --> n12
+    n12 --> n13
+    n13 -->|True| n14
+    n13 -->|False| n24
+    n14 --> n15
+    n15 -->|True| n16
+    n15 -->|False| n17
+    n16 --> n17
+    n17 --> n18
+    n18 --> n19
+    n18 --> n21
+    n19 --> n20
+    n20 --> n23
+    n21 --> n22
+    n22 --> n23
+    n23 --> n13
+    n24 --> n25
+    n25 --> n1`,
+// 11
+`flowchart TD
+    n0(["Start: openapi_seq.py (module)"])
+    n1(["End / 結束"])
+    n2["ImportFrom / 導入自"]
+    n3["Import / 導入"]
+    n4["ImportFrom / 導入自"]
+    n5["ImportFrom / 導入自"]
+    n6["try / 嘗試"]
+    n7["Import / 導入"]
+    n8["except Exception / 例外"]
+    n9["yaml = None / yaml = None"]
+    n10["after try / try 後"]
+    n11["def _extract_paths(...) / 定義"]
+    n12["def _extract_paths_yaml(...) / 定義"]
+    n13["def process_openapi(...) / 定義"]
+    n14["def execute_sequences(...) / 定義"]
+    n0 --> n2
+    n2 --> n3
+    n3 --> n4
+    n4 --> n5
+    n5 --> n6
+    n6 --> n7
+    n6 --> n8
+    n7 --> n10
+    n8 --> n9
+    n9 --> n10
+    n10 --> n11
+    n11 --> n12
+    n12 --> n13
+    n13 --> n14
+    n14 --> n1`,
+// 12
+`flowchart TD
+    n0(["Start: _extract_paths(text)"])
+    n1(["End / 結束"])
+    n2["paths: List[str] = []"]
+    n3{"for line in text.splitlines()"}
+    n4["stripped = line.strip()"]
+    n5{"if stripped.startswith('/') and stripped.endswith(':')"}
+    n6["paths.append(stripped[:-1])"]
+    n7["merge / 合併"]
+    n8["after for / for 後"]
+    n9["return paths / 返回 paths"]
+    n0 --> n2
+    n2 --> n3
+    n3 -->|True| n4
+    n3 -->|False| n8
+    n4 --> n5
+    n5 -->|True| n6
+    n5 -->|False| n7
+    n6 --> n7
+    n7 --> n3
+    n8 --> n9
+    n9 --> n1`
+];
+
+describe('Example diagrams set2 snapshots', () => {
+  diagrams.forEach((d, i) => {
+    test(`set2 diagram #${i+7}`, () => {
+      const { ctx } = applyRules({ mmd: d, diag: 'flowchart' }, [
+        rule_legacy_to_flowchart,
+        rule_flow_direction,
+        rule_id_normalize
+      ]);
+      expect(ctx.mmd).toMatchSnapshot();
+    });
+  });
+});

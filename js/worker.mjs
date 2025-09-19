@@ -1,147 +1,106 @@
 // js/worker.mjs
-// Ensure providers are registered in ESM worker environment
-import { registerAll as registerAIPublishers } from './ai/compat.mjs';
 import { aiAssist } from './ai/ai-assist.js';
-import { runPipeline, runPipelineIR } from './engine-wrapper.mjs';
-<<<<<<< HEAD
-import { aiAnalyze } from './ai/aiEngine-esm.mjs';
-=======
+import { runPipeline as runPipelineWrapper, runPipelineIR as runPipelineIRWrapper } from './engine-wrapper.mjs';
+// Load simple text rules; it installs self.applyRules lazily
+import './rules/applyRules.js';
 // mark imported but optional engine helpers as used to avoid lint warnings
-void runPipelineIR;
->>>>>>> origin/main
+void runPipelineIRWrapper;
 
 self.onmessage = async (event) => {
-  // Ensure providers are registered (ESM providers)
-  try {
-    const ok = await registerAIPublishers(self).catch(()=>false);
-    if (!ok) {
-      // If providers couldn't be registered via ESM, log and rely on legacy aiEngine (if available)
-      console.warn('ESM providers registration failed; ensure legacy providers are available via aiEngine.js');
-    }
-  } catch (e) {
-    console.warn('Provider registration error:', e);
-  }
-
-  const { files = {}, uiOptions = {} } = event.data || {};
-  const code = files?.mermaid ?? 'flowchart TD\nA-->B';
-  const dtype = guessDiagram(code) || 'flowchart';
+  const payload = event.data || {};
+  const files = payload.files || {};
+  // Accept both uiOptions and options (legacy)
+  const uiOptions = payload.uiOptions || payload.options || {};
+  const providedMermaid = files?.mermaid;
+  const initialCode = providedMermaid ?? 'flowchart TD\nA-->B';
+  const requestedDiagram = uiOptions?.diagram || guessDiagram(initialCode) || 'flowchart';
   const configSnapshot = uiOptions?.mermaidConfig || {};
 
-  // If UI requested engine execution, prefer engine-wrapper path (calls global DiagramMenderCore via wrapper)
-  try {
-    const useEngine = !!(uiOptions && (uiOptions.useEngine || uiOptions.mode === 'engine'));
-    if (useEngine) {
+  // Helper: apply simple rules if available
+  async function applyRulesIfAny(text, dtype) {
+    try {
+      if (typeof self.applyRules === 'function') {
+        const { code, log = [], errors = [] } = await self.applyRules(String(text || ''), { dtype });
+        const appliedRules = Array.isArray(log) ? log.map(x => x?.rule).filter(Boolean) : [];
+        return { code, log, errors, appliedRules };
+      }
+    } catch (e) {
+      // ignore and return original
+    }
+    return { code: String(text || ''), log: [], errors: [], appliedRules: [] };
+  }
+
+  // Determine if Python sources are present
+  const hasPython = Object.keys(files || {}).some(k => /\.py$/i.test(k));
+
+  // 1) If Python present, prefer ESM engine pipeline
+  if (hasPython) {
+    try {
+      const esm = await import('./engine-esm.js');
+      const ir = esm.parsePythonProject(files);
+      const result = await esm.runPipelineIR(ir, { diagram: requestedDiagram });
+      const rulesRes = await applyRulesIfAny(result.code, result.dtype || requestedDiagram);
+      self.postMessage({
+        code: rulesRes.code,
+        errors: (result.errors || []).concat(rulesRes.errors || []),
+        log: (result.log || []).concat(rulesRes.log || []),
+        dtype: result.dtype || requestedDiagram,
+        appliedRules: rulesRes.appliedRules || []
+      });
+      return;
+    } catch (e) {
+      console.warn('engine-esm.runPipeline failed, trying wrapper:', e);
       try {
-        const result = await runPipeline(files, uiOptions || {});
-        // result shape is { code, errors, log, dtype }
-        self.postMessage(result);
+        const result = await runPipelineWrapper(files, { diagram: requestedDiagram });
+        const rulesRes = await applyRulesIfAny(result.code, result.dtype || requestedDiagram);
+        self.postMessage({
+          code: rulesRes.code,
+          errors: (result.errors || []).concat(rulesRes.errors || []),
+          log: (result.log || []).concat(rulesRes.log || []),
+          dtype: result.dtype || requestedDiagram,
+          appliedRules: rulesRes.appliedRules || []
+        });
         return;
-      } catch (e) {
-        console.warn('engine-wrapper.runPipeline failed, falling back to AI path:', e);
+      } catch (e2) {
+        console.warn('engine-wrapper.runPipeline failed, falling back to AI path:', e2);
       }
     }
-  } catch (e) {
-    console.warn('worker engine decision error:', e);
+  } else {
+    // 2) If UI explicitly requests engine mode (even without .py), try wrapper first
+    try {
+      const useEngine = !!(uiOptions && (uiOptions.useEngine || uiOptions.mode === 'engine'));
+      if (useEngine) {
+        try {
+          const result = await runPipelineWrapper(files, { diagram: requestedDiagram });
+          const rulesRes = await applyRulesIfAny(result.code, result.dtype || requestedDiagram);
+          self.postMessage({
+            code: rulesRes.code,
+            errors: (result.errors || []).concat(rulesRes.errors || []),
+            log: (result.log || []).concat(rulesRes.log || []),
+            dtype: result.dtype || requestedDiagram,
+            appliedRules: rulesRes.appliedRules || []
+          });
+          return;
+        } catch (e) {
+          console.warn('engine-wrapper.runPipeline failed (explicit engine), continuing to AI:', e);
+        }
+      }
+    } catch (e) {
+      console.warn('worker engine decision error:', e);
+    }
   }
 
-  // AI 協助；若要先觀察建議而不自動套 patch，改 autoApplyFixes:false
-  // Prefer using explicit aiAnalyze from ESM engine when available
-  let aiResult;
-  try {
-    aiResult = await aiAnalyze({ mermaid: code }, { diagram: dtype, provider: uiOptions.provider });
-  } catch (e) {
-    // fall back to aiAssist flow when aiAnalyze fails
-    aiResult = null;
-  }
-
-  if (aiResult) {
-    // aiAnalyze returned a final suggestion shape
-    self.postMessage({ code: aiResult.code || code, dtype: aiResult.dtype || dtype, ai: { ...aiResult } });
-    return;
-  }
-
+  // 3) AI 協助；若要先觀察建議而不自動套 patch，改 autoApplyFixes:false
   const { rulesHit, retrievals, qa, codePatched, changes } = await aiAssist({
-    diagramType: dtype,
-    code,
+    diagramType: requestedDiagram,
+    code: initialCode,
     configSnapshot,
     contextText: '',
     autoApplyFixes: true
   });
 
   // return consistent payload shape (include ai details)
-  self.postMessage({ code: codePatched, dtype, ai: { rulesHit, retrievals, qa, changes } });
-};
-
-// js/worker.mjs
-// Ensure providers are registered in ESM worker environment
-import { registerAll as registerAIPublishers } from './ai/compat.mjs';
-import { aiAssist } from './ai/ai-assist.js';
-import { runPipeline, runPipelineIR } from './engine-wrapper.mjs';
-import { aiAnalyze } from './ai/aiEngine-esm.mjs';
-
-// mark imported but optional engine helpers as used to avoid lint warnings
-void runPipelineIR;
-
-self.onmessage = async (event) => {
-  // Ensure providers are registered (ESM providers)
-  try {
-    const ok = await registerAIPublishers(self).catch(()=>false);
-    if (!ok) {
-      // If providers couldn't be registered via ESM, log and rely on legacy aiEngine (if available)
-      console.warn('ESM providers registration failed; ensure legacy providers are available via aiEngine.js');
-    }
-  } catch (e) {
-    console.warn('Provider registration error:', e);
-  }
-
-  const { files = {}, uiOptions = {} } = event.data || {};
-  const code = files?.mermaid ?? 'flowchart TD\nA-->B';
-  const dtype = guessDiagram(code) || 'flowchart';
-  const configSnapshot = uiOptions?.mermaidConfig || {};
-
-  // If UI requested engine execution, prefer engine-wrapper path (calls global DiagramMenderCore via wrapper)
-  try {
-    const useEngine = !!(uiOptions && (uiOptions.useEngine || uiOptions.mode === 'engine'));
-    if (useEngine) {
-      try {
-        const result = await runPipeline(files, uiOptions || {});
-        // result shape is { code, errors, log, dtype }
-        self.postMessage(result);
-        return;
-      } catch (e) {
-        console.warn('engine-wrapper.runPipeline failed, falling back to AI path:', e);
-      }
-    }
-  } catch (e) {
-    console.warn('worker engine decision error:', e);
-  }
-
-  // AI 協助；若要先觀察建議而不自動套 patch，改 autoApplyFixes:false
-  // Prefer using explicit aiAnalyze from ESM engine when available
-  let aiResult;
-  try {
-    aiResult = await aiAnalyze({ mermaid: code }, { diagram: dtype, provider: uiOptions.provider });
-  } catch (e) {
-    // fall back to aiAssist flow when aiAnalyze fails
-    aiResult = null;
-  }
-
-  if (aiResult) {
-    // aiAnalyze returned a final suggestion shape
-    self.postMessage({ code: aiResult.code || code, dtype: aiResult.dtype || dtype, ai: { ...aiResult } });
-    return;
-  }
-
-  const { rulesHit, retrievals, qa, codePatched, changes } = await aiAssist({
-    diagramType: dtype,
-    code,
-    configSnapshot,
-    contextText: '',
-    autoApplyFixes: true
-  });
-
-  // return consistent payload shape (include ai details)
-  self.postMessage({ code: codePatched, dtype, ai: { rulesHit, retrievals, qa, changes } });
+  self.postMessage({ code: codePatched, dtype: requestedDiagram, ai: { rulesHit, retrievals, qa, changes } });
 };
 
 function guessDiagram(txt) {

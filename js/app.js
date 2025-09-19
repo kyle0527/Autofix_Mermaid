@@ -1,4 +1,3 @@
-請
 import mermaid from 'mermaid';
 import { sanitize } from './sanitize.js';
 import { applyFixes } from './autofix.js';

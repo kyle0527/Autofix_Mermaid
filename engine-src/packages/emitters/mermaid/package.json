@@ -1,8 +1,8 @@
 {
   "name": "@diagrammender/emitters-mermaid",
   "version": "0.3.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "dependencies": { "@diagrammender/types": "0.3.0" },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "dependencies": { "@diagrammender/types": "file:../../types" },
   "scripts": { "build": "tsc -p tsconfig.json", "test": "echo no-tests" }
 }

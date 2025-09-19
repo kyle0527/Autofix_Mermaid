@@ -1,215 +1,186 @@
 <!DOCTYPE html>
-
-<html lang="zh-Hant"><head><link href="css/styles.css" rel="stylesheet"/>
-<meta charset="utf-8"/><meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title> AutoFixMermaid</title>
-<script type="importmap">{"imports":{"mermaid":"./assets/mermaid-11.11.0/mermaid.esm.mjs"}}</script>
-</head><body>
-<header>
-  <select id="engineSelect">
-  <option value="rules">Rules（規則）</option>
-  <option value="ai">AI</option>
-</select>
-
-<select id="aiProvider">
-  <option value="ollama">Ollama</option>
-  <option value="webllm">WebLLM</option>
-  <option value="none">None</option>
-</select>
-<h1>Mermaid AutoFix V2.2a（Label () fix）</h1>
-<div class="toolbar">
-<button class="btn" id="btnDebug">除錯</button>
-<button class="btn" id="btnRules">規則</button>
-<button class="btn" id="btnDocs">文檔</button>
-<button class="btn" id="btnRender">直接渲染</button>
-<button class="btn" id="btnFixRender">自動修正＋渲染</button>
-<button class="btn" id="btnSelfTest">自我檢測</button>
-<<<<<<< HEAD
-<button class="btn" id="btnHealth">健康檢測</button>
-=======
-<!-- P2 AutoFix Pipeline Controls -->
-<button class="btn" id="btnValidate">驗證</button>
-<button class="btn" id="btnAutoFix">AutoFix</button>
-<select id="layoutSelect" class="select">
-  <option value="default">Layout: Default</option>
-  <option value="elk">Layout: ELK</option>
-  <option value="tidytree">Layout: Tidy-tree</option>
-</select>
->>>>>>> origin/main
-<label style="margin-left:8px;">來源</label>
-<label style="margin-left:8px;">引擎</label>
-<select id="engineMode" class="select">
-  <option value="classic" selected>經典（WTS→引擎→Mock）</option>
-  <option value="ai">AI（實驗）</option>
-</select>
-<label><input type="radio" name="sourceMode" value="auto" checked>自動</label>
-<label><input type="radio" name="sourceMode" value="mermaid">Mermaid</label>
-<label><input type="radio" name="sourceMode" value="python">Python</label>
-<label style="margin-left:12px;"><input type="checkbox" id="autoRender">即時渲染</label>
-<label>專案檔案</label>
-<input id="fileInput" type="file" webkitdirectory directory multiple />
-<label>圖表類型</label>
-<select class="select" id="diagramType">
-  <option value="flowchart">flowchart</option>
-  <option value="classDiagram">classDiagram</option>
-  <option value="sequenceDiagram">sequenceDiagram</option>
-</select>
-<label>PNG 背景</label>
-<input class="select" id="pngBG" placeholder="#ffffff 或 transparent" style="width:160px" type="text" value="transparent"/>
-<label style="margin-left:12px;">圖表尺寸</label>
-<input id="svgW" min="0" placeholder="寬度(自動)" type="number"/>
-<input id="svgH" min="0" placeholder="高度(自動)" type="number"/>
-<label>Security</label><select class="select" id="secLevel"><option selected="" value="strict">strict</option><option value="loose">loose</option></select>
-<button class="btn" disabled="" id="btnExportImage">輸出圖片</button>
-<button class="btn" disabled="" id="btnExportMMD">匯出 MMD</button>
-<button class="btn" disabled="" id="btnExportSVG">匯出 SVG</button>
-<button class="btn" disabled="" id="btnExportPNG">匯出 PNG</button>
-<button class="btn" disabled="" id="btnExportErrors">匯出 errors.json</button>
-<button class="btn" disabled="" id="btnExportFixlog">匯出 fixlog.json</button>
-<span id="status">-</span> <span id="statusMsg" style="color:#666"></span>
-</div>
-</header>
-<div class="notice" id="notice"></div>
-<main>
-<section id="debugPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
-  <header>除錯面板</header>
-  <pre id="debugLog" style="background:#f8f8f8;max-height:200px;overflow:auto;"></pre>
-</section>
-<section id="rulesPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
-  <header>規則設定</header>
-  <textarea id="rulesConfig" style="width:100%;height:120px;" placeholder="可在此編輯/新增優化規則(JSON)"></textarea>
-  <button id="btnSaveRules">儲存規則</button>
-</section>
-<section id="docsPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
-  <!DOCTYPE html>
-
-  <html lang="zh-Hant"><head><link href="css/styles.css" rel="stylesheet"/>
-  <meta charset="utf-8"/><meta content="width=device-width, initial-scale=1" name="viewport"/>
-  <title> AutoFixMermaid</title>
-  <script type="importmap">{"imports":{"mermaid":"./assets/mermaid-11.11.0/mermaid.esm.mjs"}}</script>
-  </head><body>
-  <header>
-    <select id="engineSelect">
-    <option value="rules">Rules（規則）</option>
-    <option value="ai">AI</option>
-  </select>
-
-  <select id="aiProvider">
-    <option value="ollama">Ollama</option>
-    <option value="webllm">WebLLM</option>
-    <option value="none">None</option>
-  </select>
-  <h1>Mermaid AutoFix V2.2a（Label () fix）</h1>
-  <div class="toolbar">
-  <button class="btn" id="btnDebug">除錯</button>
-  <button class="btn" id="btnRules">規則</button>
-  <button class="btn" id="btnDocs">文檔</button>
-  <button class="btn" id="btnRender">直 接渲染</button>
-  <button class="btn" id="btnFixRender">自動修正＋渲染</button>
-  <button class="btn" id="btnSelfTest"> 自我檢測</button>
-  <!-- P2 AutoFix Pipeline Controls --> <button class="btn" id="btnValidate"> 驗證</button>
-  <button class="btn" id="btnAutoFix">AutoFix</button>
-  <select id="layoutSelect" class="select">
-    <option value="default">Layout: Default</option>
-    <option value="elk">Layout: ELK</option>
-    <option value="tidytree">Layout: Tidy-tree</option>
-  </select>
-  <label style="margin-left:8px;">來源</label>
-  <label style="margin-left:8px;">引擎</label>
-  <select id="engineMode" class="select">
-    <option value="classic" selected>經 典（WTS→引擎→Mock）</option>
-    <option value="ai">AI（實驗）</option>
-  </select>
-  <label><input type="radio" name="sourceMode" value="auto" checked>自動</label>
-  <label><input type="radio" name="sourceMode" value="mermaid">Mermaid</label>
-  <label><input type="radio" name="sourceMode" value="python">Python</label>
-  <label style="margin-left:12px;"><input type="checkbox" id="autoRender">即時渲染</label>
-  <label>專案檔案</label>
-  <input id="fileInput" type="file" webkitdirectory directory multiple />
-  <label>圖表類型</label>
-  <select class="select" id="diagramType">
-    <option value="flowchart">flowchart</option>
-    <option value="classDiagram">classDiagram</option>
-    <option value="sequenceDiagram">sequenceDiagram</option>
-  </select>
-  <label>PNG 背景</label>
-  <input class="select" id="pngBG" placeholder="#ffffff 或 transparent" style="width:160px" type="text" value="transparent"/>
-  <label style="margin-left:12px;">圖表 尺寸</label>
-  <input id="svgW" min="0" placeholder="寬度(自動)" type="number"/>
-  <input id="svgH" min="0" placeholder="高度(自動)" type="number"/>
-  <label>Security</label><select class="select" id="secLevel"><option selected="" value="strict">strict</option><option value="loose">loose</option></select>
-  <button class="btn" disabled="" id="btnExportImage">輸出 圖片</button>
-  <button class="btn" disabled="" id="btnExportMMD">匯出 MMD</button>
-  <button class="btn" disabled="" id="btnExportSVG">匯出 SVG</button>
-  <button class="btn" disabled="" id="btnExportPNG">匯出 PNG</button>
-  <button class="btn" disabled="" id="btnExportErrors">匯出 errors.json</button>
-  <button class="btn" disabled="" id="btnExportFixlog">匯出 fixlog.json</button>
-  <span id="status">-</span> <span id="statusMsg" style="color:#666"></span>
-  </div>
-  </header>
-  <div class="notice" id="notice"></div>
-  <main>
-  <section id="debugPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
-    <header>除錯面板</header>
-    <pre id="debugLog" style="background:#f8f8f8;max-height:200px;overflow:auto;"></pre>
-  </section>
-  <section id="rulesPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
-    <header>規則設定</header>
-    <textarea id="rulesConfig" style="width:100%;height:120px;" placeholder=" 可在此編輯/新增優化規則(JSON)"></textarea>
-    <button id="btnSaveRules">儲存規則</button>
-  </section>
-  <section id="docsPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
-    <header>Mermaid 語法文檔</header>
-    <select id="doc-select" style="width:100%;margin-bottom:8px;"></select>
-    <div id="doc-view" style="background:#f8f8f8;padding:8px;border-radius:4px;max-height:300px;overflow:auto;"></div>
-  </section>
-  <section><header>輸入</header><textarea id="src" placeholder="在此貼上 Mermaid 代碼..." spellcheck="false"></textarea></section>
-  <section><header>錯誤 / 修正日誌</header><pre id="log"></pre></section>
-  <section><header>預覽（SVG）</header><div id="graphDiv"><div id="svg"></div></div></section>
-  <aside id="configPanel" style="display:none;border:1px solid #ccc;padding:8px;margin-bottom:8px;">
-    <header>配置面板</header>
-    <form id="config-form">
-      <label>Security Level
-        <select name="securityLevel">
-          <option value="strict" selected>strict</option>
-          <option value="loose">loose</option>
-        </select>
-      </label>
-      <label>Theme
-        <select name="theme">
-          <option value="default">default</option>
-          <option value="neutral">neutral</option>
-          <option value="forest">forest</option>
-          <option value="dark">dark</option>
-        </select>
-      </label>
-      <label>Flowchart Curve
-        <select name="curve">
-          <option value="basis">basis</option>
-          <option value="linear">linear</option>
-          <option value="monotoneX">monotoneX</option>
-          <option value="step">step</option>
-        </select>
-      </label>
-    </form>
-    <h5>當前配置</h5>
-    <pre id="cfg-json" style="background:#f8f8f8;padding:8px;border-radius:4px;font-size:12px;"></pre>
-  </aside>
-  </main>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AutoFixMermaid</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script type="importmap">{"imports":{"mermaid":"./assets/mermaid-11.11.0/mermaid.esm.mjs"}}</script>
+  </head>
+  <body>
+    <header>
+      <h1>Mermaid AutoFix V2.2a（Label () fix）</h1>
+      <div class="toolbar">
+        <label>引擎
+          <select id="engineSelect">
+            <option value="rules">Rules（規則）</option>
+            <option value="ai">AI</option>
+          </select>
+        </label>
+        <label>AI Provider
+          <select id="aiProvider">
+            <option value="ollama">Ollama</option>
+            <option value="webllm">WebLLM</option>
+            <option value="none">None</option>
+          </select>
+        </label>
+        <button class="btn" id="btnDebug">除錯</button>
+        <button class="btn" id="btnRules">規則</button>
+        <button class="btn" id="btnDocs">文檔</button>
+        <button class="btn" id="btnToggleConfig">配置</button>
+        <button class="btn" id="btnRender">直接渲染</button>
+        <button class="btn" id="btnFixRender">自動修正＋渲染</button>
+        <button class="btn" id="btnSelfTest">自我檢測</button>
+        <button class="btn" id="btnValidate">驗證</button>
+        <button class="btn" id="btnAutoFix">AutoFix</button>
+        <label>Layout
+          <select id="layoutSelect" class="select">
+            <option value="default">Default</option>
+            <option value="elk">ELK</option>
+            <option value="tidytree">Tidy-tree</option>
+          </select>
+        </label>
+        <fieldset class="fieldset-inline">
+          <legend>來源模式</legend>
+          <label><input type="radio" name="sourceMode" value="auto" checked />自動</label>
+          <label><input type="radio" name="sourceMode" value="mermaid" />Mermaid</label>
+          <label><input type="radio" name="sourceMode" value="python" />Python</label>
+        </fieldset>
+        <label class="ml-8"><input type="checkbox" id="autoRender" />即時渲染</label>
+        <label>專案檔案 <input id="fileInput" type="file" webkitdirectory directory multiple /></label>
+        <label>圖表類型
+          <select class="select" id="diagramType">
+            <option value="flowchart">flowchart</option>
+            <option value="classDiagram">classDiagram</option>
+            <option value="sequenceDiagram">sequenceDiagram</option>
+          </select>
+        </label>
+        <label>PNG 背景 <input class="select w-bg-input" id="pngBG" placeholder="#ffffff 或 transparent" type="text" value="transparent" /></label>
+        <label>尺寸
+          <input id="svgW" min="0" placeholder="寬(自動)" type="number" />
+          <input id="svgH" min="0" placeholder="高(自動)" type="number" />
+        </label>
+        <label>Security
+          <select class="select" id="secLevel">
+            <option value="strict" selected>strict</option>
+            <option value="loose">loose</option>
+          </select>
+        </label>
+        <button class="btn" disabled id="btnExportImage">輸出圖片</button>
+        <button class="btn" disabled id="btnExportMMD">匯出 MMD</button>
+        <button class="btn" disabled id="btnExportSVG">匯出 SVG</button>
+        <button class="btn" disabled id="btnExportPNG">匯出 PNG</button>
+        <button class="btn" disabled id="btnExportErrors">匯出 errors.json</button>
+        <button class="btn" disabled id="btnExportFixlog">匯出 fixlog.json</button>
+        <span id="status">-</span>
+        <span id="statusMsg" class="muted"></span>
+      </div>
+    </header>
+    <div class="notice" id="notice"></div>
+    <main>
+      <section id="debugPanel" class="panel-box hidden">
+        <header>除錯面板</header>
+        <pre id="debugLog" class="scroll-box-sm"></pre>
+      </section>
+      <section id="rulesPanel" class="panel-box hidden">
+        <header>規則設定</header>
+        <textarea id="rulesConfig" class="w-100 h-120" placeholder="可在此編輯/新增優化規則(JSON)"></textarea>
+        <button id="btnSaveRules">儲存規則</button>
+      </section>
+      <section id="docsPanel" class="panel-box hidden">
+        <header>Mermaid 語法文檔</header>
+        <select id="doc-select" class="w-100 mb-8" aria-label="選擇語法文檔"></select>
+        <div id="doc-view" class="doc-box"></div>
+      </section>
+      <section>
+        <header>輸入</header>
+        <textarea id="src" placeholder="在此貼上 Mermaid 代碼..." spellcheck="false"></textarea>
+      </section>
+      <section>
+        <header>錯誤 / 修正日誌</header>
+        <pre id="log"></pre>
+      </section>
+      <section>
+        <header>預覽（SVG）</header>
+        <div id="graphDiv"><div id="svg"></div></div>
+      </section>
+      <aside id="configPanel" class="panel-box hidden">
+        <header>配置面板</header>
+        <form id="config-form">
+          <label>Security Level
+            <select name="securityLevel">
+              <option value="strict" selected>strict</option>
+              <option value="loose">loose</option>
+            </select>
+          </label>
+          <label>Theme
+            <select name="theme">
+              <option value="default">default</option>
+              <option value="neutral">neutral</option>
+              <option value="forest">forest</option>
+              <option value="dark">dark</option>
+            </select>
+          </label>
+          <label>Flowchart Curve
+            <select name="curve">
+              <option value="basis">basis</option>
+              <option value="linear">linear</option>
+              <option value="monotoneX">monotoneX</option>
+              <option value="step">step</option>
+            </select>
+          </label>
+        </form>
+        <h5>當前配置</h5>
+        <pre id="cfg-json" class="code-box compact"></pre>
+        <section id="complexityPanel" class="panel complexity-panel">
+          <header class="panel-header">
+            <h3 class="panel-title">複雜度 & 規則 (Beta)</h3>
+            <label class="inline-flex small muted"><input type="checkbox" id="debugMode" /> debug</label>
+            <button type="button" id="btnReAnalyze" class="btn btn-xs push-right">重新分析</button>
+          </header>
+          <form id="complexityLimits" class="limits-form">
+            <label class="limit-field"><span>Max Nodes</span><input id="limitNodes" type="number" value="60" class="w-90" /></label>
+            <label class="limit-field"><span>Max Edges</span><input id="limitEdges" type="number" value="100" class="w-90" /></label>
+            <label class="limit-field"><span>Max Depth</span><input id="limitDepth" type="number" value="6" class="w-90" /></label>
+          </form>
+          <fieldset class="rules-fieldset">
+            <legend class="rules-legend">規則 (Rules)</legend>
+            <div class="rules-actions">
+              <button type="button" id="btnRulesAll" class="btn btn-xxs">全部</button>
+              <button type="button" id="btnRulesNone" class="btn btn-xxs">清空</button>
+            </div>
+            <div id="rulesList" class="rules-grid"></div>
+          </fieldset>
+          <div id="complexityStatus" class="complexity-status muted">(尚未分析)</div>
+        </section>
+      </aside>
+    </main>
   <!-- Mermaid 11.11.0 ESM loaded via import map -->
-  <!-- P0+ Offline Bundle scripts -->
+  <!-- Scripts Layered -->
   <script type="module" src="./js/autofixProvider.js"></script>
   <script type="module" src="./js/errorPolicy.js"></script>
   <script type="module" src="./js/logbook.js"></script>
-  <!-- P1 Offline Bundle scripts -->
   <script type="module" src="./js/configPanel.js"></script>
   <script type="module" src="./js/docs.js"></script>
-  <!-- P2 Offline Bundle scripts -->
   <script type="module" src="./js/autofix.js"></script>
   <script type="module" src="./js/layout.js"></script>
   <script type="module" src="./js/sanitize.js"></script>
   <script type="module" src="./js/app.js"></script>
-  <!-- Optional offline canvg: <script src="js/vendor/canvg.min.js"></script> -->
-  <script src="js/main.js" type="module"></script>
+  <script type="module" src="./js/main.js"></script>
   <script type="module" src="./js/poc-ui.js"></script>
-  </body></html>
+  <script type="module" src="./js/complexity-lite.js"></script>
+  <script type="module" src="./js/panel.complexity.js"></script>
+    <script>
+      // 簡易按鈕事件：切換 configPanel 顯示
+      document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('btnToggleConfig');
+        const panel = document.getElementById('configPanel');
+        if (btn && panel) {
+          btn.addEventListener('click', () => {
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

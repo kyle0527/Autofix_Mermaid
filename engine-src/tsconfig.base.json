@@ -4,9 +4,17 @@
     "module": "commonjs",
     "declaration": true,
     "outDir": "dist",
-    "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@diagrammender/types": ["packages/types/src"],
+      "@diagrammender/parsers-python": ["packages/parsers/python/src"],
+      "@diagrammender/analyzers": ["packages/analyzers/src"],
+      "@diagrammender/emitters-mermaid": ["packages/emitters/mermaid/src"],
+      "@diagrammender/fix-rules-mermaid-compat": ["packages/fix-rules/mermaid-compat/src"],
+      "@diagrammender/core": ["packages/core/src"]
+    }
   }
 }

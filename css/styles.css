@@ -18,6 +18,43 @@ section>header{border-bottom:1px solid var(--bd);padding:8px 10px;font-weight:60
 #configPanel select { min-width: 120px; }
 #cfg-json { font-size: 12px; white-space: pre-wrap; }
 
+/* --- Extracted from inline styles (index.html cleanup) --- */
+.ml-8 { margin-left: 8px; }
+.w-bg-input { width: 140px; }
+.panel-box { display:none; border:1px solid var(--bd); padding:8px; margin-bottom:8px; background:#fff; border-radius:6px; }
+.scroll-box-sm { background:#f8f8f8; max-height:200px; overflow:auto; }
+.doc-box { background:#f8f8f8; padding:8px; border-radius:4px; max-height:300px; overflow:auto; }
+.code-box { background:#f8f8f8; padding:8px; border-radius:4px; }
+.code-box.compact { font-size:12px; }
+.muted { color:#999; }
+.mt-12 { margin-top:12px; }
+.hidden { display:none !important; }
+.w-100 { width:100%; }
+.mb-8 { margin-bottom:8px; }
+.h-120 { height:120px; }
+
+/* Complexity / Rules Panel */
+.panel.complexity-panel, #complexityPanel.panel { border:1px solid var(--bd); padding:8px; margin-top:12px; background:#fff; border-radius:8px; }
+.panel-header { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.panel-title { margin:0; font-size:14px; font-weight:600; }
+.inline-flex { display:flex; align-items:center; gap:4px; }
+.small { font-size:12px; }
+.push-right { margin-left:auto; }
+.limits-form { display:flex; flex-wrap:wrap; gap:12px; font-size:12px; margin-bottom:8px; }
+.limit-field { display:flex; flex-direction:column; gap:2px; font-size:12px; }
+.w-90 { width:90px; }
+.rules-fieldset { border:1px solid var(--bd); padding:6px; border-radius:4px; }
+.rules-legend { padding:0 4px; font-size:12px; }
+.rules-actions { display:flex; gap:8px; margin-bottom:4px; }
+.rules-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:4px 8px; font-size:12px; }
+.complexity-status { white-space:pre; font-family:monospace; margin-top:8px; font-size:12px; }
+.btn-xs { padding:4px 8px; font-size:12px; }
+.btn-xxs { padding:2px 6px; font-size:11px; }
+
+/* fieldset reset helper */
+.fieldset-inline { border:none; display:inline-block; vertical-align:middle; padding:0; margin:0; }
+.fieldset-inline legend { display:none; }
+
 
 /* P2 Offline Bundle Styles - Dark Theme & Layout */
 :root {

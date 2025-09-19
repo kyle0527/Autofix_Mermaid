@@ -170,6 +170,7 @@ function normalizeHeader(text) {
 function initializeUI(renderMermaid, svgToPNG, initMermaid) {
   let lastResult = { code: '', svg: '', errors: [], log: [], dtype: '' };
   const STORAGE_KEY = 'autofix_mermaid_ui_v1';
+  let latestUiConfig = { limits:{maxNodes:60,maxEdges:100,maxDepth:6}, enabledRules:[], debug:false };
 
   /**
    * Set application status
@@ -348,7 +349,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             diagram: diagramType,
             provider: aiProvider,
             mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' }
-          }
+          },
+          uiConfig: latestUiConfig
         };
       } else {
         // classic/rules worker (worker.js)
@@ -360,7 +362,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             diagram: diagramType,
             provider: aiProvider,
             seedMermaid: undefined
-          }
+          },
+          uiConfig: latestUiConfig
         };
       }
 
@@ -390,7 +393,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             console.warn('Worker termination failed:', error);
           }
 
-          const { code, errors = [], log = [], dtype = '' } = event.data || {};
+          const { code, errors = [], log = [], dtype = '', complexitySummary, appliedRules } = event.data || {};
           
           // Safety: normalize worker output header
           const safeCode = normalizeHeader(code);
@@ -421,15 +424,21 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             }
           }
           if (logElement) {
-            const logText = Array.isArray(log) 
-              ? log.map(item => (typeof item === 'string' ? item : JSON.stringify(item))).join('\n')
-              : '';
-            logElement.textContent = logText + '\n\n' + safeCode;
+            let lines = [];
+            if (Array.isArray(log)) {
+              lines = log.map(item => (typeof item === 'string' ? item : (item.rule? `[${item.rule}] ${item.msg||''}` : JSON.stringify(item))));
+            }
+            if (appliedRules && appliedRules.length) {
+              lines.push('[rules.applied] '+ appliedRules.join(','));
+            }
+            logElement.textContent = lines.join('\n') + '\n\n' + safeCode;
           }
           
           enableExportButtons();
           setStatus(true, dtype ? `OK 偵測到圖表：${dtype}` : 'OK');
-          resolve({ code: safeCode, errors, log, dtype });
+          // forward complexity summary (if worker produced one) to panel hook
+          try { if (complexitySummary && window.__updateComplexityFromWorker) window.__updateComplexityFromWorker(complexitySummary); } catch {}
+          resolve({ code: safeCode, errors, log, dtype, complexitySummary });
         };
 
         worker.onerror = (error) => {
@@ -862,6 +871,14 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
   // Initialize the UI
   bindEventHandlers();
+  // Listen for ui-config-changed events from complexity panel
+  document.addEventListener('ui-config-changed', (e)=>{
+    latestUiConfig = e.detail || latestUiConfig;
+    // auto re-process if autoRender enabled
+    if ($('autoRender')?.checked) {
+      try { processInput(); } catch {}
+    }
+  });
   window.addEventListener('beforeunload', saveSettingsSnapshot);
   // Restore basic settings
   try {

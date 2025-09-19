@@ -198,7 +198,11 @@
   function fixEnsureHeader(code, diagram){
     const trimmed = String(code).trim();
     if (!/^(flowchart|classDiagram|sequenceDiagram|stateDiagram|erDiagram)\\b/.test(trimmed)){
-      return { code: `${diagram === 'classDiagram' ? 'classDiagram' : (diagram === 'sequenceDiagram' ? 'sequenceDiagram' : 'flowchart TD')}\\n` + code, notes: ['Added diagram header'] };
+      const kind = diagram || 'flowchart';
+      let header = 'flowchart TD';
+      if (kind === 'classDiagram') header = 'classDiagram';
+      else if (kind === 'sequenceDiagram') header = 'sequenceDiagram';
+      return { code: `${header}\\n` + code, notes: [`Added diagram header: ${header}`] };
     }
     return { code, notes: [] };
   }

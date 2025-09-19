@@ -1,14 +1,14 @@
 {
   "name": "@diagrammender/core",
   "version": "0.3.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "dependencies": {
-    "@diagrammender/types": "0.3.0",
-    "@diagrammender/parsers-python": "0.3.0",
-    "@diagrammender/analyzers": "0.3.0",
-    "@diagrammender/emitters-mermaid": "0.3.0",
-    "@diagrammender/fix-rules-mermaid-compat": "0.3.0"
+    "@diagrammender/types": "file:../types",
+    "@diagrammender/parsers-python": "file:../parsers/python",
+    "@diagrammender/analyzers": "file:../analyzers",
+    "@diagrammender/emitters-mermaid": "file:../emitters/mermaid",
+    "@diagrammender/fix-rules-mermaid-compat": "file:../fix-rules/mermaid-compat"
   },
   "scripts": { "build": "tsc -p tsconfig.json", "test": "echo no-tests" }
 }
