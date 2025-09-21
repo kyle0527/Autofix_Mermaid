@@ -1,0 +1,14 @@
+{
+  "name": "@diagrammender/ui-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve . -l 5173"
+  },
+  "dependencies": {
+    "@diagrammender/fix-rules-mermaid-compat": "workspace:*",
+    "dompurify": "^3.2.6",
+    "p-limit": "^5.0.0"
+  }
+}

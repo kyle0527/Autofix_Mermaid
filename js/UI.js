@@ -1,6 +1,6 @@
 import { t, onLocaleChange, getLocale } from './i18n/index.js';
 import { applyLayoutSelection } from './layout.js';
-import { preprocessMermaid as preprocessRulepack, getRuleConfig } from './rules/state.js';
+
 
 /**
  * 建立 worker 實例，依 engineMode 切換 classic/AI
@@ -389,6 +389,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
       // Direct Mermaid rendering path
       if (!shouldForceWorker && !hasFiles && (sourceMode === 'mermaid' || (sourceMode === 'auto' && isLikelyMermaid(inputText)))) {
+
         let processedInput = inputText;
         try {
           processedInput = await preprocessRulepack(inputText);
@@ -396,6 +397,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           console.warn('Rule preprocess step failed:', error);
         }
         const normalizedCode = normalizeHeader(processedInput);
+
         const renderResult = await renderMermaid(normalizedCode, { width, height });
 
         if (renderResult.error) {
@@ -462,7 +464,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' },
             locale,
             reason,
-            rules: rulesOptions,
+
           }
         };
       } else {
@@ -476,7 +478,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             provider: aiProvider,
             seedMermaid: undefined,
             locale,
-            rules: rulesOptions,
+
           },
           uiMode: reason,
         };

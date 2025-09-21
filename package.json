@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "test": "node ./scripts/run-tests.js",
     "dev": "node --input-type=module scripts/dev-server.mjs",
-    "build:packs": "node ./scripts/build-packs.mjs"
+
   },
   "engines": {
     "node": ">=18"

@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "R-BAD-001",
+      "title": "Missing required fields test",
+      "category": "test",
+      "diagram_types": "classDiagram",
+      "phase": "preprocess",
+      "severity": "warning",
+      "pattern_kind": "regex",
+      "pattern": "class\\s+([^\\s{]+)\\s*\\{\\s*\\}",
+      "condition_json": {},
+      "fix_action": "replace",
+      "fix_params_json": {
+        "replacement": "class \\1 { }"
+      },
+      "example_in": "classDiagram\n  class Foo{}\n",
+      "example_out": "classDiagram\n  class Foo { }\n",
+      "notes": "Missing enabled field - required by schema",
+      "origin": "test",
+      "version": "1.0.0",
+      "created_at": "2025-09-21",
+      "updated_at": "2025-09-21"
+    }
+  ]
+}

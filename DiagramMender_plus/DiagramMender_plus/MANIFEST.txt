@@ -1,0 +1,25 @@
+# DiagramMender_fixpack_v1
+
+目的：**純修復**（不新增功能），讓整合後的 Monorepo 可穩定建置與執行 CLI。
+
+變更清單：
+1. `tsconfig.base.json`（新增於 repo 根目錄）
+   - 提供所有套件 `tsconfig.json` 的基底，修正原先 `extends ../../tsconfig.base.json` 的斷鏈。
+
+2. `package.json`（根目錄，若你的原檔缺這行才會出現在補包中）
+   - 新增 devDependencies：`"typescript": "^5.6.3"`，確保 `tsc` 可用。
+
+3. `packages/cli/package.json`
+   - 新增 `"type": "module"`，避免 ESM 執行問題。
+   - 新增 `"main": "dist/index.js"` 與 `"types": "dist/index.d.ts"` 以利工具鏈辨識。
+
+套用方式：
+- 將本補包 zip 直接解壓覆蓋到你的整合專案根目錄；或逐檔手動覆蓋（路徑相同）。
+
+驗收指令：
+1) `npm install`
+2) `npm run build`
+3) `node packages/cli/dist/index.js --help`
+4) `node smoke-test.mjs ./demo.py`（或 `npx diagrammender file ./demo.py`）
+
+若上列任一步驟失敗，請回報錯誤訊息與 OS/Node 版本。

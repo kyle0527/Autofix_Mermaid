@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "R-BAD-002",
+      "title": "Invalid data types test",
+      "category": "test",
+      "diagram_types": ["flowchart", "classDiagram"],
+      "phase": "preprocess",
+      "severity": "error",
+      "enabled": "yes",
+      "pattern_kind": "invalid_pattern_kind",
+      "pattern": "test.*pattern",
+      "condition_json": "not_an_object",
+      "fix_action": "unknown_action",
+      "fix_params_json": {
+        "replacement": "test"
+      },
+      "example_in": "test input",
+      "example_out": "test output",
+      "notes": "Invalid enabled field (should be boolean), invalid pattern_kind and fix_action values, invalid condition_json type",
+      "origin": "test",
+      "version": "1.0.0",
+      "created_at": "2025-09-21",
+      "updated_at": "2025-09-21"
+    }
+  ]
+}
