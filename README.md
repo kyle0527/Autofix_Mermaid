@@ -93,6 +93,8 @@ python -m http.server 8080
 - [ ] **Mermaid 語法檢查**：使用 Mermaid 驗證工具確認語法正確性
 - [ ] **ESLint 檢查**：執行 `npm run lint` 確認程式碼品質
 - [ ] **TypeScript 檢查**：執行 `tsc --noEmit` 進行類型檢查
+- [ ] **Schema 驗證**：執行 `npm run validate:schema` 確認 RulePack/PromptPack 格式正確
+- [ ] **Schema 單元測試**：執行 `npm run test:schema` 驗證 Schema 驗證功能
 - [ ] **批量 Mermaid 測試**：運行 `python3 tests/fix_examples.py` 驗證所有圖表
 - [ ] **模組編譯測試**：確認 engine-src 和 DiagramMender_plus 兩個工作區都能編譯成功
 
@@ -155,6 +157,61 @@ python -m http.server 8080
 | 3. 產出與修正 Mermaid | Autofix 規則 + 正則/AST 修復 | Flowchart/Class 基礎 | 規範檢查 (lint) + 自動格式化 + 視覺差異提示 |
 | 4. 排列組合/渲染/匯出 | Mermaid.js + 自訂佈局策略 | 基礎渲染 + PNG/SVG | 多視圖 (模組依賴 / 呼叫圖 / 時序) + PDF + 批次匯出 |
 | 5. 商用 + 全 UI 操作 | Web 前端 + Worker | 單頁工具 | 多專案管理 / 角色權限 / 報表匯出 |
+
+---
+
+## 📋 Schema 驗證系統
+
+本專案採用嚴格的 JSON Schema 驗證機制，確保 RulePack 和 PromptPack 配置檔案的正確性與一致性。
+
+### 🔍 支援的驗證類型
+
+1. **RulePack 驗證** (`rules/rulepack.json`)
+   - 嚴格驗證必填欄位：`rule_id`, `enabled`, `diagram_types`, `phase`, `pattern_kind`, `fix_action`
+   - 資料類型檢查：確保 `enabled` 為布林值、`pattern_kind` 為允許的枚舉值等
+   - 結構完整性：驗證巢狀物件 `condition_json`, `fix_params_json` 格式
+
+2. **PromptPack 驗證** (`rules/promptpack.json`)
+   - 必填欄位驗證：`prompt_id`, `intent`, `input_type`, `template`
+   - 版本一致性：確保 `version` 欄位存在且格式正確
+   - 範本完整性：驗證提示範本結構
+
+### 🚀 快速驗證指令
+
+```bash
+# 執行完整的 Schema 驗證
+npm run validate:schema
+
+# 僅執行 Schema 驗證相關測試
+npm run test:schema
+
+# 執行完整測試套件（包含 Schema 驗證）
+npm test
+```
+
+### 🧪 測試壞樣本
+
+專案包含多個故意設計的錯誤樣本，用於驗證 Schema 驗證的有效性：
+- `rules/rulepack.bad1.json` - 缺少必填欄位測試
+- `rules/rulepack.bad2.json` - 資料類型錯誤測試  
+- `rules/promptpack.bad1.json` - PromptPack 錯誤測試
+
+### 📝 錯誤訊息範例
+
+當驗證失敗時，系統會提供清晰可讀的錯誤訊息：
+
+```
+❌ 驗證失敗: ./rules/rulepack.bad1.json
+data/rules/0 must have required property 'enabled'
+
+❌ 驗證失敗: ./rules/rulepack.bad2.json  
+data/rules/0/enabled must be boolean
+data/rules/0/pattern_kind must be equal to one of the allowed values
+```
+
+### 🔄 CI/CD 整合
+
+Schema 驗證已整合至 GitHub Actions CI 流程中，確保所有 Pull Request 都必須通過嚴格的 Schema 驗證才能合併。
 
 ---
 

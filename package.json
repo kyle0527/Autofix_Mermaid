@@ -8,12 +8,15 @@
     "start": "node ./scripts/start-server.js",
     "lint": "eslint . --ext .js,.mjs",
     "test": "node ./scripts/run-tests.js",
-    "dev": "node --input-type=module scripts/dev-server.mjs"
+    "dev": "node --input-type=module scripts/dev-server.mjs",
+    "validate:schema": "node validate-schema.js",
+    "test:schema": "node --test test/unit/schema-validation.test.mjs"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "ajv": "^8.17.1",
     "eslint": "^8.57.0",
     "playwright": "^1.41.2"
   }
