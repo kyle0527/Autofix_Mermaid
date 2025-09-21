@@ -1,7 +1,7 @@
 // Renderer.js — render helper (ESM)
 // Lazy-load DOMPurify at render time with multi-CDN fallback
 let __domPurify = null;
-async function getDOMPurify() {
+async function _getDOMPurify() {
   if (__domPurify) return __domPurify;
   const cdns = [
     'https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.es.js',
