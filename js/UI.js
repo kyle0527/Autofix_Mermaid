@@ -1,6 +1,7 @@
 import { t, onLocaleChange, getLocale } from './i18n/index.js';
 import { applyLayoutSelection } from './layout.js';
 
+
 /**
  * 建立 worker 實例，依 engineMode 切換 classic/AI
  * @param {string} engineMode - 'rules' | 'ai'
@@ -250,19 +251,44 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
   function saveSettingsSnapshot() {
     try {
       const sourceMode = (document.querySelector('input[name="sourceMode"]:checked') || { value: 'auto' }).value;
-      const data = {
-        src: $('src')?.value || '',
-        svgW: $('svgW')?.value || '',
-        svgH: $('svgH')?.value || '',
-        pngBG: $('pngBG')?.value || 'transparent',
-        diagramType: $('diagramType')?.value || 'flowchart',
-        secLevel: $('secLevel')?.value || 'strict',
-        engineSelect: $('engineSelect')?.value || 'rules',
-        aiProvider: $('aiProvider')?.value || 'none',
-        autoRender: !!$('autoRender')?.checked,
-        sourceMode
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      let existing = {};
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            existing = parsed;
+          }
+        }
+      } catch {}
+
+      const docSelect = document.getElementById('docSelect') || document.getElementById('doc-select');
+      const docsPanel = document.getElementById('docsPanel');
+      const configPanel = document.getElementById('configPanel');
+
+      existing.src = $('src')?.value || '';
+      existing.svgW = $('svgW')?.value || '';
+      existing.svgH = $('svgH')?.value || '';
+      existing.pngBG = $('pngBG')?.value || 'transparent';
+      existing.diagramType = $('diagramType')?.value || 'flowchart';
+      existing.secLevel = $('secLevel')?.value || 'strict';
+      existing.engineSelect = $('engineSelect')?.value || 'rules';
+      existing.aiProvider = $('aiProvider')?.value || 'none';
+      existing.autoRender = !!$('autoRender')?.checked;
+      existing.sourceMode = sourceMode;
+      existing.rulesVersion = getRuleConfig()?.version || null;
+
+      if (docSelect instanceof HTMLSelectElement) {
+        existing.docsSelection = docSelect.value || '';
+      }
+      if (docsPanel) {
+        existing.docsVisible = docsPanel.style.display !== 'none';
+      }
+      if (configPanel) {
+        existing.configVisible = configPanel.style.display !== 'none';
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
     } catch {}
   }
 
@@ -363,7 +389,15 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
       // Direct Mermaid rendering path
       if (!shouldForceWorker && !hasFiles && (sourceMode === 'mermaid' || (sourceMode === 'auto' && isLikelyMermaid(inputText)))) {
-        const normalizedCode = normalizeHeader(inputText);
+
+        let processedInput = inputText;
+        try {
+          processedInput = await preprocessRulepack(inputText);
+        } catch (error) {
+          console.warn('Rule preprocess step failed:', error);
+        }
+        const normalizedCode = normalizeHeader(processedInput);
+
         const renderResult = await renderMermaid(normalizedCode, { width, height });
 
         if (renderResult.error) {
@@ -412,6 +446,13 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       let postPayload = {};
       const worker = createWorker(engineMode);
 
+      const ruleConfig = getRuleConfig();
+      const rulesOptions = {};
+      if (ruleConfig?.manifest_path) rulesOptions.manifest_path = ruleConfig.manifest_path;
+      if (ruleConfig?.version) rulesOptions.version = ruleConfig.version;
+      if (ruleConfig?.rulepack_path) rulesOptions.rulepack_path = ruleConfig.rulepack_path;
+      if (ruleConfig?.promptpack_path) rulesOptions.promptpack_path = ruleConfig.promptpack_path;
+
       if (engineMode === 'ai') {
         // AI worker (worker.mjs)
         postPayload = {
@@ -423,6 +464,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' },
             locale,
             reason,
+
           }
         };
       } else {
@@ -436,6 +478,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             provider: aiProvider,
             seedMermaid: undefined,
             locale,
+
           },
           uiMode: reason,
         };

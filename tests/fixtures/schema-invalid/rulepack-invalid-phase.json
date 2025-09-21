@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "R-INVALID-002",
+      "enabled": true,
+      "diagram_types": "flowchart",
+      "phase": "bogus",
+      "pattern_kind": "regex",
+      "fix_action": "replace"
+    }
+  ]
+}

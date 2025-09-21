@@ -3,17 +3,17 @@
 感謝你對本專案的興趣！本文件說明開發環境、提交流程、規則擴充與測試策略。
 
 ## 開發環境準備
-1. Node.js 18+ (建議同時測 20 以符合 CI matrix)
-2. 安裝依賴：於 `autofix_mermaidV3.7/` 內執行 `npm install`
+1. Node.js 18+（建議也在 Node 20 上驗證，以符合未來 CI 規畫）
+2. 安裝依賴：於專案根目錄執行 `npm install`
 3. 推薦安裝 VSCode 外掛：ESLint / EditorConfig / Markdownlint
 
 ## NPM Scripts
 | 指令 | 說明 |
 |------|------|
-| `npm run lint` | 執行 ESLint 檢查 (忽略 vendor/assets) |
-| `npm run test:unit` | 執行所有單元測試 (node:test) |
-| `npm run test:ci` | CI 用：lint + unit |
-| `npm run dev` | 啟動開發伺服器 (之後可掛前端或 Worker 測試) |
+| `npm run lint` | 執行 ESLint 檢查（使用 flat config，已忽略 vendor/assets） |
+| `npm test` | 執行 schema 驗證與規則預處理測試（`scripts/run-tests.js`） |
+| `npm run build:packs` | 從 Excel 重新產生 RulePack/PromptPack 並更新 manifest |
+| `npm run dev` | 啟動開發伺服器（供前端或 Worker 手動測試） |
 
 ## 程式碼風格
 - 使用 ESLint 既有規則，提交前請確保無 error（warning 可接受但建議處理）
@@ -36,15 +36,14 @@
   - `test: add IR diff tests`
 
 ## 測試策略
-### 單元測試
-放在 `test/unit/*.mjs`，使用 Node 原生 `node:test`。
+### 既有測試
+- Schema 驗證：`tests/schema-validation.mjs` 透過 AJV 編譯 `rulepack.schema.json` 與 `promptpack.schema.json`，並對三個壞樣本確認錯誤訊息。
+- 規則預處理：`tests/rules-pipeline.mjs` 驗證 manifest 版本選擇與 `applyPreprocessRules` 對示例圖表的修改結果。
 
-### 快照測試 (規劃)
-- 目標：對 Mermaid 文字輸出建立 `.snap` 對照
-- 建議目錄：`test/snapshots/`
-
-### 整合測試 (規劃)
-- 上傳程式碼 → 解析 → 生成 Mermaid → 渲染 → 匯出 (Playwright)
+### 計畫中的擴充
+- 單元測試：以 `node:test` 建立較小顆粒度的函式測試，建議放在 `tests/unit/`。
+- 快照測試：對 Mermaid 輸出建立 `.snap` 對照（建議目錄 `tests/snapshots/`）。
+- 整合測試：以 Playwright 驗證「上傳程式 → 解析 → 渲染 → 匯出」全流程。
 
 ## IR 擴充指引
 `js/engine/ir.js` (將新增)：
@@ -75,7 +74,7 @@ export function addEntity(ir, entity) { ir.entities.push(entity); }
 ## 提交流程
 1. Fork / 建立分支
 2. 實作 + 加測試 + 更新文件
-3. 執行：`npm run test:ci`
+3. 執行：`npm run lint` 與 `npm test`
 4. 發 PR，描述：動機 / 變更 / 驗證方式 / 風險
 5. Reviewer 檢查後合併
 

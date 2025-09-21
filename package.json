@@ -6,12 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node ./scripts/start-server.js",
-    "lint": "eslint . --ext .js,.mjs",
+    "lint": "eslint .",
     "test": "node ./scripts/run-tests.js",
     "dev": "node --input-type=module scripts/dev-server.mjs",
-    "validate:schema": "node validate-schema.js",
-    "test:schema": "node --test test/unit/schema-validation.test.mjs",
-    "pr:create": "gh pr create --base main --head feature/schema-ajv --title 'feat(schema): AJV validation and CI' --body 'Add AJV schema validation, tests, bad samples, and CI integration.\n\nFixes #28'"
+
   },
   "engines": {
     "node": ">=18"
@@ -20,5 +18,8 @@
     "ajv": "^8.17.1",
     "eslint": "^8.57.0",
     "playwright": "^1.41.2"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
   }
 }

@@ -1,0 +1,11 @@
+{
+  "defaultVersion": "2025-09-12",
+  "versions": {
+    "2025-09-12": {
+      "rulepack": "rules/versions/2025-09-12/rulepack.json",
+      "promptpack": "rules/versions/2025-09-12/promptpack.json",
+      "source": "__not_shipped__/data/diagram_knowledge_pack.xlsx",
+      "generatedAt": "2025-09-21T09:03:07.739Z"
+    }
+  }
+}
