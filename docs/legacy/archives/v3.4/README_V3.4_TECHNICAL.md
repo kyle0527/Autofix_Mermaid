@@ -2,4 +2,4 @@
 Moved on: 2025-09-16
 Original path: /README_V3.4_TECHNICAL.md
 
-This technical README for V3.4 was archived to doc/archives/v3.4.
+This technical README for V3.4 was archived to docs/legacy/archives/v3.4.
