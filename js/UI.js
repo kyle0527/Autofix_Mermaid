@@ -1,3 +1,5 @@
+import { t, onLocaleChange, getLocale } from './i18n/index.js';
+
   /**
    * 建立 worker 實例，依 engineMode 切換 classic/AI
    * @param {string} engineMode - 'rules' | 'ai'
@@ -176,15 +178,54 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
    * @param {boolean} isOk - Whether operation was successful
    * @param {string} message - Status message
    */
-  function setStatus(isOk, message) {
+  const statusState = {
+    isOk: true,
+    key: null,
+    params: {},
+    message: '',
+  };
+
+  function applyStatusLocale() {
     const statusElement = $('status');
     const messageElement = $('statusMsg');
-    if (statusElement) statusElement.textContent = isOk ? 'OK' : 'WORKING';
-    if (messageElement) messageElement.textContent = message || '';
+    if (statusElement) {
+      statusElement.textContent = statusState.isOk ? t('status.okShort') : t('status.workingShort');
+    }
+    if (messageElement) {
+      const text = statusState.key ? t(statusState.key, statusState.params) : statusState.message;
+      messageElement.textContent = text || '';
+    }
   }
-    // mark helper as used to avoid lint warning
-    /* eslint-disable no-unused-vars */
-    void ensureMermaidInit;
+
+  function setStatus(isOk, messageOrOptions, maybeParams = {}) {
+    statusState.isOk = !!isOk;
+    statusState.key = null;
+    statusState.params = {};
+    statusState.message = '';
+
+    if (typeof messageOrOptions === 'string') {
+      if (messageOrOptions.includes('.')) {
+        statusState.key = messageOrOptions;
+        statusState.params = maybeParams || {};
+      } else {
+        statusState.message = messageOrOptions;
+      }
+    } else if (messageOrOptions && typeof messageOrOptions === 'object') {
+      statusState.key = messageOrOptions.key || null;
+      statusState.params = messageOrOptions.params || {};
+      statusState.message = messageOrOptions.message || '';
+    }
+
+    applyStatusLocale();
+  }
+
+  onLocaleChange(() => {
+    applyStatusLocale();
+  });
+
+  // mark helper as used to avoid lint warning
+  /* eslint-disable no-unused-vars */
+  void ensureMermaidInit;
 
   /**
    * Show user notification
@@ -286,7 +327,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       }
       if (logElement) logElement.textContent = '';
       
-      setStatus(false, '分析中…');
+      setStatus(false, 'status.analyzing');
 
       const diagramType = $('diagramType')?.value || 'flowchart';
       const width = parseInt($('svgW')?.value || '0', 10) || 0;
@@ -324,18 +365,19 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           } catch (error) {
             console.error('SVG parsing failed:', error);
             // Fallback to text content for debugging
-            svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+            svgContainer.textContent = t('error.svgRenderFailed', { message: error.message });
           }
         }
         if (logElement) logElement.textContent = normalizedCode;
         
         enableExportButtons();
-        setStatus(true, 'OK 直接渲染 Mermaid');
+        setStatus(true, 'status.directRenderSuccess');
         return { code: normalizedCode, errors: [], log: [], dtype: 'mermaid' };
       }
 
       // 根據 engineMode 建立 worker 與 payload
       const files = await collectFiles(inputText);
+      const locale = getLocale();
       let postPayload = {};
       const worker = createWorker(engineMode);
 
@@ -347,7 +389,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             mode: 'ai',
             diagram: diagramType,
             provider: aiProvider,
-            mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' }
+            mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' },
+            locale
           }
         };
       } else {
@@ -359,7 +402,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             lang: 'python',
             diagram: diagramType,
             provider: aiProvider,
-            seedMermaid: undefined
+            seedMermaid: undefined,
+            locale
           }
         };
       }
@@ -417,7 +461,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             } catch (error) {
               console.error('SVG parsing failed:', error);
               // Fallback to text content for debugging
-              svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+              svgContainer.textContent = t('error.svgRenderFailed', { message: error.message });
             }
           }
           if (logElement) {
@@ -428,7 +472,11 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           }
           
           enableExportButtons();
-          setStatus(true, dtype ? `OK 偵測到圖表：${dtype}` : 'OK');
+          if (dtype) {
+            setStatus(true, 'status.detectedDiagram', { dtype });
+          } else {
+            setStatus(true, 'status.okShort');
+          }
           resolve({ code: safeCode, errors, log, dtype });
         };
 
@@ -456,7 +504,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
     } catch (error) {
       console.error('Processing failed:', error);
-      showNotice(`發生錯誤：${error?.message || error}`);
+      showNotice(t('notice.errorWithMessage', { message: error?.message || error }));
       setStatus(false, error?.message || String(error));
       return null;
     }
@@ -484,7 +532,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         try {
           filesMap[key] = await readFileAsText(file);
         } catch (error) {
-          console.warn(`讀取檔案失敗：${file.name}`, error);
+          console.warn(t('warning.fileReadFailed', { file: file.name }), error);
         }
       }
       
@@ -509,7 +557,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
     if (logElement) logElement.textContent = '';
     
-    setStatus(false, '自我檢測中…');
+    setStatus(false, 'status.selfTestRunning');
 
   // Self-test uses the ESM worker variant
   const worker = new Worker(`js/worker.mjs?v=${Date.now()}`, { type: 'module' });
@@ -597,7 +645,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         } catch (error) {
           console.error('SVG parsing failed:', error);
           // Fallback to text content for debugging
-          svgContainer.textContent = 'SVG rendering failed: ' + error.message;
+          svgContainer.textContent = t('error.svgRenderFailed', { message: error.message });
         }
       }
       
@@ -606,14 +654,17 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       const webTreeSitter = log.find(item => item && item.rule === 'worker.wts');
       
       if (logElement) {
-        logElement.textContent = 
-          `diag: ${diagnostics ? diagnostics.msg : 'n/a'}\n` +
-          `${webTreeSitter ? 'web-tree-sitter used' : 'fallback parser'}`;
+        const diagValue = diagnostics ? diagnostics.msg : t('selfTest.notAvailable');
+        const diagText = t('selfTest.diagnostic', { value: diagValue });
+        const parserText = webTreeSitter
+          ? t('selfTest.webTreeSitterUsed')
+          : t('selfTest.fallbackParser');
+        logElement.textContent = `${diagText}\n${parserText}`;
       }
       
-      setStatus(true, webTreeSitter ? 'OK（使用 web-tree-sitter）' : 'OK（使用 fallback 解析）');
+      setStatus(true, webTreeSitter ? 'status.webTreeSitterOk' : 'status.fallbackOk');
     } catch (error) {
-      showNotice(`自我檢測失敗：${error?.message || error}`);
+      showNotice(t('notice.selfTestFailed', { message: error?.message || error }));
       setStatus(false, error?.message || String(error));
     }
   }
@@ -678,9 +729,15 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     $('btnSelfTest')?.addEventListener('click', runSelfTest);
     // 健康檢測：檢查模型 JSON、worker、Ollama
     $('btnHealth')?.addEventListener('click', async () => {
-      setStatus(false, '健康檢測中…');
+      setStatus(false, 'status.healthCheckRunning');
       const lines = [];
-      const push = (ok, label, extra='') => lines.push(`${ok ? '✅' : '❌'} ${label}${extra ? ' - ' + extra : ''}`);
+      const translateValue = (value) =>
+        value && value.startsWith('health.') ? t(value) : value;
+      const push = (ok, label, extra = '') => {
+        const labelText = translateValue(label);
+        const extraText = translateValue(extra);
+        lines.push(`${ok ? '✅' : '❌'} ${labelText}${extraText ? ' - ' + extraText : ''}`);
+      };
       try {
         // 1. 模型 JSON
         const modelFiles = ['rules_v1.json','knowledge_index_v1.json','qa_templates_v1.json'];
@@ -715,18 +772,21 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             push(false, 'Ollama /api/version', String(e.name === 'AbortError' ? 'timeout' : e));
           }
         } else {
-          push(true, 'Ollama（略過）', '非選用');
+          push(true, 'health.ollamaSkipped', 'health.ollamaOptional');
         }
         // 5. 同源判斷 (避免 file://)
-        push(location.protocol.startsWith('http'), 'HTTP(S) 協議', location.protocol);
+        push(location.protocol.startsWith('http'), 'health.protocolCheck', location.protocol);
         // 顯示結果
         const logElement = $('log');
         if (logElement) logElement.textContent = lines.join('\n');
-        setStatus(true, '健康檢測完成');
+        setStatus(true, 'status.healthCheckSuccess');
       } catch (e) {
         const logElement = $('log');
-        if (logElement) logElement.textContent = lines.concat(['錯誤: '+ (e?.message||e)]).join('\n');
-        setStatus(false, '健康檢測失敗');
+        if (logElement) {
+          const message = e?.message || e;
+          logElement.textContent = lines.concat([t('health.errorLine', { message })]).join('\n');
+        }
+        setStatus(false, 'status.healthCheckFailed');
       }
     });
 
@@ -760,7 +820,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     $('btnExportSVG')?.addEventListener('click', () => {
       const svgElement = document.querySelector('#graphDiv svg') || document.querySelector('#svg svg');
       if (!svgElement) {
-        alert('沒有可匯出的 SVG');
+        alert(t('alert.noSvg'));
         return;
       }
       
@@ -782,12 +842,12 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     $('btnExportImage')?.addEventListener('click', async () => {
       const svgElement = document.querySelector('#graphDiv svg') || document.querySelector('#svg svg');
       if (!svgElement) {
-        alert('沒有可匯出的圖片');
+        alert(t('alert.noImage'));
         return;
       }
 
       // 讓用戶選擇輸出格式
-      const format = confirm('選擇輸出格式:\n確定 = PNG\n取消 = SVG') ? 'PNG' : 'SVG';
+      const format = confirm(t('alert.chooseFormat')) ? 'PNG' : 'SVG';
       
       if (format === 'SVG') {
         // 直接輸出 SVG
@@ -816,8 +876,9 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           });
           downloadFile('diagram.png', pngBlob, 'image/png');
         } catch (error) {
-          console.error('PNG 輸出失敗：', error);
-          alert(`PNG 輸出失敗：${error?.message || error}`);
+          const message = error?.message || error;
+          console.error(t('alert.pngExportFailed', { message }), error);
+          alert(t('alert.pngExportFailed', { message }));
         }
       }
     });
@@ -825,7 +886,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     $('btnExportPNG')?.addEventListener('click', async () => {
       const svgElement = document.querySelector('#graphDiv svg') || document.querySelector('#svg svg');
       if (!svgElement) {
-        alert('沒有可匯出的 SVG');
+        alert(t('alert.noSvg'));
         return;
       }
 
@@ -843,7 +904,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       // 檢查 SVG 是否含外部資源（如 <image>、外部 CSS）
       const hasExternalResource = /<image\s[^>]*xlink:href=["'](http|data:)[^"']+["']/i.test(svgString) || /<link\s[^>]*href=["']http/i.test(svgString);
       if (hasExternalResource) {
-        alert('PNG 匯出失敗：SVG 內容含外部資源（如圖片或外部 CSS），無法匯出。請移除外部資源後再試。');
+        alert(t('alert.pngExportNoExternal'));
         return;
       }
       try {
@@ -854,8 +915,9 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         });
         downloadFile('diagram.png', pngBlob, 'image/png');
       } catch (error) {
-        console.error('PNG 轉出失敗：', error);
-        alert(`PNG 轉出失敗：${error?.message || error}\n可能原因：SVG 內容含外部資源或瀏覽器安全限制。`);
+        const message = error?.message || error;
+        console.error(t('alert.pngConvertFailed', { message }), error);
+        alert(`${t('alert.pngConvertFailed', { message })}\n${t('alert.pngConvertReason')}`);
       }
     });
   }
@@ -885,7 +947,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
   try {
     const srcEl = $('src');
     if (srcEl && !String(srcEl.value || '').trim()) {
-      srcEl.value = 'flowchart TD\n  A[Mermaid AutoFix] --> B[準備完成]\n  B --> C{開始輸入或上傳檔案}';
+      srcEl.value = t('sample.flowchart');
       // 做一次直接渲染（不經 worker）
       setTimeout(() => { try { document.getElementById('btnRender')?.click(); } catch {} }, 0);
     }

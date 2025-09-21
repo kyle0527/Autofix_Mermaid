@@ -1,90 +1,155 @@
-請
-import mermaid from 'mermaid';
-import { sanitize } from './sanitize.js';
-import { applyFixes } from './autofix.js';
-import { applyLayoutSelection } from './layout.js';
+import { loadDocList, loadDocInto } from './docs.js';
+import { bindConfigPanel } from './configPanel.js';
+import { t } from './i18n/index.js';
 
-mermaid.initialize({ startOnLoad:false, securityLevel:'strict' });
+const DOC_PANEL_ID = 'docsPanel';
+const DOC_SELECT_IDS = ['docSelect', 'doc-select'];
+const DOC_VIEW_ID = 'docView';
+const CONFIG_PANEL_ID = 'configPanel';
 
-// tolerant selection: try multiple id variants (dash-case and camelCase) to match HTML
-function $id(...names) {
-  for (const n of names) {
-    if (!n) continue;
-    const byId = document.getElementById(n);
-    if (byId) return byId;
-    const byCssId = document.querySelector('#' + n);
-    if (byCssId) return byCssId;
-    // allow passing selectors directly
-    try { const q = document.querySelector(n); if (q) return q; } catch {}
+let docsInitialized = false;
+let docsVisible = false;
+let configVisible = false;
+
+function getDocSelectElement() {
+  for (const id of DOC_SELECT_IDS) {
+    const el = document.getElementById(id);
+    if (el) {
+      return /** @type {HTMLSelectElement} */ (el);
+    }
   }
   return null;
 }
 
-const editor = $id('editor', 'src');
-const errors = $id('errors', 'log');
-const preview = $id('preview', 'svg', 'graphDiv');
-const themeSel = $id('theme', 'secLevel');
-const layoutSel = $id('layout', 'layoutSelect');
-
-if (!editor) console.warn('Editor element not found (tried #editor, #src)');
-if (!errors) console.warn('Errors element not found (tried #errors, #log)');
-if (!preview) console.warn('Preview element not found (tried #preview, #svg, #graphDiv)');
-
-async function validate(code){
-  errors.textContent='';
-  try { await mermaid.parse(code); return true; }
-  catch(e){ errors.textContent=(e&&e.str)?e.str:String(e); return false; }
+function getDocViewElement() {
+  const el = document.getElementById(DOC_VIEW_ID);
+  return el ?? null;
 }
-async function render(){
-  // Run autofixes but do NOT forcibly overwrite the editor by default.
-  // This keeps render as a preview operation. If you want to persist fixes,
-  // call render({ persistFixes: true }) or use the dedicated autofix button.
-  const { code: fixedCode, notes } = applyFixes(editor.value);
-  // If autofix returned notes, surface them in the errors panel for user feedback.
-  if (Array.isArray(notes) && notes.length) {
-    errors.textContent = notes.join('\n');
+
+async function loadSelectedDoc(selectEl, viewEl) {
+  if (!selectEl || !viewEl) return;
+  const docPath = selectEl.value;
+  if (!docPath) {
+    viewEl.textContent = '';
+    return;
   }
-  const codeToRender = (typeof fixedCode === 'string' && fixedCode.length > 0) ? fixedCode : editor.value;
 
-  // Optionally persist fixes back to the editor. Keep default behavior = false to
-  // avoid surprising UX where preview mutates user text on every render.
-  // If you prefer the old behaviour, call render({ persistFixes: true }) or
-  // set persistOnRender = true here.
-  const persistOnRender = false;
-  if (persistOnRender) editor.value = codeToRender;
-
-  const theme = themeSel.value;
-  applyLayoutSelection(mermaid, layoutSel.value);
-  mermaid.initialize({ startOnLoad:false, securityLevel:'strict', theme });
-
-  if(!(await validate(codeToRender))){ preview.innerHTML=''; return; }
-
-  // mermaid.render can return either a string (svg) or an object { svg, bindFunctions }
-  // depending on mermaid build/version. Handle both safely.
-  const renderResult = await mermaid.render('mmd-'+Date.now(), codeToRender);
-  const svg = (typeof renderResult === 'string') ? renderResult : (renderResult && renderResult.svg) ? renderResult.svg : String(renderResult);
-  preview.innerHTML = sanitize(svg);
-}
-
-// tolerant button binding helper
-function bindButton(handler, ...ids){
-  for (const id of ids) {
-    const el = $id(id, id.replace(/-/g, ''), id.replace(/-/g, '').replace(/^(.)/, m => m.toLowerCase()));
-    if (el) { el.onclick = handler; return el; }
+  viewEl.setAttribute('data-i18n', 'docs.loading');
+  viewEl.textContent = t('docs.loading');
+  try {
+    await loadDocInto(viewEl, docPath);
+    viewEl.removeAttribute('data-i18n');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    viewEl.removeAttribute('data-i18n');
+    viewEl.textContent = t('docs.loadError', { message });
   }
-  return null;
 }
 
-bindButton(async ()=>{ await validate(editor && editor.value); }, 'btn-validate', 'btnValidate', 'btnValidate');
-bindButton(()=>render(), 'btn-render', 'btnRender', 'btnRender');
-bindButton(()=>{ const r = applyFixes(editor && editor.value); if(r && r.code) editor.value = r.code; if(r && r.notes) errors.textContent = (Array.isArray(r.notes)?r.notes.join('\n'):String(r.notes)); }, 'btn-autofix', 'btnAutoFix', 'AutoFix', 'btnAutoFix');
+async function ensureDocsInitialized() {
+  if (docsInitialized) return;
 
-themeSel.addEventListener('change', render);
-layoutSel.addEventListener('change', render);
+  const selectEl = getDocSelectElement();
+  const viewEl = getDocViewElement();
 
-editor.value = `graph TD
-  A([ Start: passthrough(payload) ]) --> B["Work"]
-  B --> C{{"OK?"}}
-  C -->|Yes| D([ End ]) 
-  C -->|No| A
-`;
+  if (!selectEl || !viewEl) {
+    console.warn('Docs panel elements not found.');
+    return;
+  }
+
+  try {
+    const files = await loadDocList();
+    selectEl.innerHTML = '';
+
+    if (!files.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.dataset.i18n = 'docs.noneOption';
+      option.textContent = t('docs.noneOption');
+      selectEl.appendChild(option);
+      viewEl.setAttribute('data-i18n', 'docs.emptyMessage');
+      viewEl.textContent = t('docs.emptyMessage');
+      docsInitialized = true;
+      return;
+    }
+
+    for (const file of files) {
+      const option = document.createElement('option');
+      option.value = file;
+      option.textContent = file.replace(/\.md$/i, '');
+      selectEl.appendChild(option);
+    }
+
+    selectEl.addEventListener('change', () => {
+      loadSelectedDoc(selectEl, viewEl);
+    });
+
+    // Load the first document by default
+    selectEl.selectedIndex = 0;
+    await loadSelectedDoc(selectEl, viewEl);
+    docsInitialized = true;
+  } catch (error) {
+    const viewEl = getDocViewElement();
+    const message = error instanceof Error ? error.message : String(error);
+    if (viewEl) {
+      viewEl.removeAttribute('data-i18n');
+      viewEl.textContent = t('docs.listError', { message });
+    }
+    console.error('Failed to initialize docs panel:', error);
+  }
+}
+
+function updatePanelVisibility(panel, visible) {
+  if (!panel) return;
+  panel.style.display = visible ? 'block' : 'none';
+  panel.setAttribute('aria-hidden', visible ? 'false' : 'true');
+}
+
+export async function toggleDocsPanel() {
+  const panel = document.getElementById(DOC_PANEL_ID);
+  if (!panel) {
+    console.warn('Docs panel not found.');
+    return;
+  }
+
+  docsVisible = !docsVisible;
+  if (docsVisible) {
+    await ensureDocsInitialized();
+  }
+  updatePanelVisibility(panel, docsVisible);
+}
+
+export function toggleConfigPanel() {
+  const panel = document.getElementById(CONFIG_PANEL_ID);
+  if (!panel) {
+    console.warn('Config panel not found.');
+    return;
+  }
+
+  configVisible = !configVisible;
+  updatePanelVisibility(panel, configVisible);
+}
+
+export async function initP1Features() {
+  await ensureDocsInitialized();
+
+  const docsPanel = document.getElementById(DOC_PANEL_ID);
+  if (docsPanel) {
+    docsPanel.style.display = 'none';
+    docsPanel.setAttribute('aria-hidden', 'true');
+  }
+
+  const configPanel = document.getElementById(CONFIG_PANEL_ID);
+  if (configPanel) {
+    configPanel.style.display = 'none';
+    configPanel.setAttribute('aria-hidden', 'true');
+  }
+
+  try {
+    if (typeof window !== 'undefined' && window.mermaid) {
+      bindConfigPanel(window.mermaid);
+    }
+  } catch (error) {
+    console.warn('Failed to bind config panel:', error);
+  }
+}
