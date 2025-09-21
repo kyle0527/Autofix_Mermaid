@@ -233,6 +233,6 @@ npm run build
 
 ---
 
-(Archived) 此檔案已移至 doc/archive/README_V3.4_TECHNICAL.md（備份日期：2025-09-16）。
+(Archived) 此檔案已移至 docs/legacy/archive/README_V3.4_TECHNICAL.md（備份日期：2025-09-16）。
 
-請開啟 doc/archive/README_V3.4_TECHNICAL.md 以檢視完整內容。
+請開啟 docs/legacy/archive/README_V3.4_TECHNICAL.md 以檢視完整內容。

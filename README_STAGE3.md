@@ -2,7 +2,7 @@
 
 ### 1. 開始使用
 
-1. 開啟 index.html（建議使用 Chrome 或 Edge）。
+1. 在專案根目錄執行 `npm install && npm start`，或啟動 `python -m http.server` 後造訪 `http://localhost:8080`。
 2. 主畫面上方有一排工具按鈕，包含「直接渲染」、「自動修正＋渲染」、「自我檢測」等。
 3. 下方有「原始碼輸入區」，可貼上 Mermaid、Python 或專案程式碼。
 
@@ -15,15 +15,16 @@
 
 ### 3. 進階功能
 
+- **規則版本切換**：配置面板可從 manifest 選擇 RulePack/PromptPack，並顯示來源與生成時間。
+- **說明文件面板**：Docs 面板會記住最後閱讀的 Markdown，重新整理後仍保留選取。
 - **專案檔案匯入**：可選擇整個資料夾，批次分析多個 Python 檔案。
-- **圖表類型切換**：可選擇 flowchart、classDiagram、sequenceDiagram 等不同圖表類型。
-- **安全性設定**：可調整 Mermaid 的 security level（strict/loose）。
-- **自我檢測**：按「自我檢測」可測試系統功能是否正常。
+- **圖表與安全性設定**：可切換 flowchart/class/sequence、調整 security level（strict/loose）。
+- **自我檢測**：按「自我檢測」可測試 worker、Mermaid 與模型資源是否正常。
 
 ### 4. 除錯與規則設定
 
 - **除錯面板**：按「除錯」可開啟 log 面板，檢視分析過程、錯誤訊息與 AI/engine 回傳細節。
-- **規則面板**：按「規則」可開啟規則設定區，直接編輯或新增優化規則（JSON 格式），儲存後即時生效。
+- **規則／配置面板**：按「規則」可開啟規則設定區（仍支援 JSON 編輯）；按「配置」可選擇 RulePack/PromptPack 版本並檢視來源、生成時間。
 
 ### 5. 常見問題
 
@@ -40,10 +41,10 @@
 - 支援 AI/engine 切換，適合進階用戶測試不同分析路徑。
 
 # Stage 3 Delivered
-- Source Mode (Auto/Mermaid/Python), Auto Render, Diagnostics
-- Worker attempts web-tree-sitter if present; otherwise falls back
-- Engine supports runPipelineIR(ir, opts)
-- Newline handling fixed in engine emitters
+- Source Mode (Auto/Mermaid/Python)、Auto Render、Diagnostics。
+- 規則/AI worker 整合：UI 可切換 engine/provider，並將 RulePack 選擇帶入 worker payload。
+- 配置面板支援 manifest 驗證與版本資訊展示；Docs 面板支援懶載入與選項快取。
+- AJV 驗證與 `npm test` 自動檢查：阻擋壞的 Rule/Prompt pack，並驗證預處理規則範例。
 
 ## 2025-09-12 功能更新紀錄
 
@@ -52,7 +53,7 @@
 	- 新增 `debugPanel`（顯示分析/修正 log）與 `rulesPanel`（可編輯/儲存優化規則 JSON）。
 	- UI.js 可控制面板開啟/關閉，並將 log 或規則內容動態顯示於對應區塊。
 
-- UI 功能全面集中於 UI.js，UI-clean.js 已刪除。
+- UI 功能全面集中於 UI.js，舊版 UI-clean.js 已封存於 docs/legacy/ui-prototype/UI-clean.js。
 
 - engine-esm.js（ESM 版）已建立，可直接 import/export 主要函式。
 

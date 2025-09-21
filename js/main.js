@@ -16,7 +16,6 @@ import {
   t,
 } from './i18n/index.js';
 // P2 imports
-import { applyFixes } from './autofix.js';
 import { applyLayoutSelection } from './layout.js';
 
 function setupLocalization() {
@@ -69,15 +68,15 @@ async function initializeApp() {
     console.info('Mermaid initialized successfully');
 
     // Wire up UI components
-    initializeUI(renderMermaid, svgToPNG, initMermaid);
+    const uiControls = initializeUI(renderMermaid, svgToPNG, initMermaid);
     console.info('UI initialized successfully');
 
     // Initialize P1 features (Docs and Config panels)
-    initP1Features();
+    await initP1Features();
     console.info('P1 features initialized successfully');
 
     // Initialize P2 features (AutoFix pipeline and Layout)
-    initP2Features();
+    initP2Features(uiControls);
     console.info('P2 features initialized successfully');
 
     // Bind P1 panel toggle buttons
@@ -104,21 +103,17 @@ async function initializeApp() {
   }
 }
 
-// Mark optional import as used to avoid lint warning when it's intentionally unused
-/* eslint-disable no-unused-vars */
-void toggleConfigPanel;
-
 /**
  * Initialize P2 features (AutoFix pipeline and Layout)
  */
-function initP2Features() {
+function initP2Features(uiControls) {
   const btnValidate = document.getElementById('btnValidate');
   const btnAutoFix = document.getElementById('btnAutoFix');
   const layoutSelect = document.getElementById('layoutSelect');
   const srcTextarea = document.getElementById('src');
   const logPre = document.getElementById('log');
 
-  if (btnValidate) {
+  if (btnValidate && srcTextarea && logPre) {
     btnValidate.addEventListener('click', async () => {
       const code = srcTextarea.value;
       try {
@@ -130,11 +125,15 @@ function initP2Features() {
     });
   }
 
-  if (btnAutoFix) {
+  if (btnAutoFix && uiControls?.runAnalysis) {
     btnAutoFix.addEventListener('click', () => {
-      const result = applyFixes(srcTextarea.value);
-      srcTextarea.value = result.code;
-      logPre.textContent = result.notes.join('\n');
+      uiControls.runAnalysis('autofix').catch((error) => {
+        console.error('AutoFix invocation failed:', error);
+        if (logPre) {
+          const message = error instanceof Error ? error.message : String(error);
+          logPre.textContent = t('notice.errorWithMessage', { message });
+        }
+      });
     });
   }
 
@@ -142,7 +141,7 @@ function initP2Features() {
     layoutSelect.addEventListener('change', () => {
       applyLayoutSelection(window.mermaid, layoutSelect.value);
       // Trigger re-render if there's content
-      if (srcTextarea.value.trim()) {
+      if (srcTextarea && srcTextarea.value.trim()) {
         // This will be handled by the existing render logic
       }
     });

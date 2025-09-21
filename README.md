@@ -15,39 +15,49 @@
 ### 1️⃣ 啟動應用程式
 ```bash
 # 切換到專案目錄
-cd "C:\D\Autofix_Mermaid\autofix_mermaidV3.4"
+cd Autofix_Mermaid
 
-# 啟動本地伺服器  
-python -m http.server 8080
+# 安裝依賴並啟動開發伺服器
+npm install
+npm start
 
-# 開啟瀏覽器訪問
-# http://localhost:8080
+# 或以簡易 HTTP 伺服器啟動（例如 Python）
+# python -m http.server 8080
+# 然後造訪 http://localhost:8080
 ```
 
 ### 2️⃣ 基本使用
-1. **貼上程式碼**：在輸入區域貼上 Python 程式碼或 Mermaid 語法
-2. **選擇模式**：自動偵測 / Mermaid / Python
-3. **生成圖表**：點擊「自動修正＋渲染」
-4. **匯出結果**：點擊「輸出圖片」選擇 SVG 或 PNG 格式
+1. **貼上程式碼或上傳資料夾**：輸入區域支援 Python、Mermaid 或自動偵測。
+2. **選擇解析引擎**：使用工具列的「Rules / AI」切換 worker 管線與提供者。
+3. **挑選規則版本**：在配置面板選擇 manifest 內的 RulePack/PromptPack 版本（預設使用最新）。
+4. **生成圖表**：點擊「直接渲染」或「自動修正＋渲染」，自動套用預處理規則後渲染。
+5. **匯出結果**：成功渲染後可下載 MMD、SVG、PNG、錯誤與修正日誌等檔案。
+
+### 3️⃣ 驗證環境
+```bash
+npm run lint
+npm test
+```
+
 
 ---
 
 ## ✨ 主要功能
 
 ### 🔍 智能程式碼分析
-- **Tree-sitter 支援**：精確的 Python 語法解析
-- **自動 Fallback**：無 WASM 環境時自動降級  
-- **多語言支援**：Python、Mermaid 語法
+- **Worker 管線**：UI 與 `js/worker.js` / `js/worker.mjs` 對接，可在規則與 AI 模式間切換。
+- **Mermaid 預處理**：RulePack `preprocess` 規則會在直接渲染前自動修正常見語法。
+- **自動 Fallback**：無 WASM / engine 時改走規則或 AI mock 管線。
 
-### 📊 豐富的圖表類型
-- **🌊 Flowchart**：程序流程圖
-- **🏗️ Class Diagram**：類別關係圖
-- **🔄 Sequence Diagram**：序列互動圖
+### 📊 規則與提示包管理
+- **Manifest 駕馭**：`rules/manifest.json` 定義版本、來源與預設 Pack。
+- **版本選擇器**：配置面板提供 RulePack/PromptPack 切換，並顯示產生時間與來源資訊。
+- **AJV 驗證**：載入時與 CI 皆會使用 JSON Schema 驗證 Rule/Prompt 資料。
 
 ### 🎨 現代化介面
-- **即時預覽**：輸入時自動渲染
-- **智能按鈕**：成功後啟用匯出功能
-- **格式選擇**：一鍵切換 SVG/PNG 輸出
+- **即時預覽與自動渲染**：輸入或設定變更時可自動觸發渲染。
+- **面板快取**：Docs / Config 面板記憶上次開啟狀態與選擇的說明文件。
+- **匯出流程**：僅在成功渲染後啟用按鈕，支援 SVG、PNG、MMD 與錯誤/修正記錄
 
 ---
 
@@ -182,22 +192,26 @@ flowchart LR
 ## 📁 專案結構
 
 ```
-autofix_mermaidV3.4/
-├── 📄 index.html              # 主應用程式
-├── 📁 js/                     # JavaScript 模組
-│   ├── main.js               # 應用程式進入點
-│   ├── UI.js                 # 使用者介面
-│   ├── Renderer.js           # 圖表渲染器
-│   ├── worker.js             # 背景處理器
-│   ├── vendor/               # 第三方庫
-│   │   ├── mermaid.min.js
-│   │   └── web-tree-sitter.js ⭐ 新增
-│   └── wasm/                 # WebAssembly
-│       ├── tree-sitter.wasm ⭐ 新增
-│       └── tree-sitter-python.wasm ⭐ 新增
-├── 📁 css/                    # 樣式檔案
-├── 📁 engine-src/             # TypeScript 原始碼
-└── 📚 文檔/                   # 說明文件
+Autofix_Mermaid/
+├── 📄 index.html              # 主應用程式入口
+├── 📁 js/                     # UI、渲染與 worker 模組
+│   ├── main.js               # 初始化入口
+│   ├── UI.js / app.js        # 互動與面板控制
+│   ├── rules/                # RulePack 客戶端工具
+│   ├── worker.js / worker.mjs# 規則/AI worker 實作
+│   └── engine/               # 規則驗證器等核心模組
+├── 📁 rules/                  # 版本化 Rule/Prompt packs
+│   ├── manifest.json         # Pack 清單與預設版本
+│   ├── rulepack.json         # 預設規則包快取
+│   └── versions/             # 版本化輸出（build-packs 產生）
+├── 📁 scripts/               # 自動化腳本
+│   ├── run-tests.js          # lint/schema/fixtures 測試入口
+│   └── build-packs.mjs       # XLSX → JSON 轉換
+├── 📁 tests/                 # Node 測試套件
+│   ├── schema-validation.mjs # AJV 驗證三組壞樣本
+│   └── rules-pipeline.mjs    # 預處理規則範例驗證
+├── 📁 docs/                  # 使用文件與技術地圖（含 docs/legacy/）
+└── 📄 package.json           # npm 腳本與依賴
 ```
 
 ---
@@ -305,3 +319,17 @@ classDiagram
 
 [![GitHub](https://img.shields.io/badge/GitHub-kyle0527-blue.svg)](https://github.com/kyle0527)
 [![AutoFix Mermaid](https://img.shields.io/badge/AutoFix-Mermaid-green.svg)](https://github.com/kyle0527/Autofix_Mermaid)
+
+## 🧱 規則與 Prompt 匯入管線
+
+- `scripts/build-packs.mjs`：將 `__not_shipped__/data/diagram_knowledge_pack.xlsx` 匯入為 JSON，並寫入
+  `rules/versions/<版本>/rulepack.json` 與 `promptpack.json`。預設會更新 `rules/manifest.json` 與根目錄下的
+  `rules/rulepack.json`、`rules/promptpack.json`。
+- `npm run build:packs`：以專案腳本方式執行 `build-packs.mjs`，方便在 CI 或手動更新時快速重建最新版本的
+  RulePack / PromptPack。執行時會沿用 `rules/manifest.json` 指定的結構並自動更新預設版本。
+- `npm test`：會執行 Schema 驗證與範例圖測試，確保最新的 RulePack 能修正 `tests/fixtures/rules/examples/`
+  內的三個樣本圖；同時也會檢查 Node.js 環境是否成功載入 AJV 驗證器，以避免回落到較寬鬆的備援檢查。結束
+  前會呼叫 `node scripts/build-packs.mjs --check`，確保版本庫內的 JSON 與 `__not_shipped__/data/diagram_knowledge_pack.xlsx`
+  同步，若有落差則提示重新執行 `npm run build:packs` 更新。
+- 前端配置面板提供「規則版本」下拉選單，會根據 `rules/manifest.json` 自動載入版本、標示預設版本，並顯示
+  來源與生成時間，供測試不同規則組合時快速切換。

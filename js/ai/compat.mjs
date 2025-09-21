@@ -3,7 +3,6 @@
 // Usage (module worker): import './ai/compat.mjs'; await compat.registerAll(self);
 
 export async function registerAll(scope = self) {
-  const base = new URL('.', import.meta.url).pathname.replace(/\/js\/ai\/$/, '/js/ai/');
   // Try dynamic import of ESM providers
   try {
     // Note: browsers resolve import specifier relative to module URL

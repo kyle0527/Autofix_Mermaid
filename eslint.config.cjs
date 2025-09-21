@@ -5,7 +5,9 @@ module.exports = [
       'js/vendor/**',
       'wasm/**',
       'assets/**',
-      '**/*.min.js'
+      '**/*.min.js',
+      'engine-src/**/dist/**',
+      'docs/legacy/**'
     ]
   },
   {

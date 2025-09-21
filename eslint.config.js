@@ -1,11 +1,13 @@
 export default [
   {
     ignores: [
-  'js/vendor/**',
-  '_backup_removed/**',
+      'js/vendor/**',
+      '_backup_removed/**',
       'wasm/**',
       'assets/**',
-      '**/*.min.js'
+      '**/*.min.js',
+      'engine-src/**/dist/**',
+      'docs/legacy/**'
     ]
   },
   {
