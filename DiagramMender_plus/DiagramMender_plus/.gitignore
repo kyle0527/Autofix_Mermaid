@@ -1,0 +1,10 @@
+node_modules/
+dist/
+!packages/fix-rules/mermaid-compat/dist/
+coverage/
+.cache/
+.DS_Store
+*.log
+data/*.json
+
+package-lock.json

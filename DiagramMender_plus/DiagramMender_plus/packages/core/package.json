@@ -1,0 +1,17 @@
+{
+  "name": "@diagrammender/core",
+  "version": "0.3.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@diagrammender/types": "workspace:*",
+    "@diagrammender/parsers-python": "workspace:*",
+    "@diagrammender/analyzers": "workspace:*",
+    "@diagrammender/emitters-mermaid": "workspace:*",
+    "@diagrammender/fix-rules-mermaid-compat": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test dist/__tests__"
+  }
+}

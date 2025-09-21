@@ -51,6 +51,88 @@ python -m http.server 8080
 
 ---
 
+## ⚠️ 開發注意事項與檢查清單
+
+> **重要**：執行任何修改前後，請務必進行以下檢查以減少後續 Debug 工程！
+
+### 🔍 執行前檢查清單
+
+#### Mermaid 圖表相關
+- [ ] **檢查節點 ID 命名**：是否使用了 Mermaid 保留關鍵字？
+  - ❌ 避免：`end`, `start`, `class`, `id`, `graph`, `subgraph`
+  - ✅ 建議：`endNode`, `startNode`, `classNode`, `idNode`
+- [ ] **圖表類型宣告**：每個 `mermaid` 程式碼塊是否有正確的類型宣告？
+  - ✅ 必須：`flowchart TD`、`classDiagram`、`sequenceDiagram`
+- [ ] **註解語法**：是否混用了不同的註解格式？
+  - ❌ 避免：HTML 註解 `<!-- -->`、Markdown 註解 `[//]: #`
+  - ✅ 使用：Mermaid 註解 `%% 註解內容`
+
+#### TypeScript/JavaScript 相關
+- [ ] **類型註解**：回調函數參數是否有明確類型？
+  - ❌ 避免：`array.forEach((item, index) => ...)`
+  - ✅ 使用：`array.forEach((item: Type, index: number) => ...)`
+- [ ] **模組引用**：是否引用了不存在或未編譯的模組？
+- [ ] **tsconfig.json 配置**：輸出路徑是否與源碼路徑衝突？
+- [ ] **Monorepo 工作區**：`@diagrammender/*` 模組路徑是否正確配置？
+- [ ] **TypeScript 類型庫**：是否移除了有問題的 `"types": ["node"]` 配置？
+- [ ] **Null 安全檢查**：物件屬性存取是否有適當的 null 檢查？
+
+#### 檔案結構相關
+- [ ] **路徑引用**：跨平台路徑分隔符是否正確處理？
+- [ ] **編碼格式**：檔案是否使用 UTF-8 編碼？
+- [ ] **換行符**：是否統一使用 LF 或 CRLF？
+
+### 🧪 執行後驗證清單
+
+#### 功能驗證
+- [ ] **Mermaid 渲染**：所有圖表是否能正常渲染？
+- [ ] **TypeScript 編譯**：是否有編譯錯誤或警告？
+- [ ] **JavaScript 執行**：瀏覽器控制台是否有錯誤？
+
+#### 語法驗證
+- [ ] **Mermaid 語法檢查**：使用 Mermaid 驗證工具確認語法正確性
+- [ ] **ESLint 檢查**：執行 `npm run lint` 確認程式碼品質
+- [ ] **TypeScript 檢查**：執行 `tsc --noEmit` 進行類型檢查
+- [ ] **批量 Mermaid 測試**：運行 `python3 tests/fix_examples.py` 驗證所有圖表
+- [ ] **模組編譯測試**：確認 engine-src 和 DiagramMender_plus 兩個工作區都能編譯成功
+
+#### 相容性檢查
+- [ ] **瀏覽器相容**：在主流瀏覽器中測試功能
+- [ ] **Node.js 版本**：確認使用的 Node.js 版本符合需求 (>=18)
+- [ ] **依賴版本**：檢查 package.json 中的依賴版本是否相容
+
+### 🔧 常見問題快速參考
+
+1. **Mermaid 圖表不顯示**
+   - 檢查是否有語法錯誤 → 參考 `NOTE.md` 中的修復方法
+   - 確認是否有 `flowchart TD` 宣告
+   - 避免使用 `end` 作為節點名稱（改為 `endNode`）
+   - 移除 HTML 註釋和 Markdown 標記
+
+2. **TypeScript 編譯失敗**
+   - 檢查 tsconfig.json 配置 → 參考專案中的標準配置
+   - 確認所有參數都有明確類型註解
+   - 移除 `"types": ["node"]` 避免類型定義衝突
+   - 使用 `moduleResolution: "bundler"` 而非 `"node"`
+
+3. **模組找不到錯誤 (@diagrammender/*)**
+   - 確認 workspace 根目錄的 package.json 配置
+   - 檢查 tsconfig.json 中的 baseUrl 和 paths 設定
+   - 使用相對路徑或臨時類型定義作為備案
+   - 確保 monorepo 結構正確建立
+
+4. **GitHub Actions YAML 錯誤**
+   - 確認縮排使用空格而非 Tab
+   - 檢查 YAML 語法結構正確性
+   - 驗證動作名稱和參數格式
+
+5. **Python 類型註解問題**
+   - 確保使用 Python 3.6+ 支援的類型提示語法
+   - 檢查 import 語句中的類型引入
+   - 考慮向後相容性需求
+
+> 💡 **提示**：詳細的修復步驟和解決方案請參考 [NOTE.md](./NOTE.md) 檔案
+
 ---
 
 ## 🧭 商用願景與目標 (Business Vision)

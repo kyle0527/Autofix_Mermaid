@@ -1,0 +1,46 @@
+
+---
+
+# 二、Issue 模板（直接建立檔案）
+
+> 在 repo 建資料夾 `.github/ISSUE_TEMPLATE/`，放兩個檔案。
+
+**`.github/ISSUE_TEMPLATE/task.yml`**
+```yaml
+name: Task
+description: Track a deliverable for the roadmap (3×10)
+title: "[Task] "
+labels: ["kind:task"]
+body:
+  - type: input
+    id: code
+    attributes:
+      label: Task Code
+      description: e.g., P1-03
+      placeholder: P1-03
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What this task must achieve (1-3 lines)
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Bullet list of verifiable checks
+  - type: checkboxes
+    id: deliverables
+    attributes:
+      label: Deliverables
+      options:
+        - label: Code committed
+        - label: Tests/snapshots added
+        - label: Docs updated
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options:
+        - phase-1
+        - phase-2
+        - phase-3

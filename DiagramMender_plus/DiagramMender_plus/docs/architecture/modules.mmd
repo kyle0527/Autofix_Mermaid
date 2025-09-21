@@ -1,0 +1,13 @@
+graph TD
+  CORE[packages/core]
+  PYPARSER[packages/parsers/python]
+  FIXRULES[packages/fix-rules/mermaid-compat]
+  RENDERWEB[packages/renderer/web]
+  UIWEB[packages/ui-web]
+  CLICMD[packages/cli]
+
+  PYPARSER --> CORE
+  FIXRULES --> CORE
+  CORE --> RENDERWEB
+  CORE --> CLICMD
+  RENDERWEB --> UIWEB

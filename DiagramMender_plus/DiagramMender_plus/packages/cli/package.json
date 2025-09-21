@@ -1,0 +1,17 @@
+{
+  "name": "@diagrammender/cli",
+  "version": "0.3.0",
+  "bin": {
+    "diagrammender": "dist/index.js"
+  },
+  "dependencies": {
+    "@diagrammender/core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "echo no-tests"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts"
+}
