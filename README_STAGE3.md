@@ -52,7 +52,7 @@
 	- 新增 `debugPanel`（顯示分析/修正 log）與 `rulesPanel`（可編輯/儲存優化規則 JSON）。
 	- UI.js 可控制面板開啟/關閉，並將 log 或規則內容動態顯示於對應區塊。
 
-- UI 功能全面集中於 UI.js，UI-clean.js 已刪除。
+- UI 功能全面集中於 UI.js，舊版 UI-clean.js 已封存於 docs/legacy/ui-prototype/UI-clean.js。
 
 - engine-esm.js（ESM 版）已建立，可直接 import/export 主要函式。
 

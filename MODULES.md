@@ -7,7 +7,7 @@ Overview
 Proposed top-level modules
 
 1) frontend/ui (JS, ESM)
-   - Files: `index.html`, `js/main.js`, `js/UI.js`, `js/UI-clean.js`, `js/Renderer.js`
+   - Files: `index.html`, `js/main.js`, `js/UI.js`, `js/Renderer.js` (legacy prototypes archived under `docs/legacy/ui-prototype/`)
    - Responsibility: DOM, user interactions, event wiring, render triggering
    - Notes: prefer ESM; isolate DOM helpers; unit-test UI logic with jsdom
 
@@ -22,7 +22,7 @@ Proposed top-level modules
    - Notes: providers are currently UMD-style IIFE for worker importScripts compatibility; consider moving to ESM adapters + a tiny compatibility shim for worker
 
 4) worker (mix: classic worker + module worker)
-   - Files: `js/worker.js`, `js/worker.mjs`, `js/worker-clean.js`
+   - Files: `js/worker.js`, `js/worker.mjs` (retired classic prototype stored in `docs/legacy/ui-prototype/worker-clean.js`)
    - Responsibility: offload heavy tasks, parsing, AI orchestration
    - Notes: keep both flavors for compatibility; gradually unify to ESM worker if browser support allows or provide a build step that outputs both
 

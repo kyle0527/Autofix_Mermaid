@@ -1,8 +1,8 @@
 # Archived: patches/recorded_changes.md
 
-This file was archived on 2025-09-16 and moved to `doc/archive/recorded_changes.md`.
+This file was archived on 2025-09-16 and moved to `docs/legacy/archive/recorded_changes.md`.
 
-If you need the original content, please open the archived copy in `doc/archive/`.
+If you need the original content, please open the archived copy in `docs/legacy/archive/`.
 
 -- archived by automated assistant
    - js/UI-clean.js
@@ -49,4 +49,3 @@ If you need the original content, please open the archived copy in `doc/archive/
 
 ## Files created/edited during this session
 - Review `autofix.js`, `layout.js`, and `sanitize.js` for any API usage that needs harmonizing. (A cursory read was performed and no immediate `mermaid.render` calls were found inside those files; main changes were in `js/app.js`.)
-

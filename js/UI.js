@@ -1,17 +1,24 @@
 import { t, onLocaleChange, getLocale } from './i18n/index.js';
+import { applyLayoutSelection } from './layout.js';
 
-  /**
-   * 建立 worker 實例，依 engineMode 切換 classic/AI
-   * @param {string} engineMode - 'rules' | 'ai'
-   * @returns {Worker} worker 實例
-   */
-  function createWorker(engineMode) {
-    if (engineMode === 'ai') {
-      return new Worker(`js/worker.mjs?v=${Date.now()}`, { type: 'module' });
-    }
-    // 預設 classic/rules
-    return new Worker(`js/worker.js?v=${Date.now()}`, { type: 'classic' });
+/**
+ * 建立 worker 實例，依 engineMode 切換 classic/AI
+ * @param {string} engineMode - 'rules' | 'ai'
+ * @returns {Worker} worker 實例
+ */
+function cacheBustedUrl(relativePath) {
+  const url = new URL(relativePath, import.meta.url);
+  url.searchParams.set('v', Date.now().toString());
+  return url;
+}
+
+function createWorker(engineMode) {
+  if (engineMode === 'ai') {
+    return new Worker(cacheBustedUrl('./worker.mjs'), { type: 'module' });
   }
+  // 預設 classic/rules
+  return new Worker(cacheBustedUrl('./worker.js'), { type: 'classic' });
+}
 /**
  * UI Controller Module
  * @fileoverview Handles user interface interactions and worker communication
@@ -259,6 +266,11 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     } catch {}
   }
 
+  const runAnalysis = (requestReason = 'render') => {
+    saveSettingsSnapshot();
+    return processInput({ reason: requestReason });
+  };
+
   /**
    * Download file to user's computer
    * @param {string} fileName - Name for downloaded file
@@ -314,11 +326,11 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
    * @param {boolean} autoMode - Whether in auto mode
    * @returns {Promise<Object|null>} Processing result
    */
-  async function processInput() {
+  async function processInput({ reason = 'render' } = {}) {
     try {
       const svgContainer = $('svg');
       const logElement = $('log');
-      
+
       // Clear previous results safely
       if (svgContainer) {
         while (svgContainer.firstChild) {
@@ -332,18 +344,28 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       const diagramType = $('diagramType')?.value || 'flowchart';
       const width = parseInt($('svgW')?.value || '0', 10) || 0;
       const height = parseInt($('svgH')?.value || '0', 10) || 0;
+      const layoutMode = $('layoutSelect')?.value || 'default';
 
       const sourceMode = (document.querySelector('input[name="sourceMode"]:checked') || { value: 'auto' }).value;
       const engineMode = $('engineSelect')?.value || 'rules'; // rules | ai
       const aiProvider = $('aiProvider')?.value || 'none';
       const inputText = $('src')?.value || '';
       const hasFiles = !!($('fileInput')?.files && $('fileInput').files.length > 0);
+      const shouldForceWorker = reason === 'autofix';
+
+      try {
+        if (window?.mermaid) {
+          applyLayoutSelection(window.mermaid, layoutMode);
+        }
+      } catch (error) {
+        console.warn('Failed to apply layout selection:', error);
+      }
 
       // Direct Mermaid rendering path
-      if (!hasFiles && (sourceMode === 'mermaid' || (sourceMode === 'auto' && isLikelyMermaid(inputText)))) {
+      if (!shouldForceWorker && !hasFiles && (sourceMode === 'mermaid' || (sourceMode === 'auto' && isLikelyMermaid(inputText)))) {
         const normalizedCode = normalizeHeader(inputText);
         const renderResult = await renderMermaid(normalizedCode, { width, height });
-        
+
         if (renderResult.error) {
           throw new Error(renderResult.error);
         }
@@ -369,10 +391,19 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           }
         }
         if (logElement) logElement.textContent = normalizedCode;
-        
+
         enableExportButtons();
         setStatus(true, 'status.directRenderSuccess');
-        return { code: normalizedCode, errors: [], log: [], dtype: 'mermaid' };
+        const directResult = { code: normalizedCode, errors: [], log: [], dtype: 'mermaid' };
+        lastResult = directResult;
+        if (reason === 'autofix') {
+          const srcElement = $('src');
+          if (srcElement) {
+            srcElement.value = normalizedCode;
+          }
+          saveSettingsSnapshot();
+        }
+        return directResult;
       }
 
       // 根據 engineMode 建立 worker 與 payload
@@ -390,7 +421,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             diagram: diagramType,
             provider: aiProvider,
             mermaidConfig: { securityLevel: $('secLevel')?.value || 'strict' },
-            locale
+            locale,
+            reason,
           }
         };
       } else {
@@ -403,8 +435,9 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             diagram: diagramType,
             provider: aiProvider,
             seedMermaid: undefined,
-            locale
-          }
+            locale,
+          },
+          uiMode: reason,
         };
       }
 
@@ -500,6 +533,13 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       });
 
       lastResult = result;
+      if (reason === 'autofix') {
+        const srcElement = $('src');
+        if (srcElement) {
+          srcElement.value = result.code;
+        }
+        saveSettingsSnapshot();
+      }
       return result;
 
     } catch (error) {
@@ -560,7 +600,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     setStatus(false, 'status.selfTestRunning');
 
   // Self-test uses the ESM worker variant
-  const worker = new Worker(`js/worker.mjs?v=${Date.now()}`, { type: 'module' });
+  const worker = new Worker(cacheBustedUrl('./worker.mjs'), { type: 'module' });
     const testFiles = { 
       'main.py': 'def a(x):\n  return x\n\ndef b(y):\n  return a(y)\n' 
     };
@@ -689,7 +729,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Input change handlers for auto-render
-  const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'secLevel', 'engineSelect', 'aiProvider'];
+    const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'secLevel', 'engineSelect', 'aiProvider', 'layoutSelect'];
     
     for (const elementId of inputElements) {
       const element = $(elementId);
@@ -703,8 +743,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         };
         if (elementId === 'engineSelect') {
           element.addEventListener('change', () => {
-            saveSettingsSnapshot();
-            processInput();
+            runAnalysis('render');
           });
         }
         element.addEventListener('input', autoRenderHandler);
@@ -724,8 +763,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Main action buttons
-    $('btnRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
-    $('btnFixRender')?.addEventListener('click', () => { saveSettingsSnapshot(); processInput(); });
+    $('btnRender')?.addEventListener('click', () => { runAnalysis('render'); });
+    $('btnFixRender')?.addEventListener('click', () => { runAnalysis('autofix'); });
     $('btnSelfTest')?.addEventListener('click', runSelfTest);
     // 健康檢測：檢查模型 JSON、worker、Ollama
     $('btnHealth')?.addEventListener('click', async () => {
@@ -751,12 +790,12 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         }
         // 2. worker module (HEAD)
         try {
-          const r = await fetch('js/worker.mjs', { method: 'GET', cache: 'no-store' });
+          const r = await fetch('./js/worker.mjs', { method: 'GET', cache: 'no-store' });
           push(r.ok, 'worker.mjs', r.ok ? '' : `HTTP ${r.status}`);
         } catch (e) { push(false, 'worker.mjs', String(e)); }
         // 3. worker classic
         try {
-          const r = await fetch('js/worker.js', { method: 'GET', cache: 'no-store' });
+          const r = await fetch('./js/worker.js', { method: 'GET', cache: 'no-store' });
           push(r.ok, 'worker.js', r.ok ? '' : `HTTP ${r.status}`);
         } catch (e) { push(false, 'worker.js', String(e)); }
         // 4. Ollama (只在 provider=ollama 時提示)
@@ -787,14 +826,6 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           logElement.textContent = lines.concat([t('health.errorLine', { message })]).join('\n');
         }
         setStatus(false, 'status.healthCheckFailed');
-      }
-    });
-
-    // P1 Docs and Config panel buttons
-    $('btnDocs')?.addEventListener('click', () => {
-      const panel = $('docsPanel');
-      if (panel) {
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
       }
     });
 
@@ -952,6 +983,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       setTimeout(() => { try { document.getElementById('btnRender')?.click(); } catch {} }, 0);
     }
   } catch {}
+
+  return { processInput, runAnalysis, saveSettingsSnapshot };
 }
 
 export { initializeUI };
