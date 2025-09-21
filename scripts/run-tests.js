@@ -1,13 +1,25 @@
 #!/usr/bin/env node
-// Test runner stub: runs a few sanity checks (non-exhaustive)
-const { execSync } = require('child_process');
+import { accessSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = join(SCRIPT_DIR, '..');
+
+function assertExists(relativePath) {
+  const fullPath = join(PROJECT_ROOT, relativePath);
+  accessSync(fullPath);
+  console.log(`✔ ${relativePath}`);
+}
+
 try {
-  console.log('Checking main entry...');
-  const r = execSync('node -e "require(\'fs\').accessSync(\'index.html\')"');
-  console.log('index.html exists');
-} catch (e) {
-  console.error('index.html missing');
+  console.log('Checking project layout...');
+  assertExists('index.html');
+  assertExists('js/main.js');
+  assertExists('js/app.js');
+  console.log('Sanity checks passed');
+  process.exit(0);
+} catch (error) {
+  console.error(`Sanity check failed: ${error?.message || error}`);
   process.exit(2);
 }
-console.log('Sanity checks passed');
-process.exit(0);

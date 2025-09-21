@@ -6,15 +6,64 @@
 import { initializeUI } from './UI.js';
 import { initMermaid, renderMermaid, svgToPNG } from './Renderer.js';
 import { initP1Features, toggleDocsPanel, toggleConfigPanel } from './app.js';
+import {
+  initI18n,
+  translateDocument,
+  setLocale,
+  getLocale,
+  onLocaleChange,
+  getAvailableLocales,
+  t,
+} from './i18n/index.js';
 // P2 imports
 import { applyFixes } from './autofix.js';
 import { applyLayoutSelection } from './layout.js';
+
+function setupLocalization() {
+  initI18n({ defaultLocale: 'zh-Hant' });
+
+  const renderLanguageOptions = () => {
+    const selectEl = document.getElementById('languageSelect');
+    if (!selectEl) return;
+
+    const locales = getAvailableLocales();
+    const current = getLocale();
+    selectEl.innerHTML = '';
+    for (const entry of locales) {
+      const option = document.createElement('option');
+      option.value = entry.code;
+      option.textContent = t(entry.nameKey);
+      option.setAttribute('data-i18n', entry.nameKey);
+      selectEl.appendChild(option);
+    }
+    selectEl.value = current;
+  };
+
+  translateDocument();
+  renderLanguageOptions();
+
+  const languageSelect = document.getElementById('languageSelect');
+  if (languageSelect) {
+    languageSelect.addEventListener('change', (event) => {
+      const target = event.target;
+      if (target instanceof HTMLSelectElement) {
+        setLocale(target.value);
+      }
+    });
+  }
+
+  onLocaleChange(() => {
+    translateDocument();
+    renderLanguageOptions();
+  });
+}
 
 /**
  * Initialize application with error handling
  */
 async function initializeApp() {
   try {
+    setupLocalization();
     // Initialize Mermaid with safe defaults
     await initMermaid();
     console.info('Mermaid initialized successfully');
@@ -40,8 +89,7 @@ async function initializeApp() {
     }
 
     if (btnConfig) {
-      // For now, we'll use the existing config in the toolbar
-      // btnConfig.addEventListener('click', toggleConfigPanel);
+      btnConfig.addEventListener('click', toggleConfigPanel);
     }
 
   } catch (error) {
@@ -50,7 +98,7 @@ async function initializeApp() {
     // Show user-friendly error message
     const noticeEl = document.getElementById('notice');
     if (noticeEl) {
-      noticeEl.textContent = `初始化失敗：${error.message}`;
+      noticeEl.textContent = t('error.initFailed', { message: error.message });
       noticeEl.style.display = 'block';
     }
   }
@@ -75,9 +123,9 @@ function initP2Features() {
       const code = srcTextarea.value;
       try {
         await window.mermaid.parse(code);
-        logPre.textContent = '✅ 驗證通過';
+        logPre.textContent = t('validate.success');
       } catch (error) {
-        logPre.textContent = `❌ 驗證失敗: ${error.message}`;
+        logPre.textContent = t('validate.failure', { message: error.message });
       }
     });
   }
