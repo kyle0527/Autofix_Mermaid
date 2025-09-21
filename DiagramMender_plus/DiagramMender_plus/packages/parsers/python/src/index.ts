@@ -1,13 +1,72 @@
-import {
-  IRProject,
-  IRModule,
-  IRFunction,
-  IRClass,
-  IRStatement,
-  ParserPlugin,
-  ParserParseOptions,
-  ParserDetectionResult,
-} from '@diagrammender/types';
+// Temporary local type definitions until module resolution is fixed
+interface IRProject {
+  modules: Record<string, IRModule> | IRModule[];
+  entryPoint?: string;
+  fixNotes?: string[];
+}
+
+interface IRModule {
+  name: string;
+  path: string;
+  functions: IRFunction[];
+  classes: IRClass[];
+  statements?: IRStatement[];
+  imports?: string[];
+}
+
+interface IRFunction {
+  id?: string;
+  name: string;
+  params: string[];
+  returnType?: string;
+  line?: number;
+  body?: any[];
+  calls?: string[];
+  pos?: any;
+  doc?: string;
+}
+
+interface IRClass {
+  id?: string;
+  name: string;
+  methods: IRFunction[];
+  properties?: string[];
+  line?: number;
+  bases?: string[];
+  attrs?: any[];
+  pos?: any;
+  doc?: string;
+}
+
+interface IRStatement {
+  type: string;
+  content: string;
+  line?: number;
+}
+
+interface ParserPlugin {
+  lang: string;
+  version: string;
+  capabilities?: Record<string, boolean>;
+  aliases?: string[];
+  parseProject?: (files: Record<string, string>, options?: ParserParseOptions) => IRProject;
+  detect?: (files: Record<string, string>) => ParserDetectionResult | null;
+  treeSitterModule?: string;
+}
+
+interface ParserParseOptions {
+  useTreeSitter?: boolean;
+  maxFileSize?: number;
+  preferTreeSitter?: boolean;
+  runtime?: string;
+}
+
+interface ParserDetectionResult {
+  lang: string;
+  confidence: number | string;
+  reason?: string;
+  matchedFiles?: string[];
+}
 
 declare const require: (id: string) => any;
 
@@ -30,7 +89,8 @@ function parsePythonProjectInternal(files: Record<string,string>, options?: Pars
       const Python = require('tree-sitter-python');
       return parseWithTreeSitter(Parser, Python, files);
     } catch (e) {
-      // swallow and fallback below
+      // Log the error and fallback below
+      console.error('Failed to use tree-sitter for Python parsing, falling back to regex parser:', e);
     }
   }
   return parseWithFallback(files);

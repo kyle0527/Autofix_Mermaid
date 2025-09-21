@@ -2,11 +2,23 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ES2020",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "lib": ["ES2020", "DOM"],
     "strict": true,
     "esModuleInterop": true,
     "allowJs": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "./build",
+    "baseUrl": "./packages",
+    "paths": {
+      "@diagrammender/types": ["types/src/index"],
+      "@diagrammender/core": ["core/src/index"],
+      "@diagrammender/parsers-python": ["parsers/python/src/index"],
+      "@diagrammender/emitters-mermaid": ["emitters/mermaid/src/index"],
+      "@diagrammender/analyzers": ["analyzers/src/index"],
+      "@diagrammender/fix-rules-mermaid-compat": ["fix-rules/mermaid-compat/src/index"]
+    }
   },
-  "include": ["packages/**/*"]
+  "include": ["packages/**/*.ts"],
+  "exclude": ["packages/**/dist/**/*", "packages/**/*.js"]
 }

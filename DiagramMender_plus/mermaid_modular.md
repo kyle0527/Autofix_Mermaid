@@ -1,33 +1,33 @@
 ### 1. py2mermaid.py :: def safe_id
 
 ```mermaid
-%% py2mermaid.py :: def safe_id
 flowchart TD
+  %% py2mermaid.py :: def safe_id
   n1["'Make a Mermaid-safe node id (alnum + underscores).'"]
   n2["s = re.sub('[^0-9A-Za-z_]', '_', s)"]
   n3{"if re.match('^\\d', s)"}
   n4["s = '_' + s"]
   n5["return s"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n3 -->|True| n4
   n2 --> n3
   n4 --> n5
   start --> n1
-  n5 --> end
+  n5 --> endNodeNode
 ```
 
 ### 2. py2mermaid.py :: def iter_py_files
 
 ```mermaid
-%% py2mermaid.py :: def iter_py_files
 flowchart TD
+%% py2mermaid.py :: def iter_py_files
   n1["ignores: List[str] = [i.strip() for i in ignore if i.strip()]"]
   n2["out: List[Path] = []"]
-  n3{"for <ast.Tuple object at 0x7ed8c5273950> in os.walk(root)"}
+  n3{"for dirpath, dirnames, filenames in os.walk(root)"}
   n4["dirnames[:] = [d for d in dirnames if d not in ignores and d != '__pycache__']"]
-  n5{"for <ast.Name object at 0x7ed8c5272450> in filenames"}
+  n5{"for fn in filenames"}
   n6{"if fn.endswith('.py')"}
   n7["p = Path(dirpath) / fn"]
   n8{"if any((seg in ignores for seg in p.parts))"}
@@ -37,7 +37,7 @@ flowchart TD
   n12["return out"]
   n13["return out"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n8 -->|True| n9
   n7 --> n8
@@ -53,12 +53,13 @@ flowchart TD
   n2 --> n3
   n3 --> n13
   start --> n1
-  n13 --> end
+  n13 --> endNode
 ```
 
 ### 3. py2mermaid.py :: def parse_module
 
 ```mermaid
+flowchart TD
 %% py2mermaid.py :: def parse_module
 flowchart TD
   n1["tree = ast.parse(src)"]
@@ -101,7 +102,7 @@ flowchart TD
   n38["join"]
   n39["return {'functions': functions, 'classes': classes, 'calls': sorted(set(calls))}"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n3 --> n4
@@ -151,12 +152,13 @@ flowchart TD
   n4 --> n5
   n5 --> n39
   start --> n1
-  n39 --> end
+  n39 --> endNode
 ```
 
 ### 4. py2mermaid.py :: def analyze_project
 
 ```mermaid
+flowchart TD
 %% py2mermaid.py :: def analyze_project
 flowchart TD
   n1["ir: Dict[str, Dict] = {}"]
@@ -168,7 +170,7 @@ flowchart TD
   n7["ir[str(p)] = parse_module(src)"]
   n8["return ir"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n3 -->|body| n4
   n3 -->|except Exception| n5
   n4 --> n6
@@ -179,12 +181,13 @@ flowchart TD
   n1 --> n2
   n2 --> n8
   start --> n1
-  n8 --> end
+  n8 --> endNode
 ```
 
 ### 5. py2mermaid.py :: def build_mermaid
 
 ```mermaid
+flowchart TD
 %% py2mermaid.py :: def build_mermaid
 flowchart TD
   n1["lines = ['flowchart TD']"]
@@ -231,7 +234,7 @@ flowchart TD
   n42["lines.append(f'  {safe_id('func_' + c)}{{{html.escape(c)}}}')"]
   n43["return '\n'.join(lines)"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n4 --> n5
   n5 --> n6
@@ -288,12 +291,13 @@ flowchart TD
   n33 --> n41
   n41 --> n43
   start --> n1
-  n43 --> end
+  n43 --> endNode
 ```
 
 ### 6. py2mermaid.py :: def mend_mermaid
 
 ```mermaid
+flowchart TD
 %% py2mermaid.py :: def mend_mermaid
 flowchart TD
   n1["code = code.strip()"]
@@ -307,7 +311,7 @@ flowchart TD
   n9["code += '\n' + '\n'.join(['end'] * (opens - ends))"]
   n10["return code"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n2 -->|True| n3
   n1 --> n2
   n3 --> n4
@@ -318,26 +322,28 @@ flowchart TD
   n7 --> n8
   n9 --> n10
   start --> n1
-  n10 --> end
+  n10 --> endNode
 ```
 
 ### 7. py2mermaid.py :: def write_markdown
 
 ```mermaid
+flowchart TD
 %% py2mermaid.py :: def write_markdown
 flowchart TD
   n1["out_md.parent.mkdir(parents=True, exist_ok=True)"]
   n2["out_md.write_text(f'```mermaid\n{mermaid_code}\n```', encoding='utf-8')"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   start --> n1
-  n2 --> end
+  n2 --> endNode
 ```
 
 ### 8. py2mermaid.py :: def build_html
 
 ```mermaid
+flowchart TD
 %% py2mermaid.py :: def build_html
 flowchart TD
   n1["js = mermaid_js_path.read_text(encoding='utf-8', errors='replace')"]
@@ -345,17 +351,18 @@ flowchart TD
   n3["tpl = f'<!doctype html>\n<html>\n<head>\n  <meta charset='utf-8'/>\n  <meta name='viewport' content='width=device-width,"]
   n4["return tpl"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n3 --> n4
   start --> n1
-  n4 --> end
+  n4 --> endNode
 ```
 
 ### 9. py2mermaid.py :: def cli
 
 ```mermaid
+flowchart TD
 %% py2mermaid.py :: def cli
 flowchart TD
   n1["parser = argparse.ArgumentParser(description='Generate Mermaid flowcharts from a Python project.')"]
@@ -386,7 +393,7 @@ flowchart TD
   n26["out_html.write_text(html_str, encoding='utf-8')"]
   n27["print(f'[OK] HTML preview written: {out_html} ({out_html.stat().st_size} bytes)')"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n3 --> n4
@@ -414,12 +421,13 @@ flowchart TD
   n22 -->|True| n23
   n21 --> n22
   start --> n1
-  n27 --> end
+  n27 --> endNode
 ```
 
 ### 10. py2mermaid.py :: <module>
 
 ```mermaid
+flowchart TD
 %% py2mermaid.py :: <module>
 flowchart TD
   m1["'\npy2mermaid — Generate Mermaid flowcharts from a Python project folder.\n\nUsage:\n  python py2mermaid.py /path/to/pro"]
@@ -431,7 +439,7 @@ flowchart TD
   m7{"if __name__ == '__main__'"}
   m8["cli()"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   m3 --> m4
@@ -440,12 +448,13 @@ flowchart TD
   m7 -->|True| m8
   m6 --> m7
   start --> m1
-  m8 --> end
+  m8 --> endNode
 ```
 
 ### 11. py2mermaid_v2.py :: <module>
 
 ```mermaid
+flowchart TD
 %% py2mermaid_v2.py :: <module>
 flowchart TD
   m1["'Thin CLI wrapper for diagram_mender CLI.'"]
@@ -454,18 +463,19 @@ flowchart TD
   m4{"if __name__ == '__main__'"}
   m5["raise SystemExit(main())"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   m4 -->|True| m5
   m3 --> m4
   start --> m1
-  m5 --> end
+  m5 --> endNode
 ```
 
 ### 12. run_v3_then_combine.py :: def main
 
 ```mermaid
+flowchart TD
 %% run_v3_then_combine.py :: def main
 flowchart TD
   n1["ap = argparse.ArgumentParser()"]
@@ -484,7 +494,7 @@ flowchart TD
   n14["print(' -', mmd)"]
   n15["print(' -', html)"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n3 --> n4
@@ -500,12 +510,13 @@ flowchart TD
   n13 --> n14
   n14 --> n15
   start --> n1
-  n15 --> end
+  n15 --> endNode
 ```
 
 ### 13. run_v3_then_combine.py :: <module>
 
 ```mermaid
+flowchart TD
 %% run_v3_then_combine.py :: <module>
 flowchart TD
   m1["'\nrun_v3_then_combine.py\nConvenience wrapper that generates Mermaid from a project and produces:\n- Markdown with ```m"]
@@ -516,7 +527,7 @@ flowchart TD
   m6{"if __name__ == '__main__'"}
   m7["main()"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   m3 --> m4
@@ -524,12 +535,13 @@ flowchart TD
   m6 -->|True| m7
   m5 --> m6
   start --> m1
-  m7 --> end
+  m7 --> endNode
 ```
 
 ### 14. index.py :: def _parse_source
 
 ```mermaid
+flowchart TD
 %% index.py :: def _parse_source
 flowchart TD
   n1["tree = ast.parse(src)"]
@@ -553,7 +565,7 @@ flowchart TD
   n19["join"]
   n20["return {'functions': functions, 'classes': classes}"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n7 -->|iter| n8
@@ -579,12 +591,13 @@ flowchart TD
   n3 --> n4
   n4 --> n20
   start --> n1
-  n20 --> end
+  n20 --> endNode
 ```
 
 ### 15. index.py :: def parsePythonProject
 
 ```mermaid
+flowchart TD
 %% index.py :: def parsePythonProject
 flowchart TD
   n1["'Build a minimal IR from a mapping of filename->source.'"]
@@ -593,35 +606,37 @@ flowchart TD
   n4["ir['modules'][name] = _parse_source(src)"]
   n5["return ir"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n3 -->|iter| n4
   n4 -->|next| n3
   n2 --> n3
   n3 --> n5
   start --> n1
-  n5 --> end
+  n5 --> endNode
 ```
 
 ### 16. index.py :: <module>
 
 ```mermaid
+flowchart TD
 %% index.py :: <module>
 flowchart TD
   m1["from __future__ import annotations"]
   m2["import ast"]
   m3["from typing import Dict, Any"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   start --> m1
-  m3 --> end
+  m3 --> endNode
 ```
 
 ### 17. test_ir_basic.py :: def test_simple_class
 
 ```mermaid
+flowchart TD
 %% test_ir_basic.py :: def test_simple_class
 flowchart TD
   n1["files = {'mod1.py': 'class A:\n    def foo(self):\n        pass\nclass B(A):\n    def bar(self):\n        self.foo()\n'}"]
@@ -634,7 +649,7 @@ flowchart TD
   n8["mnames = {m['name'] for m in b['methods']}"]
   n9["assert 'bar' in mnames"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n3 --> n4
@@ -644,12 +659,13 @@ flowchart TD
   n7 --> n8
   n8 --> n9
   start --> n1
-  n9 --> end
+  n9 --> endNode
 ```
 
 ### 18. test_ir_basic.py :: def test_simple_func
 
 ```mermaid
+flowchart TD
 %% test_ir_basic.py :: def test_simple_func
 flowchart TD
   n1["files = {'mod2.py': 'def hello():\n    print('hi')\n'}"]
@@ -659,19 +675,20 @@ flowchart TD
   n5["f = [f for f in mod['functions'] if f['name'] == 'hello'][0]"]
   n6["assert 'print' in f['calls']"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n3 --> n4
   n4 --> n5
   n5 --> n6
   start --> n1
-  n6 --> end
+  n6 --> endNode
 ```
 
 ### 19. test_ir_basic.py :: <module>
 
 ```mermaid
+flowchart TD
 %% test_ir_basic.py :: <module>
 flowchart TD
   m1["'\nUnit Test: Python IR Analysis (Basic Classes/Functions/Calls/Inheritance)\n'"]
@@ -681,33 +698,35 @@ flowchart TD
   m5["test_simple_func()"]
   m6["print('All Python IR tests passed.')"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m4 --> m5
   m5 --> m6
   m3 -->|True| m4
   m2 --> m3
   start --> m1
-  m6 --> end
+  m6 --> endNode
 ```
 
 ### 20. __init__.py :: <module>
 
 ```mermaid
+flowchart TD
 %% __init__.py :: <module>
 flowchart TD
   m1["'Diagram Mender: AST→Mermaid utilities.'"]
   m2["__all__ = ['graph', 'flow', 'render', 'output', 'cli']"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   start --> m1
-  m2 --> end
+  m2 --> endNode
 ```
 
 ### 21. cli.py :: def main
 
 ```mermaid
+flowchart TD
 %% cli.py :: def main
 flowchart TD
   n1["ap = argparse.ArgumentParser(description='Generate Mermaid flowcharts from Python code')"]
@@ -722,7 +741,7 @@ flowchart TD
   n10["print(f'Wrote {len(results)} flowcharts to {args.out}')"]
   n11["return 0"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n3 --> n4
@@ -734,12 +753,13 @@ flowchart TD
   n9 --> n10
   n10 --> n11
   start --> n1
-  n11 --> end
+  n11 --> endNode
 ```
 
 ### 22. cli.py :: <module>
 
 ```mermaid
+flowchart TD
 %% cli.py :: <module>
 flowchart TD
   m1["from __future__ import annotations"]
@@ -748,18 +768,19 @@ flowchart TD
   m4["from .render import walk_and_render"]
   m5["from .output import write_markdown"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   m3 --> m4
   m4 --> m5
   start --> m1
-  m5 --> end
+  m5 --> endNode
 ```
 
 ### 23. flow.py :: def _short_stmt
 
 ```mermaid
+flowchart TD
 %% flow.py :: def _short_stmt
 flowchart TD
   n1["try"]
@@ -769,7 +790,7 @@ flowchart TD
   n5["join"]
   n6["return s.__class__.__name__"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n2 -->|True| n3
   n1 -->|body| n2
   n1 -->|except Exception| n4
@@ -777,12 +798,13 @@ flowchart TD
   n4 --> n5
   n5 --> n6
   start --> n1
-  n6 --> end
+  n6 --> endNode
 ```
 
 ### 24. flow.py :: def _expr
 
 ```mermaid
+flowchart TD
 %% flow.py :: def _expr
 flowchart TD
   n1{"if e is None"}
@@ -794,7 +816,7 @@ flowchart TD
   n7["join"]
   n8["return e.__class__.__name__"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 -->|True| n2
   n4 -->|True| n5
   n3 -->|body| n4
@@ -804,12 +826,13 @@ flowchart TD
   n2 --> n3
   n7 --> n8
   start --> n1
-  n8 --> end
+  n8 --> endNode
 ```
 
 ### 25. flow.py :: <module>
 
 ```mermaid
+flowchart TD
 %% flow.py :: <module>
 flowchart TD
   m1["from __future__ import annotations"]
@@ -817,47 +840,50 @@ flowchart TD
   m3["from typing import List, Optional, Tuple"]
   m4["from .graph import Graph"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   m3 --> m4
   start --> m1
-  m4 --> end
+  m4 --> endNode
 ```
 
 ### 26. graph.py :: def _sanitize
 
 ```mermaid
+flowchart TD
 %% graph.py :: def _sanitize
 flowchart TD
   n1["s = s.replace(''', ''').replace('\n', ' ').strip()"]
   n2["return s[:120]"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   start --> n1
-  n2 --> end
+  n2 --> endNode
 ```
 
 ### 27. graph.py :: <module>
 
 ```mermaid
+flowchart TD
 %% graph.py :: <module>
 flowchart TD
   m1["from __future__ import annotations"]
   m2["from dataclasses import dataclass, field"]
   m3["from typing import Dict, List, Optional"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   start --> m1
-  m3 --> end
+  m3 --> endNode
 ```
 
 ### 28. output.py :: def write_markdown
 
 ```mermaid
+flowchart TD
 %% output.py :: def write_markdown
 flowchart TD
   n1["os.makedirs(os.path.dirname(out_path), exist_ok=True) if os.path.dirname(out_path) else None"]
@@ -868,7 +894,7 @@ flowchart TD
   n6["fh.write(g.to_mermaid(title))"]
   n7["fh.write('\n```\n\n')"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n4 --> n5
   n5 --> n6
   n6 --> n7
@@ -877,12 +903,13 @@ flowchart TD
   n2 -->|enter| n3
   n1 --> n2
   start --> n1
-  n3 --> end
+  n3 --> endNode
 ```
 
 ### 29. output.py :: <module>
 
 ```mermaid
+flowchart TD
 %% output.py :: <module>
 flowchart TD
   m1["from __future__ import annotations"]
@@ -890,17 +917,18 @@ flowchart TD
   m3["from typing import List, Tuple"]
   m4["from .graph import Graph"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   m3 --> m4
   start --> m1
-  m4 --> end
+  m4 --> endNode
 ```
 
 ### 30. render.py :: def render_file_to_graph
 
 ```mermaid
+flowchart TD
 %% render.py :: def render_file_to_graph
 flowchart TD
   n1["with open(path, 'r', encoding='utf-8', errors='ignore')"]
@@ -935,7 +963,7 @@ flowchart TD
   n30["results.append((f'{os.path.basename(path)} :: <module>', g))"]
   n31["return results"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 -->|enter| n2
   n3 -->|body| n4
   n5 --> n6
@@ -969,12 +997,13 @@ flowchart TD
   n21 --> n22
   n30 --> n31
   start --> n1
-  n31 --> end
+  n31 --> endNode
 ```
 
 ### 31. render.py :: def walk_and_render
 
 ```mermaid
+flowchart TD
 %% render.py :: def walk_and_render
 flowchart TD
   n1["ignore = [i.strip() for i in ignore or [] if i.strip()]"]
@@ -996,7 +1025,7 @@ flowchart TD
   n17["return results"]
   n18["return results"]
   start(("start"))
-  end(("end"))
+  endNode(("end"))
   n1 --> n2
   n2 --> n3
   n4 -->|True| n5
@@ -1017,12 +1046,13 @@ flowchart TD
   n5 --> n6
   n6 --> n18
   start --> n1
-  n18 --> end
+  n18 --> endNode
 ```
 
 ### 32. render.py :: <module>
 
 ```mermaid
+flowchart TD
 %% render.py :: <module>
 flowchart TD
   m1["from __future__ import annotations"]
@@ -1031,12 +1061,18 @@ flowchart TD
   m4["from .graph import Graph"]
   m5["from .flow import FlowBuilder"]
   start(("module start"))
-  end(("module end"))
+  endModule(("module end"))
   m1 --> m2
   m2 --> m3
   m3 --> m4
   m4 --> m5
   start --> m1
-  m5 --> end
+  m5 --> endNode
 ```
+
+
+
+
+
+
 
