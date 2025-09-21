@@ -22,15 +22,7 @@ export async function analyzePythonProject(files) {
       readErrors.push(`Failed to read ${rel}: ${err}`);
     }
   }
-try {
-            const txt = await f.text();
-            entries.push({ path: rel, content: txt });
-          } catch (err) {
-            readErrors.push(`Failed to read ${rel}: ${err}`);
-          }
-        }),
-      ),
-  );
+  
   if (readErrors.length) {
     console.error('File read errors:\n' + readErrors.join('\n'));
   }

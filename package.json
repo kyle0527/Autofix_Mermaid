@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node ./scripts/start-server.js",
-    "lint": "eslint . --ext .js,.mjs",
+    "lint": "eslint .",
     "test": "node ./scripts/run-tests.js",
     "dev": "node --input-type=module scripts/dev-server.mjs"
   },
