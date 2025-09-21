@@ -1,0 +1,8 @@
+flowchart LR
+  A[Source Code] --> B[Parsers]
+  B --> C[IR]
+  C --> D[Fix Engine]
+  D --> E[Emitter]
+  E --> F[Renderer]
+  F --> G[[UI]]
+  E --> H[[CLI]]

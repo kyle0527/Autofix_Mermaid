@@ -1,0 +1,35 @@
+{
+  "name": "diagrammender",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "packages/*/*"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "eslint": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "vitest": "^3.2.4",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "log": "node scripts/logger.js",
+    "store": "node scripts/dataStore.js",
+    "test": "vitest run",
+    "install": "npm install --workspaces",
+    "build": "npm -ws run build || echo 'Build scripts not defined for all packages'",
+    "dev": "npm -w @diagrammender/ui-web run dev || echo 'Run UI dev server in ui-web'",
+    "cli": "node packages/cli/dist/index.js --help || echo 'Build first: tsc'"
+  }
+}

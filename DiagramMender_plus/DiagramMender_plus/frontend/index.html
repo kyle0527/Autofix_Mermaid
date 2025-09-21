@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DiagramMender – 安全模式</title>
+  <style>
+    :root { --pad: 16px; }
+    html, body { height: 100%; }
+    body { font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans TC', sans-serif; margin: 0; padding: var(--pad); background: #fafafa; color:#222;}
+    header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+    header h1 { font-size: 18px; margin:0; }
+    .banner-error { background: #fee; color: #a00; padding: 8px 12px; border: 1px solid #f99; margin-bottom: 12px; display:none; border-radius:6px;}
+    .skeleton { height: 12px; background: #eee; margin: 8px 0; border-radius:6px; }
+    .hidden { display: none; }
+    pre.code { background:#f7f7f7; padding:12px; overflow:auto; border-radius:8px; border:1px solid #ececec;}
+    button.action { padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer; }
+    button.action:hover { background:#f3f3f3; }
+    .toolbar { display:flex; gap:8px; align-items:center; margin: 8px 0 16px; }
+    footer { margin-top: 24px; color:#666; font-size: 12px; }
+    .diagram-svg { overflow:auto; background:#fff; border:1px solid #ececec; border-radius:8px; padding:8px; }
+  </style>
+</head>
+<body>
+  <div id="errorBanner" class="banner-error"></div>
+
+  <header>
+    <h1>DiagramMender（安全模式 / 漸進增強）</h1>
+  </header>
+
+  <section id="content">
+    <!-- 降級：保留 mermaid 原始碼或用 data-code-b64；JS 成功後才渲染 -->
+    <pre class="code mermaid-src" data-mermaid data-code-b64="Zmxvd2NoYXJ0IFRECkFbU3RhcnRdIC0tPiBCLUFuYWx5emUKQiAtLT4gQyhbVmlld10pCkMgLS0+IEQoe1RSL0lkbGUgUmVuZGVyfSkKRA==">
+flowchart TD
+A[Start] --> B-Analyze
+B --> C([View])
+C --> D({TR/Idle Render})
+D --> A
+</pre>
+
+    <div class="toolbar">
+      <button class="action" id="btnRender">嘗試渲染</button>
+      <button class="action" id="btnShowCode">顯示原始碼</button>
+    </div>
+    <div class="skeleton"></div>
+  </section>
+
+  <!-- 前端增強腳本 -->
+  <script type="module" src="./dist/main.js"></script>
+  <!-- 全域錯誤守衛 -->
+  <script type="module" src="./error-guard.js"></script>
+  <!-- 建議：暫時不要註冊 SW；等穩定後再開 -->
+  <!-- <script type="module" src="./sw-register.js"></script> -->
+
+  <footer>
+    若渲染失敗，依然可閱讀上方原始碼。建議以靜態伺服器開啟此頁（例如：<code>python -m http.server</code>）。
+  </footer>
+</body>
+</html>
