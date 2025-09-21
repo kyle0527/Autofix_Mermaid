@@ -1,0 +1,20 @@
+{
+  "name": "autofix-mermaid",
+  "version": "0.0.0-dev",
+  "description": "Mermaid AutoFix - modular refactor scaffold",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node ./scripts/start-server.js",
+    "lint": "eslint . --ext .js,.mjs",
+    "test": "node ./scripts/run-tests.js",
+    "dev": "node --input-type=module scripts/dev-server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "playwright": "^1.41.2"
+  }
+}

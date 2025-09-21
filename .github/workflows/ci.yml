@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: autofix_mermaidV3.7/package-lock.json
+      - name: Install deps
+        working-directory: ./autofix_mermaidV3.7
+        run: npm install --no-audit --no-fund
+      - name: Lint & Test
+        working-directory: ./autofix_mermaidV3.7
+        run: npm run test:ci
+      - name: Validate Rule/Prompt Packs (if present)
+        working-directory: ./autofix_mermaidV3.7
+        run: |
+          if [ -d rules ]; then
+            node scripts/validate_packs.mjs
+          else
+            echo "No rules/ directory present - skipping pack validation"
+          fi

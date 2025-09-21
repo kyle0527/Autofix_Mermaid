@@ -1,0 +1,25 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "worker": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "ignorePatterns": [
+    "js/vendor/**",
+    "wasm/**",
+    "assets/**",
+    "**/*.min.js"
+  ],
+  "rules": {
+    "prefer-const": "warn",
+    "no-var": "warn",
+    "no-implicit-globals": "warn",
+    "no-unused-vars": ["warn", { "varsIgnorePattern": "^_" }],
+    "no-restricted-globals": ["error", "event", "fdescribe"]
+  }
+}

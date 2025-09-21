@@ -1,0 +1,5 @@
+npm install -g live-server
+live-server --port=3000
+# 或
+npm install -g http-server
+http-server -p 3000

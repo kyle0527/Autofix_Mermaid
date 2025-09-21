@@ -1,0 +1,1 @@
+# gantt.md\n\n(offline minimal placeholder)

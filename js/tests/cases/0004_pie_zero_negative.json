@@ -1,0 +1,31 @@
+{
+  "id": "0004_pie_zero_negative",
+  "title": "Pie: zero slice and negative slice behavior",
+  "diagramType": "pie",
+  "labels": ["pie", "validation"],
+  "source": "Mermaid issue: zero label placement & negative values crash",
+  "cases": [
+    {
+      "name": "negative-should-error-clearly",
+      "mode": "auto",
+      "input": "pie\ntitle Bad Values\n\"Valid\": 30\n\"Negative\": -10\n",
+      "expect": {
+        "renderOk": false,
+        "errorIncludes": ["negative values are not allowed"]
+      },
+      "ruleSuggestion": {
+        "id": "rule.pie.no-negative@v1",
+        "matcher": "pie slice value < 0",
+        "fix": "reject with clear message",
+        "appliesTo": ["pie"],
+        "severity": "error"
+      }
+    },
+    {
+      "name": "zero-should-not-break",
+      "mode": "auto",
+      "input": "pie\ntitle Zero Slice\n\"Valid\": 30\n\"Zero\": 0\n",
+      "expect": { "renderOk": true }
+    }
+  ]
+}

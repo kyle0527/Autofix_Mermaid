@@ -1,0 +1,9 @@
+{
+  "id": "flowchart.core",
+  "detect": { "diagram": "flowchart" },
+  "fix": { "actions": [] },
+  "severity": "info",
+  "category": "diagram",
+  "explain": "基本 flowchart 規則",
+  "refs": []
+}

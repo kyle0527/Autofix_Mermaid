@@ -1,0 +1,262 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "class-empty-braces-space",
+      "title": "ClassDiagram: empty class must contain space between braces",
+      "category": "syntax",
+      "detect": {
+        "diagram": "classDiagram",
+        "regex_any": [
+          "class\\s+[A-Za-z0-9_~<>]+~?[A-Za-z0-9_,<>~]*?\\~?\\s*\\{\\s*\\n\\}",
+          "class\\s+`[^`]+`\\s*\\{\\s*\\n\\}"
+        ]
+      },
+      "fix": {
+        "actions": [
+          { "type": "text_patch", "pattern": "\\{\\s*\\n\\}", "replacement": "{ }" }
+        ]
+      },
+      "severity": "error"
+    },
+    {
+      "id": "elk-graph-label-conflict",
+      "since": "2025-09-11",
+      "title": "Flowchart(ELK): 標籤含 'graph' 造成語法誤判",
+      "category": "parser",
+      "detect": {
+        "config_requires": [
+          {
+            "path": "flowchart.defaultRenderer",
+            "equals": "elk"
+          }
+        ],
+        "regex_any": [
+          "(?i)(^|\\s)graph(\\s|$)"
+        ]
+      },
+      "explain": "在 flowchart 設定 defaultRenderer=elk 時，如果節點文字含有 'graph' 會被誤判為關鍵字。",
+      "fix": {
+        "options": [
+          {
+            "strategy": "escape",
+            "steps": [
+              "將文字以反引號包起：`graph`。"
+            ]
+          },
+          {
+            "strategy": "renderer",
+            "steps": [
+              "針對該圖改回 'dagre' 或移除 defaultRenderer。"
+            ]
+          }
+        ]
+      },
+      "severity": "warn",
+      "refs": [
+        "https://github.com/mermaid-js/mermaid/issues/6795",
+        "https://github.com/mermaid-js/mermaid/issues/6856"
+      ]
+    },
+    {
+      "id": "sequence-autonumber-bidir",
+      "since": "2025-09-11",
+      "title": "SequenceDiagram: autonumber 與雙向箭頭 <<->> 顯示不正確",
+      "category": "rendering",
+      "detect": {
+        "diagram": "sequenceDiagram",
+        "regex_all": [
+          "(?m)^\\s*autonumber\\b",
+          "<<->>"
+        ]
+      },
+      "explain": "啟用 autonumber 時，雙向訊息的箭頭與編號呈現會錯誤。",
+      "fix": {
+        "options": [
+          {
+            "strategy": "split",
+            "steps": [
+              "改為兩條單向訊息: A->>B 與 B->>A。"
+            ]
+          },
+          {
+            "strategy": "disable_autonumber",
+            "steps": [
+              "移除 'autonumber'，或僅對該訊息停用。"
+            ]
+          }
+        ]
+      },
+      "severity": "warn",
+      "refs": [
+        "https://github.com/mermaid-js/mermaid/issues/6721"
+      ]
+    },
+    {
+      "id": "gantt-dateformat-D",
+      "since": "2025-09-11",
+      "title": "Gantt: dateFormat D 不會只顯示日",
+      "category": "config",
+      "detect": {
+        "diagram": "gantt",
+        "regex_any": [
+          "(?m)^\\s*dateFormat\\s+D\\s*$"
+        ]
+      },
+      "explain": "dateFormat D 仍會顯示年月，若要抽象時間軸需要自訂 axisFormat 或使用固定起點。",
+      "fix": {
+        "actions": [
+          {
+            "type": "suggest",
+            "text": "加入 axisFormat %d 或改用相對時間策略。"
+          }
+        ]
+      },
+      "severity": "info",
+      "refs": [
+        "https://github.com/mermaid-js/mermaid/issues/6649"
+      ]
+    },
+    {
+      "id": "gantt-excludes-time-ignored",
+      "since": "2025-09-11",
+      "title": "Gantt: dateFormat 含時間時 excludes 日期可能被忽略",
+      "category": "rendering",
+      "detect": {
+        "diagram": "gantt",
+        "regex_all": [
+          "(?m)^\\s*dateFormat\\s+YYYY-MM-DD HH:mm:ss",
+          "(?m)^\\s*excludes\\s+\\d{4}-\\d{2}-\\d{2}\\s*$"
+        ]
+      },
+      "explain": "當 dateFormat 帶時間，僅以日期指定 excludes 可能無效。",
+      "fix": {
+        "options": [
+          {
+            "strategy": "range",
+            "steps": [
+              "改為時間範圍 excludes 2025-07-07 00:00:00-2025-07-07 23:59:59。"
+            ]
+          },
+          {
+            "strategy": "format",
+            "steps": [
+              "或改用日粒度的 dateFormat。"
+            ]
+          }
+        ]
+      },
+      "severity": "warn",
+      "refs": [
+        "https://github.com/mermaid-js/mermaid/issues/6730"
+      ]
+    },
+    {
+      "id": "elk-order-random",
+      "since": "2025-09-11",
+      "title": "ELK 版面：節點順序不穩定",
+      "category": "layout",
+      "detect": {
+        "config_requires": [
+          {
+            "path": "layout",
+            "equals": "elk"
+          }
+        ],
+        "regex_any": [
+          "\\bA\\s*-->\\s*n\\d+\\b"
+        ]
+      },
+      "explain": "ELK 會重新排序輸出，需啟用 considerModelOrder/forceNodeModelOrder 類設定以保序。",
+      "fix": {
+        "actions": [
+          {
+            "type": "suggest",
+            "text": "在設定中加 considerModelOrder 或 forceNodeModelOrder。"
+          }
+        ]
+      },
+      "severity": "info",
+      "refs": [
+        "https://github.com/mermaid-js/mermaid/issues/6647",
+        "https://github.com/mermaid-js/mermaid/issues/6856"
+      ]
+    },
+    {
+      "id": "flowchart-td-subgraph",
+      "since": "2025-09-11",
+      "title": "Flowchart: TD 與 TB 在子圖的行為不同",
+      "category": "semantics",
+      "detect": {
+        "diagram": "flowchart",
+        "regex_all": [
+          "\\bflowchart\\s+TD\\b",
+          "(?m)^\\s*subgraph\\b"
+        ]
+      },
+      "explain": "文件稱 TD 與 TB 等價，但子圖行為不同，易導致節點順序與布局落差。",
+      "fix": {
+        "actions": [
+          {
+            "type": "suggest",
+            "text": "統一採 TB，或於 TD 下明確指定節點順序。"
+          }
+        ]
+      },
+      "severity": "info",
+      "refs": [
+        "https://github.com/mermaid-js/mermaid/issues/6681"
+      ]
+    },
+    {
+      "id": "block-plain-line",
+      "since": "2025-09-11",
+      "title": "Block: '---' 應為無箭頭連線",
+      "category": "rendering",
+      "detect": {
+        "diagram": "block",
+        "regex_any": [
+          "---"
+        ]
+      },
+      "explain": "部分版本 '---' 仍呈現箭頭。",
+      "fix": {
+        "actions": [
+          {
+            "type": "suggest",
+            "text": "暫用 linkStyle 或自訂 CSS 取消箭頭樣式，或改用其他記號表示無方向。"
+          }
+        ]
+      },
+      "severity": "warn",
+      "refs": [
+        "https://github.com/mermaid-js/mermaid/issues/6611"
+      ]
+    },
+    {
+      "id": "timeline-short-arrows",
+      "since": "2025-09-11",
+      "title": "Timeline: 堆疊項目過多導致箭頭過短",
+      "category": "layout",
+      "detect": {
+        "diagram": "timeline",
+        "regex_any": [
+          "(?i)timeline"
+        ]
+      },
+      "explain": "大量堆疊會壓縮箭頭長度。",
+      "fix": {
+        "actions": [
+          {
+            "type": "suggest",
+            "text": "調整 tickInterval / sectionSpacing 或拆分段落。"
+          }
+        ]
+      },
+      "severity": "info",
+      "refs": [
+        "https://github.com/mermaid-js/mermaid/issues/6610"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "qa": [
+    {
+      "id": "qa_class_empty_braces",
+      "if_match_rule": "class-empty-braces-space",
+      "question": "為什麼空的 class 會報語法錯？",
+      "answer": "Mermaid 11.8.x 對僅有換行的空 class 解析有問題。請在大括號內加入一個空白或註解，例如 `{ }` 或 `{ %% empty %% }`。"
+    },
+    {
+      "id": "qa_elk_graph_conflict",
+      "if_match_rule": "elk-graph-label-conflict",
+      "question": "Flowchart 使用 ELK 時，標籤含 'graph' 出錯怎麼辦？",
+      "answer": "將文字以反引號包起來（`graph`），或對該圖改回 dagre。"
+    },
+    {
+      "id": "qa_seq_bidir_autonum",
+      "if_match_rule": "sequence-autonumber-bidir",
+      "question": "SequenceDiagram autonumber + 雙向箭頭顯示怪？",
+      "answer": "拆成兩條單向訊息，或停用 autonumber。"
+    }
+  ]
+}

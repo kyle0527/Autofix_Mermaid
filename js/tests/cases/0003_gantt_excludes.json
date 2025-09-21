@@ -1,0 +1,31 @@
+{
+  "id": "0003_gantt_excludes",
+  "title": "Gantt excludes ignored with full datetime format",
+  "diagramType": "gantt",
+  "labels": ["gantt", "date"],
+  "source": "Mermaid issue: excludes ignored in 'YYYY-MM-DD HH:mm:ss'",
+  "cases": [
+    {
+      "name": "baseline-repro",
+      "mode": "baseline",
+      "input": "gantt\ndateFormat YYYY-MM-DD HH:mm:ss\nexcludes 2025-07-07\nsection Section\nA task:a1, 2025-07-04 20:30:30, 2025-07-08 10:30:30\nAnother task: after a1, 20h\n",
+      "expect": { "renderOk": true }
+    },
+    {
+      "name": "mender-warns",
+      "mode": "mender",
+      "input": "gantt\ndateFormat YYYY-MM-DD HH:mm:ss\nexcludes 2025-07-07\nsection Section\nA task:a1, 2025-07-04 20:30:30, 2025-07-08 10:30:30\nAnother task: after a1, 20h\n",
+      "expect": {
+        "renderOk": true,
+        "contains": ["<svg"]
+      },
+      "ruleSuggestion": {
+        "id": "rule.gantt.excludes.datetime@v1",
+        "matcher": "gantt with excludes and dateFormat including time",
+        "fix": "either drop time in excludes or normalize excludes to date parts",
+        "appliesTo": ["gantt"],
+        "severity": "warn"
+      }
+    }
+  ]
+}

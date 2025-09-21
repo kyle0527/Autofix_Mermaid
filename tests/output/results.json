@@ -1,0 +1,1308 @@
+[
+  {
+    "id": "official-0",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "flowchart TD\n    subgraph A [Independent Variables<br>Socio-Cultural Context]\n        A1[Cultural Factors]\n        A2[Social Structure]\n        A3[Economic Dimensions]\n        A4[Geographical Factors]",
+    "codeAfter": "flowchart TD\n    subgraph A [Independent Variables<br>Socio-Cultural Context]\n        A1[Cultural Factors]\n        A2[Social Structure]\n        A3[Economic Dimensions]\n        A4[Geographical Factors]"
+  },
+  {
+    "id": "official-0-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets"
+    ],
+    "codeBefore": "flowchart TD\n    subgraph A [Independent Variables<br>Socio-Cultural Context]\n        A1[Cultural Factors]\n        A2[Social Structure]\n        A3[Economic Dimensions]\n        A4[Geographical Factors",
+    "codeAfter": "flowchart TD\n    subgraph A [Independent Variables<br>Socio-Cultural Context]\n        A1[Cultural Factors]\n        A2[Social Structure]\n        A3[Economic Dimensions]\n        A4[Geographical Factors"
+  },
+  {
+    "id": "official-1",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram 是否支持节点\\线的tooltip和click事件，该怎么做？",
+    "codeAfter": "sequenceDiagram 是否支持节点\\线的tooltip和click事件，该怎么做？"
+  },
+  {
+    "id": "official-1-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram 是否支持节点\\线的tooltip和click事件，该怎么做？",
+    "codeAfter": "sequenceDiagram 是否支持节点\\线的tooltip和click事件，该怎么做？"
+  },
+  {
+    "id": "official-2",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram\n  participant systemd as systemd<br/>aaaaaaa-zz-backup\n  participant python as Python<br>aaaaaaa_zz_script\n  participant container as Container (docker)<br/>DATABASE on Linux\n\n  systemd ->>+ python: Weekly timer, /usr/local/bin/aaaaaaa_backup/",
+    "codeAfter": "sequenceDiagram\n  participant systemd as systemd<br/>aaaaaaa-zz-backup\n  participant python as Python<br>aaaaaaa_zz_script\n  participant container as Container (docker)<br/>DATABASE on Linux\n\n  systemd ->>+ python: Weekly timer, /usr/local/bin/aaaaaaa_backup/"
+  },
+  {
+    "id": "official-2-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram\n  participant systemd as systemd<br/>aaaaaaa-zz-backup\n  participant python as Python<br>aaaaaaa_zz_script\n  participant container as Container (docker)<br/>DATABASE on Linux\n\n  systemd ->>+ python: Weekly timer, /usr/local/bin/aaaaaaa_backup/",
+    "codeAfter": "sequenceDiagram\n  participant systemd as systemd<br/>aaaaaaa-zz-backup\n  participant python as Python<br>aaaaaaa_zz_script\n  participant container as Container (docker)<br/>DATABASE on Linux\n\n  systemd ->>+ python: Weekly timer, /usr/local/bin/aaaaaaa_backup/"
+  },
+  {
+    "id": "official-3",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram to allow inline configuration of participants using JSON-like annotations directly attached to the participant declaration. This change aims to simplify syntax, improve consistency with other diagrams like flowchart and class diagrams, and make participant customisation more extensible and readable.\n(extension to https://github.com/mermaid-js/mermaid/issues/6638)\n\n\n### Example\n```",
+    "codeAfter": "sequenceDiagram to allow inline configuration of participants using JSON-like annotations directly attached to the participant declaration. This change aims to simplify syntax, improve consistency with other diagrams like flowchart and class diagrams, and make participant customisation more extensible and readable.\n(extension to https://github.com/mermaid-js/mermaid/issues/6638)\n\n\n### Example\n```"
+  },
+  {
+    "id": "official-3-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram to allow inline configuration of participants using JSON-like annotations directly attached to the participant declaration. This change aims to simplify syntax, improve consistency with other diagrams like flowchart and class diagrams, and make participant customisation more extensible and readable.\n(extension to https://github.com/mermaid-js/mermaid/issues/6638)\n\n\n### Example\n```",
+    "codeAfter": "sequenceDiagram to allow inline configuration of participants using JSON-like annotations directly attached to the participant declaration. This change aims to simplify syntax, improve consistency with other diagrams like flowchart and class diagrams, and make participant customisation more extensible and readable.\n(extension to https://github.com/mermaid-js/mermaid/issues/6638)\n\n\n### Example\n```"
+  },
+  {
+    "id": "official-4",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    RenderProcessHost --|> `IPC::Sender`\n```\n\nHowever, this does not work for namespaces:\n```",
+    "codeAfter": "classDiagram\n    RenderProcessHost --|> `IPC::Sender`\n```\n\nHowever, this does not work for namespaces:\n```"
+  },
+  {
+    "id": "official-4-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    RenderProcessHost --|> `IPC::Sender`\n```\n\nHowever, this does not work for namespaces:\n```",
+    "codeAfter": "classDiagram\n    RenderProcessHost --|> `IPC::Sender`\n```\n\nHowever, this does not work for namespaces:\n```"
+  },
+  {
+    "id": "official-5",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "graph TD\n    subgraph Rider App\n        A[Rider opens app and navigates to 'Help' / 'Support'] --> B{Selects Type of Concern};\n        B --> C[Salary Issues];\n        B --> D[Aggregator Issues];\n        B --> E[Vehicle Issues];",
+    "codeAfter": "graph TD\n    subgraph Rider App\n        A[Rider opens app and navigates to 'Help' / 'Support'] --> B{Selects Type of Concern};\n        B --> C[Salary Issues];\n        B --> D[Aggregator Issues];\n        B --> E[Vehicle Issues];"
+  },
+  {
+    "id": "official-5-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets"
+    ],
+    "codeBefore": "graph TD\n    subgraph Rider App\n        A[Rider opens app and navigates to 'Help' / 'Support'] --> B{Selects Type of Concern};\n        B --> C[Salary Issues];\n        B --> D[Aggregator Issues];\n        B --> E[Vehicle Issues;",
+    "codeAfter": "graph TD\n    subgraph Rider App\n        A[Rider opens app and navigates to 'Help' / 'Support'] --> B{Selects Type of Concern};\n        B --> C[Salary Issues];\n        B --> D[Aggregator Issues];\n        B --> E[Vehicle Issues;"
+  },
+  {
+    "id": "official-6",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart as 'elk', parser throws syntax error when 'graph'(case sensitive) is included in node text.\n\nWhen a user renders multiple diagram types on a single page with flowchart renderer set to 'elk' this becomes an issue if any of the diagram happens to have word 'graph' as their node text.\nCould potentially cause issues for generative AI use cases.\n\n### Steps to reproduce",
+    "codeAfter": "flowchart as 'elk', parser throws syntax error when 'graph'(case sensitive) is included in node text.\n\nWhen a user renders multiple diagram types on a single page with flowchart renderer set to 'elk' this becomes an issue if any of the diagram happens to have word 'graph' as their node text.\nCould potentially cause issues for generative AI use cases.\n\n### Steps to reproduce"
+  },
+  {
+    "id": "official-6-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart as 'elk', parser throws syntax error when 'graph'(case sensitive) is included in node text.\n\nWhen a user renders multiple diagram types on a single page with flowchart renderer set to 'elk' this becomes an issue if any of the diagram happens to have word 'graph' as their node text.\nCould potentially cause issues for generative AI use cases.\n\n### Steps to reproduce",
+    "codeAfter": "flowchart as 'elk', parser throws syntax error when 'graph'(case sensitive) is included in node text.\n\nWhen a user renders multiple diagram types on a single page with flowchart renderer set to 'elk' this becomes an issue if any of the diagram happens to have word 'graph' as their node text.\nCould potentially cause issues for generative AI use cases.\n\n### Steps to reproduce"
+  },
+  {
+    "id": "official-7",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "graph' as node text in mindmap, er, class, flowcharts|graph, gantt pretty much any diagram throws syntax error\n\n**Config**\n```json\n{\n  \"flowchart\": {",
+    "codeAfter": "graph' as node text in mindmap, er, class, flowcharts|graph, gantt pretty much any diagram throws syntax error\n\n**Config**\n```json\n{\n  \"flowchart\": {"
+  },
+  {
+    "id": "official-7-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "graph' as node text in mindmap, er, class, flowcharts|graph, gantt pretty much any diagram throws syntax error\n\n**Config**\n```json\n{\n  \"flowchart\": {",
+    "codeAfter": "graph' as node text in mindmap, er, class, flowcharts|graph, gantt pretty much any diagram throws syntax error\n\n**Config**\n```json\n{\n  \"flowchart\": {"
+  },
+  {
+    "id": "official-8",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart:\n    defaultRenderer: elk\n---\nclassDiagram\n    class Photograph{\n      +String beakColor",
+    "codeAfter": "flowchart:\n    defaultRenderer: elk\n---\nclassDiagram\n    class Photograph{\n      +String beakColor"
+  },
+  {
+    "id": "official-8-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart:\n    defaultRenderer: elk\n---\nclassDiagram\n    class Photograph{\n      +String beakColor",
+    "codeAfter": "flowchart:\n    defaultRenderer: elk\n---\nclassDiagram\n    class Photograph{\n      +String beakColor"
+  },
+  {
+    "id": "official-9",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram",
+    "codeAfter": "classDiagram"
+  },
+  {
+    "id": "official-9-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram",
+    "codeAfter": "classDiagram"
+  },
+  {
+    "id": "official-10",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    class FooBase~T~ {\n    }\n    class Bar {\n        +Zip\n        +Zap()",
+    "codeAfter": "classDiagram\n    class FooBase~T~ {\n    }\n    class Bar {\n        +Zip\n        +Zap()"
+  },
+  {
+    "id": "official-10-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    class FooBase~T~ {\n    }\n    class Bar {\n        +Zip\n        +Zap()",
+    "codeAfter": "classDiagram\n    class FooBase~T~ {\n    }\n    class Bar {\n        +Zip\n        +Zap()"
+  },
+  {
+    "id": "official-11",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    class FooBase~T~ { }\n    class Bar {\n        +Zip\n        +Zap()\n    }",
+    "codeAfter": "classDiagram\n    class FooBase~T~ { }\n    class Bar {\n        +Zip\n        +Zap()\n    }"
+  },
+  {
+    "id": "official-11-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    class FooBase~T~ { }\n    class Bar {\n        +Zip\n        +Zap()\n    }",
+    "codeAfter": "classDiagram\n    class FooBase~T~ { }\n    class Bar {\n        +Zip\n        +Zap()\n    }"
+  },
+  {
+    "id": "official-12",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [
+      "class-empty-braces-space"
+    ],
+    "trace": [
+      {
+        "rule": "class-empty-braces-space",
+        "changes": [
+          {
+            "id": "class-empty-braces-space",
+            "type": "text_patch",
+            "pattern": "\\{\\s*\\n\\}"
+          }
+        ]
+      }
+    ],
+    "patchesApplied": [
+      {
+        "id": "class-empty-braces-space",
+        "type": "text_patch",
+        "pattern": "\\{\\s*\\n\\}"
+      }
+    ],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    class FooBase~T~ {\n}\n    class Bar {\n        +Zip\n        +Zap()",
+    "codeAfter": "classDiagram\n    class FooBase~T~ { }\n    class Bar {\n        +Zip\n        +Zap()"
+  },
+  {
+    "id": "official-12-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [
+      "class-empty-braces-space"
+    ],
+    "trace": [
+      {
+        "rule": "class-empty-braces-space",
+        "changes": [
+          {
+            "id": "class-empty-braces-space",
+            "type": "text_patch",
+            "pattern": "\\{\\s*\\n\\}"
+          }
+        ]
+      }
+    ],
+    "patchesApplied": [
+      {
+        "id": "class-empty-braces-space",
+        "type": "text_patch",
+        "pattern": "\\{\\s*\\n\\}"
+      }
+    ],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    class FooBase~T~ {\n}\n    class Bar {\n        +Zip\n        +Zap()",
+    "codeAfter": "classDiagram\n    class FooBase~T~ { }\n    class Bar {\n        +Zip\n        +Zap()"
+  },
+  {
+    "id": "official-13",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    class FooBase~T~ {}\n    class Bar {\n        +Zip\n        +Zap()\n    }",
+    "codeAfter": "classDiagram\n    class FooBase~T~ {}\n    class Bar {\n        +Zip\n        +Zap()\n    }"
+  },
+  {
+    "id": "official-13-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram\n    class FooBase~T~ {}\n    class Bar {\n        +Zip\n        +Zap()\n    }",
+    "codeAfter": "classDiagram\n    class FooBase~T~ {}\n    class Bar {\n        +Zip\n        +Zap()\n    }"
+  },
+  {
+    "id": "official-14",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "flowchart TD\n    A[Christmas] -->|Get money| B(Go shopping)\n    B --> C{Let me think}\n    C -->|One| D[Laptop]\n    C -->|Two| E[iPhone]\n    C -->|Three| F[fa:fa-car Car]",
+    "codeAfter": "flowchart TD\n    A[Christmas] -->|Get money| B(Go shopping)\n    B --> C{Let me think}\n    C -->|One| D[Laptop]\n    C -->|Two| E[iPhone]\n    C -->|Three| F[fa:fa-car Car]"
+  },
+  {
+    "id": "official-14-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets"
+    ],
+    "codeBefore": "flowchart TD\n    A[Christmas] -->|Get money| B(Go shopping)\n    B --> C{Let me think}\n    C -->|One| D[Laptop]\n    C -->|Two| E[iPhone]\n    C -->|Three| F[fa:fa-car Car",
+    "codeAfter": "flowchart TD\n    A[Christmas] -->|Get money| B(Go shopping)\n    B --> C{Let me think}\n    C -->|One| D[Laptop]\n    C -->|Two| E[iPhone]\n    C -->|Three| F[fa:fa-car Car"
+  },
+  {
+    "id": "official-15",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "gantt",
+    "codeAfter": "gantt"
+  },
+  {
+    "id": "official-15-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "gantt",
+    "codeAfter": "gantt"
+  },
+  {
+    "id": "official-16",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "Gantt diagrams, when dateFormat is 'YYYY-MM-DD HH:mm:ss', excluding specific dates are ignored.\n\n### Steps to reproduce\n\na Gantt diagram code\n",
+    "codeAfter": "Gantt diagrams, when dateFormat is 'YYYY-MM-DD HH:mm:ss', excluding specific dates are ignored.\n\n### Steps to reproduce\n\na Gantt diagram code\n"
+  },
+  {
+    "id": "official-16-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "Gantt diagrams, when dateFormat is 'YYYY-MM-DD HH:mm:ss', excluding specific dates are ignored.\n\n### Steps to reproduce\n\na Gantt diagram code\n",
+    "codeAfter": "Gantt diagrams, when dateFormat is 'YYYY-MM-DD HH:mm:ss', excluding specific dates are ignored.\n\n### Steps to reproduce\n\na Gantt diagram code\n"
+  },
+  {
+    "id": "official-17",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram\n    autonumber\n    participant A\n    participant B\n    A<<->>B: This is a bidirectional message\n```",
+    "codeAfter": "sequenceDiagram\n    autonumber\n    participant A\n    participant B\n    A<<->>B: This is a bidirectional message\n```"
+  },
+  {
+    "id": "official-17-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram\n    autonumber\n    participant A\n    participant B\n    A<<->>B: This is a bidirectional message\n```",
+    "codeAfter": "sequenceDiagram\n    autonumber\n    participant A\n    participant B\n    A<<->>B: This is a bidirectional message\n```"
+  },
+  {
+    "id": "official-18",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "graph itself\n\nThere is also a warning in the console\n![Image](https://github.com/user-attachments/assets/b8947112-0bd2-4a17-b4c7-55a2e13920fd)\n\n### Steps to reproduce",
+    "codeAfter": "graph itself\n\nThere is also a warning in the console\n![Image](https://github.com/user-attachments/assets/b8947112-0bd2-4a17-b4c7-55a2e13920fd)\n\n### Steps to reproduce"
+  },
+  {
+    "id": "official-18-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "graph itself\n\nThere is also a warning in the console\n![Image(https://github.com/user-attachments/assets/b8947112-0bd2-4a17-b4c7-55a2e13920fd)\n\n### Steps to reproduce",
+    "codeAfter": "graph itself\n\nThere is also a warning in the console\n![Image(https://github.com/user-attachments/assets/b8947112-0bd2-4a17-b4c7-55a2e13920fd)\n\n### Steps to reproduce"
+  },
+  {
+    "id": "official-19",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "flowchart TD\n    Start --> Stop\n```",
+    "codeAfter": "flowchart TD\n    Start --> Stop\n```"
+  },
+  {
+    "id": "official-19-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart TD\n    Start -- Stop\n```",
+    "codeAfter": "flowchart TD\n    Start -- Stop\n```"
+  },
+  {
+    "id": "official-20",
+    "initialValid": false,
+    "initialProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "gantt.html#vertical-markers) of the Gantt chart, there is a TypeError returned:\n\n`TypeError: Cannot read properties of undefined (reading 'type')`\n\n### Steps to reproduce\n",
+    "codeAfter": "gantt.html#vertical-markers) of the Gantt chart, there is a TypeError returned:\n\n`TypeError: Cannot read properties of undefined (reading 'type')`\n\n### Steps to reproduce\n"
+  },
+  {
+    "id": "official-20-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "gantt.html#vertical-markers) of the Gantt chart, there is a TypeError returned:\n\n`TypeError: Cannot read properties of undefined (reading 'type')`\n\n### Steps to reproduce\n",
+    "codeAfter": "gantt.html#vertical-markers) of the Gantt chart, there is a TypeError returned:\n\n`TypeError: Cannot read properties of undefined (reading 'type')`\n\n### Steps to reproduce\n"
+  },
+  {
+    "id": "official-21",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart.html#direction states\n\n> Possible FlowChart orientations are:\n> - TB - Top to bottom\n> - TD - Top-down/ **same as top to bottom**\n",
+    "codeAfter": "flowchart.html#direction states\n\n> Possible FlowChart orientations are:\n> - TB - Top to bottom\n> - TD - Top-down/ **same as top to bottom**\n"
+  },
+  {
+    "id": "official-21-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart.html#direction states\n\n> Possible FlowChart orientations are:\n> - TB - Top to bottom\n> - TD - Top-down/ **same as top to bottom**\n",
+    "codeAfter": "flowchart.html#direction states\n\n> Possible FlowChart orientations are:\n> - TB - Top to bottom\n> - TD - Top-down/ **same as top to bottom**\n"
+  },
+  {
+    "id": "official-22",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart TD\n    subgraph one\n        a2\n        a1\n    end\n    subgraph two",
+    "codeAfter": "flowchart TD\n    subgraph one\n        a2\n        a1\n    end\n    subgraph two"
+  },
+  {
+    "id": "official-22-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart TD\n    subgraph one\n        a2\n        a1\n    end\n    subgraph two",
+    "codeAfter": "flowchart TD\n    subgraph one\n        a2\n        a1\n    end\n    subgraph two"
+  },
+  {
+    "id": "official-23",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "gantt",
+    "codeAfter": "gantt"
+  },
+  {
+    "id": "official-23-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "gantt",
+    "codeAfter": "gantt"
+  },
+  {
+    "id": "official-24",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "Gantt chart still shows the full month and year.\n\n\n### Steps to reproduce\n\n```",
+    "codeAfter": "Gantt chart still shows the full month and year.\n\n\n### Steps to reproduce\n\n```"
+  },
+  {
+    "id": "official-24-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "Gantt chart still shows the full month and year.\n\n\n### Steps to reproduce\n\n```",
+    "codeAfter": "Gantt chart still shows the full month and year.\n\n\n### Steps to reproduce\n\n```"
+  },
+  {
+    "id": "official-25",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "flowchart TB\n    A --> n1[\"1\"] \n    A --> n2[2]\n    A --> n3[\"3\"]\n    A --> n4[\"4\"]\n```",
+    "codeAfter": "flowchart TB\n    A --> n1[\"1\"] \n    A --> n2[2]\n    A --> n3[\"3\"]\n    A --> n4[\"4\"]\n```"
+  },
+  {
+    "id": "official-25-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets"
+    ],
+    "codeBefore": "flowchart TB\n    A --> n1[\"1\"] \n    A --> n2[2]\n    A --> n3[\"3\"]\n    A --> n4[\"4\"\n```",
+    "codeAfter": "flowchart TB\n    A --> n1[\"1\"] \n    A --> n2[2]\n    A --> n3[\"3\"]\n    A --> n4[\"4\"\n```"
+  },
+  {
+    "id": "official-26",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram the title collides with the box top border. It looks bad.\n\n### Steps to reproduce\n\n1. create a sequenceDiagram with a box with a title\n2. see results in Safari",
+    "codeAfter": "sequenceDiagram the title collides with the box top border. It looks bad.\n\n### Steps to reproduce\n\n1. create a sequenceDiagram with a box with a title\n2. see results in Safari"
+  },
+  {
+    "id": "official-26-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram the title collides with the box top border. It looks bad.\n\n### Steps to reproduce\n\n1. create a sequenceDiagram with a box with a title\n2. see results in Safari",
+    "codeAfter": "sequenceDiagram the title collides with the box top border. It looks bad.\n\n### Steps to reproduce\n\n1. create a sequenceDiagram with a box with a title\n2. see results in Safari"
+  },
+  {
+    "id": "official-27",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram\n    box Client environment\n        participant GitHubEnterprise as GitHubEnterprise\n    end\n\n    box アップル社様のクラウド",
+    "codeAfter": "sequenceDiagram\n    box Client environment\n        participant GitHubEnterprise as GitHubEnterprise\n    end\n\n    box アップル社様のクラウド"
+  },
+  {
+    "id": "official-27-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram\n    box Client environment\n        participant GitHubEnterprise as GitHubEnterprise\n    end\n\n    box アップル社様のクラウド",
+    "codeAfter": "sequenceDiagram\n    box Client environment\n        participant GitHubEnterprise as GitHubEnterprise\n    end\n\n    box アップル社様のクラウド"
+  },
+  {
+    "id": "official-28",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart configuration allows customizing the line curvature using D3 curve functions, but this setting applies globally to *all* lines in the diagram. I often need to make **only specific lines curvy**, especially when representing annotations or comments — a common requirement in technical or patent drawings. The inability to selectively apply line curvature means I cannot properly depict these scenario",
+    "codeAfter": "flowchart configuration allows customizing the line curvature using D3 curve functions, but this setting applies globally to *all* lines in the diagram. I often need to make **only specific lines curvy**, especially when representing annotations or comments — a common requirement in technical or patent drawings. The inability to selectively apply line curvature means I cannot properly depict these scenario"
+  },
+  {
+    "id": "official-28-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart configuration allows customizing the line curvature using D3 curve functions, but this setting applies globally to *all* lines in the diagram. I often need to make **only specific lines curvy**, especially when representing annotations or comments — a common requirement in technical or patent drawings. The inability to selectively apply line curvature means I cannot properly depict these scenario",
+    "codeAfter": "flowchart configuration allows customizing the line curvature using D3 curve functions, but this setting applies globally to *all* lines in the diagram. I often need to make **only specific lines curvy**, especially when representing annotations or comments — a common requirement in technical or patent drawings. The inability to selectively apply line curvature means I cannot properly depict these scenario"
+  },
+  {
+    "id": "official-29",
+    "initialValid": false,
+    "initialProblems": [
+      "unbalanced brackets"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unbalanced brackets"
+    ],
+    "codeBefore": "flowchart diagram config options](https://mermaid.js.org/config/schema-docs/config-defs-flowchart-diagram-config.html) and [styling options](https://mermaid.js.org/syntax/flowchart.html#styling-line-curves), but the curve setting is only available at the global level.\n\n- Workarounds like splitting diagrams or overlaying SVG elements are not practical and defeat the purpose of using Mermaid for clean, text-",
+    "codeAfter": "flowchart diagram config options](https://mermaid.js.org/config/schema-docs/config-defs-flowchart-diagram-config.html) and [styling options](https://mermaid.js.org/syntax/flowchart.html#styling-line-curves), but the curve setting is only available at the global level.\n\n- Workarounds like splitting diagrams or overlaying SVG elements are not practical and defeat the purpose of using Mermaid for clean, text-"
+  },
+  {
+    "id": "official-29-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart diagram config options](https://mermaid.js.org/config/schema-docs/config-defs-flowchart-diagram-config.html) and [styling options(https://mermaid.js.org/syntax/flowchart.html#styling-line-curves), but the curve setting is only available at the global level.\n\n- Workarounds like splitting diagrams or overlaying SVG elements are not practical and defeat the purpose of using Mermaid for clean, text-",
+    "codeAfter": "flowchart diagram config options](https://mermaid.js.org/config/schema-docs/config-defs-flowchart-diagram-config.html) and [styling options(https://mermaid.js.org/syntax/flowchart.html#styling-line-curves), but the curve setting is only available at the global level.\n\n- Workarounds like splitting diagrams or overlaying SVG elements are not practical and defeat the purpose of using Mermaid for clean, text-"
+  },
+  {
+    "id": "official-30",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "Flowchart documentation in the production and latest `develop` branch.\n\nI previously reported a similar issue (#6455) about failing previews in the Flowchart documentation, which was fixed. However, I found two new documentation preview errors that are different from the previous issue:\n\n1. The `Image Shape` example code fails to render because the sample image URL (`https://example.com/image.png`) is not ",
+    "codeAfter": "Flowchart documentation in the production and latest `develop` branch.\n\nI previously reported a similar issue (#6455) about failing previews in the Flowchart documentation, which was fixed. However, I found two new documentation preview errors that are different from the previous issue:\n\n1. The `Image Shape` example code fails to render because the sample image URL (`https://example.com/image.png`) is not "
+  },
+  {
+    "id": "official-30-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "Flowchart documentation in the production and latest `develop` branch.\n\nI previously reported a similar issue (#6455) about failing previews in the Flowchart documentation, which was fixed. However, I found two new documentation preview errors that are different from the previous issue:\n\n1. The `Image Shape` example code fails to render because the sample image URL (`https://example.com/image.png`) is not ",
+    "codeAfter": "Flowchart documentation in the production and latest `develop` branch.\n\nI previously reported a similar issue (#6455) about failing previews in the Flowchart documentation, which was fixed. However, I found two new documentation preview errors that are different from the previous issue:\n\n1. The `Image Shape` example code fails to render because the sample image URL (`https://example.com/image.png`) is not "
+  },
+  {
+    "id": "official-31",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "Flowchart documentation page (`http://localhost:3333/syntax/flowchart.html`)\n1. Check the `Image Shape` section - the preview is not rendered\n1. Check the `Markdown Strings` section - the preview is not rendered\n1. Scroll to the bottom of the page - you will see \"Syntax error in text mermaid version 11.6.0\" displayed\n\n### Screenshots",
+    "codeAfter": "Flowchart documentation page (`http://localhost:3333/syntax/flowchart.html`)\n1. Check the `Image Shape` section - the preview is not rendered\n1. Check the `Markdown Strings` section - the preview is not rendered\n1. Scroll to the bottom of the page - you will see \"Syntax error in text mermaid version 11.6.0\" displayed\n\n### Screenshots"
+  },
+  {
+    "id": "official-31-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "Flowchart documentation page (`http://localhost:3333/syntax/flowchart.html`)\n1. Check the `Image Shape` section - the preview is not rendered\n1. Check the `Markdown Strings` section - the preview is not rendered\n1. Scroll to the bottom of the page - you will see \"Syntax error in text mermaid version 11.6.0\" displayed\n\n### Screenshots",
+    "codeAfter": "Flowchart documentation page (`http://localhost:3333/syntax/flowchart.html`)\n1. Check the `Image Shape` section - the preview is not rendered\n1. Check the `Markdown Strings` section - the preview is not rendered\n1. Scroll to the bottom of the page - you will see \"Syntax error in text mermaid version 11.6.0\" displayed\n\n### Screenshots"
+  },
+  {
+    "id": "official-32",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart TD\n            A@{ img: \"https://example.com/image.png\", label: \"Image Label\", pos: \"t\", w: 60, h: 60, constraint: \"off\" }\n        ```\n    - https://github.com/mermaid-js/mermaid/blob/develop/packages/mermaid/src/docs/syntax/flowchart.md?plain=1#L579-L582\n2. For the `Markdown Strings` example:\n    - Fix the syntax error in the example code",
+    "codeAfter": "flowchart TD\n            A@{ img: \"https://example.com/image.png\", label: \"Image Label\", pos: \"t\", w: 60, h: 60, constraint: \"off\" }\n        ```\n    - https://github.com/mermaid-js/mermaid/blob/develop/packages/mermaid/src/docs/syntax/flowchart.md?plain=1#L579-L582\n2. For the `Markdown Strings` example:\n    - Fix the syntax error in the example code"
+  },
+  {
+    "id": "official-32-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart TD\n            A@{ img: \"https://example.com/image.png\", label: \"Image Label\", pos: \"t\", w: 60, h: 60, constraint: \"off\" }\n        ```\n    - https://github.com/mermaid-js/mermaid/blob/develop/packages/mermaid/src/docs/syntax/flowchart.md?plain=1#L579-L582\n2. For the `Markdown Strings` example:\n    - Fix the syntax error in the example code",
+    "codeAfter": "flowchart TD\n            A@{ img: \"https://example.com/image.png\", label: \"Image Label\", pos: \"t\", w: 60, h: 60, constraint: \"off\" }\n        ```\n    - https://github.com/mermaid-js/mermaid/blob/develop/packages/mermaid/src/docs/syntax/flowchart.md?plain=1#L579-L582\n2. For the `Markdown Strings` example:\n    - Fix the syntax error in the example code"
+  },
+  {
+    "id": "official-33",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "flowchart LR\n        subgraph \"One\"\n          a(\"`The **cat**\n          in the hat`\") -- \"edge label\" --> b{{\"`The **dog** in the hog`\"}}\n        end\n        subgraph \"`**Two**`\"",
+    "codeAfter": "flowchart LR\n        subgraph \"One\"\n          a(\"`The **cat**\n          in the hat`\") -- \"edge label\" --> b{{\"`The **dog** in the hog`\"}}\n        end\n        subgraph \"`**Two**`\""
+  },
+  {
+    "id": "official-33-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart LR\n        subgraph \"One\"\n          a(\"`The **cat**\n          in the hat`\") -- \"edge label\" -- b{{\"`The **dog** in the hog`\"}}\n        end\n        subgraph \"`**Two**`\"",
+    "codeAfter": "flowchart LR\n        subgraph \"One\"\n          a(\"`The **cat**\n          in the hat`\") -- \"edge label\" -- b{{\"`The **dog** in the hog`\"}}\n        end\n        subgraph \"`**Two**`\""
+  },
+  {
+    "id": "official-34",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart.md?plain=1#L982-L996\n\n\n### Additional Context\n\nI'm prepared to create a Pull Request to fix these issues.",
+    "codeAfter": "flowchart.md?plain=1#L982-L996\n\n\n### Additional Context\n\nI'm prepared to create a Pull Request to fix these issues."
+  },
+  {
+    "id": "official-34-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "flowchart.md?plain=1#L982-L996\n\n\n### Additional Context\n\nI'm prepared to create a Pull Request to fix these issues.",
+    "codeAfter": "flowchart.md?plain=1#L982-L996\n\n\n### Additional Context\n\nI'm prepared to create a Pull Request to fix these issues."
+  },
+  {
+    "id": "official-35",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "flowchart TD\n    A[Identificación de registros: 365] --> B[Duplicados eliminados: 35]\n    B --> C[Registros únicos para cribado: 330]\n    C --> D[Registros excluidos en cribado: 120]\n    D --> E[Publicaciones recuperadas para evaluación: 210]\n    E --> F[Publicaciones excluidas tras evaluación: 40]",
+    "codeAfter": "flowchart TD\n    A[Identificación de registros: 365] --> B[Duplicados eliminados: 35]\n    B --> C[Registros únicos para cribado: 330]\n    C --> D[Registros excluidos en cribado: 120]\n    D --> E[Publicaciones recuperadas para evaluación: 210]\n    E --> F[Publicaciones excluidas tras evaluación: 40]"
+  },
+  {
+    "id": "official-35-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets"
+    ],
+    "codeBefore": "flowchart TD\n    A[Identificación de registros: 365] --> B[Duplicados eliminados: 35]\n    B --> C[Registros únicos para cribado: 330]\n    C --> D[Registros excluidos en cribado: 120]\n    D --> E[Publicaciones recuperadas para evaluación: 210]\n    E --> F[Publicaciones excluidas tras evaluación: 40",
+    "codeAfter": "flowchart TD\n    A[Identificación de registros: 365] --> B[Duplicados eliminados: 35]\n    B --> C[Registros únicos para cribado: 330]\n    C --> D[Registros excluidos en cribado: 120]\n    D --> E[Publicaciones recuperadas para evaluación: 210]\n    E --> F[Publicaciones excluidas tras evaluación: 40"
+  },
+  {
+    "id": "official-36",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "graph TD\n     A[Click here] --> B((http://example.com/\\(test\\)))\n```\n\n2. Render the diagram using the Live Editor or embedded Mermaid.\n3. Inspect the generated output or internal URL transformation logic.",
+    "codeAfter": "graph TD\n     A[Click here] --> B((http://example.com/\\(test\\)))\n```\n\n2. Render the diagram using the Live Editor or embedded Mermaid.\n3. Inspect the generated output or internal URL transformation logic."
+  },
+  {
+    "id": "official-36-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets"
+    ],
+    "codeBefore": "graph TD\n     A[Click here --> B((http://example.com/\\(test\\)))\n```\n\n2. Render the diagram using the Live Editor or embedded Mermaid.\n3. Inspect the generated output or internal URL transformation logic.",
+    "codeAfter": "graph TD\n     A[Click here --> B((http://example.com/\\(test\\)))\n```\n\n2. Render the diagram using the Live Editor or embedded Mermaid.\n3. Inspect the generated output or internal URL transformation logic."
+  },
+  {
+    "id": "official-37",
+    "initialValid": true,
+    "initialProblems": [],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": true,
+    "finalProblems": [],
+    "codeBefore": "flowchart TD\n    Start([Start]) --> Decision{Decision?}\n    Decision -->|Yes| Continue[Keep going]\n    Decision -->|No| Stop[End]\n```\n:",
+    "codeAfter": "flowchart TD\n    Start([Start]) --> Decision{Decision?}\n    Decision -->|Yes| Continue[Keep going]\n    Decision -->|No| Stop[End]\n```\n:"
+  },
+  {
+    "id": "official-37-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unclosed brackets"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unclosed brackets"
+    ],
+    "codeBefore": "flowchart TD\n    Start([Start]) --> Decision{Decision?}\n    Decision -->|Yes| Continue[Keep going]\n    Decision -->|No| Stop[End\n```\n:",
+    "codeAfter": "flowchart TD\n    Start([Start]) --> Decision{Decision?}\n    Decision -->|Yes| Continue[Keep going]\n    Decision -->|No| Stop[End\n```\n:"
+  },
+  {
+    "id": "official-38",
+    "initialValid": false,
+    "initialProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram.html), there are two different ways shown for annotating a class using << >> syntax:\n_1. Separate Line After Class Definition_\n```\nclassDiagram\nclass Shape\n<<interface>> Shape",
+    "codeAfter": "classDiagram.html), there are two different ways shown for annotating a class using << >> syntax:\n_1. Separate Line After Class Definition_\n```\nclassDiagram\nclass Shape\n<<interface>> Shape"
+  },
+  {
+    "id": "official-38-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "unbalanced brackets",
+      "no edges or nodes found"
+    ],
+    "codeBefore": "classDiagram.html), there are two different ways shown for annotating a class using << >> syntax:\n_1. Separate Line After Class Definition_\n```\nclassDiagram\nclass Shape\n<<interface>> Shape",
+    "codeAfter": "classDiagram.html), there are two different ways shown for annotating a class using << >> syntax:\n_1. Separate Line After Class Definition_\n```\nclassDiagram\nclass Shape\n<<interface>> Shape"
+  },
+  {
+    "id": "official-39",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram\nA ->> B: A calls B\n%% ❌ Expecting 'TXT' got 'NEWLINE'\nB ->> A\n```\n",
+    "codeAfter": "sequenceDiagram\nA ->> B: A calls B\n%% ❌ Expecting 'TXT' got 'NEWLINE'\nB ->> A\n```\n"
+  },
+  {
+    "id": "official-39-broken",
+    "initialValid": false,
+    "initialProblems": [
+      "no edges or nodes found"
+    ],
+    "rulesHit": [],
+    "trace": [],
+    "patchesApplied": [],
+    "finalValid": false,
+    "finalProblems": [
+      "no edges or nodes found"
+    ],
+    "codeBefore": "sequenceDiagram\nA ->> B: A calls B\n%% ❌ Expecting 'TXT' got 'NEWLINE'\nB ->> A\n```\n",
+    "codeAfter": "sequenceDiagram\nA ->> B: A calls B\n%% ❌ Expecting 'TXT' got 'NEWLINE'\nB ->> A\n```\n"
+  }
+]
