@@ -7,7 +7,10 @@ export default [
       'assets/**',
       '**/*.min.js',
       'engine-src/**/dist/**',
-      'docs/legacy/**'
+      'docs/legacy/**',
+      'DiagramMender_plus/**',
+      'js/engine.browser.js',
+      'js/ai/**'
     ]
   },
   {

@@ -14,13 +14,35 @@ const ClassicEngine = self.ClassicEngine;
 const ClassicTestRunner = self.ClassicTestRunner;
 const workerUtils = self.ClassicWorkerUtils;
 
+function getEngineMeta() {
+  if (typeof ClassicEngine.getLoadMeta === 'function') {
+    const meta = ClassicEngine.getLoadMeta() || {};
+    return {
+      source: meta.source || null,
+      attempts: Array.isArray(meta.attempts) ? meta.attempts : [],
+    };
+  }
+  return { source: null, attempts: [] };
+}
+
+function formatEngineAttempts(attempts = []) {
+  if (!Array.isArray(attempts) || !attempts.length) return '';
+  return attempts.map((item) => {
+    const status = item && item.ok ? 'ok' : 'fail';
+    const src = item?.source || 'unknown';
+    const detail = item?.error?.message ? ` (${item.error.message})` : '';
+    return `${status}@${src}${detail}`;
+  }).join('; ');
+}
+
 if (!ClassicRenderer || !ClassicEngine || !ClassicTestRunner || !workerUtils) {
   throw new Error('Classic worker modules failed to load via importScripts');
 }
 
 const { guessDiagram, buildFallbackDiagram, composeWorkerLog, toErrorMessage, resolveLocale, localize } = workerUtils;
 
-const { error: engineLoadError } = ClassicEngine.loadEngine('engine.js') || {};
+const engineLoadResult = ClassicEngine.loadEngine(['engine.browser.js', 'engine.js']) || {};
+const engineLoadError = engineLoadResult.error || null;
 
 function buildAnalysisLog(resultLog, meta = {}, locale) {
   return composeWorkerLog(resultLog, {
@@ -36,6 +58,7 @@ function directRenderFallback(files = {}, options = {}, dtype, locale) {
     : localize('engine.unavailable', locale);
   const note = localize('log.noteEngineUnavailable', locale);
 
+  const engineMeta = getEngineMeta();
   return {
     code,
     errors: [
@@ -51,6 +74,18 @@ function directRenderFallback(files = {}, options = {}, dtype, locale) {
       error: message,
     }, locale),
     dtype,
+    trace: [],
+    fragments: [],
+    links: [],
+    notes: [],
+    rawCode: code,
+    detection: null,
+    plugin: null,
+    engine: {
+      source: engineMeta.source,
+      attempts: engineMeta.attempts,
+      error: message,
+    },
   };
 }
 
@@ -82,7 +117,24 @@ async function handleAnalysisMessage(data = {}) {
 
   try {
     const result = await ClassicEngine.runPipeline(files, options);
-    const log = buildAnalysisLog(result?.log, {
+    const engineMeta = getEngineMeta();
+    const engineInfo = {
+      source: result?.engine?.source || engineMeta.source || null,
+      version: result?.engine?.version || null,
+      attempts: Array.isArray(result?.engine?.attempts) ? result.engine.attempts : engineMeta.attempts,
+    };
+    const baseLog = Array.isArray(result?.log) ? [...result.log] : [];
+    if (engineInfo.source) {
+      baseLog.push({ rule: 'worker.engineSource', msg: `engine: ${engineInfo.source}` });
+    }
+    if (engineInfo.version) {
+      baseLog.push({ rule: 'worker.engineVersion', msg: `engine version: ${engineInfo.version}` });
+    }
+    const attemptSummary = formatEngineAttempts(engineInfo.attempts);
+    if (attemptSummary) {
+      baseLog.push({ rule: 'worker.engineAttempts', msg: attemptSummary });
+    }
+    const log = buildAnalysisLog(baseLog, {
       mode: mode || 'rules',
       version: WORKER_VERSION,
       duration: Date.now() - startTs,
@@ -90,9 +142,22 @@ async function handleAnalysisMessage(data = {}) {
 
     self.postMessage({
       code: result?.code ?? '',
-      errors: result?.errors ?? [],
+      errors: Array.isArray(result?.errors) ? result.errors : [],
       log,
       dtype: result?.dtype || dtype,
+      trace: Array.isArray(result?.trace) ? result.trace : [],
+      fragments: Array.isArray(result?.fragments) ? result.fragments : [],
+      links: Array.isArray(result?.links) ? result.links : [],
+      notes: Array.isArray(result?.notes) ? result.notes : [],
+      detection: result?.detection ?? null,
+      plugin: result?.plugin ?? null,
+      rawCode: typeof result?.rawCode === 'string' ? result.rawCode : '',
+      engine: {
+        source: engineInfo.source,
+        version: engineInfo.version,
+        attempts: engineInfo.attempts,
+      },
+      ir: result?.ir || null,
     });
   } catch (error) {
     const errorDetails = toErrorMessage(error);
@@ -104,6 +169,7 @@ async function handleAnalysisMessage(data = {}) {
       error: message,
     }, locale);
 
+    const engineMeta = getEngineMeta();
     self.postMessage({
       code: fallbackDiagram,
       errors: [
@@ -114,6 +180,19 @@ async function handleAnalysisMessage(data = {}) {
       ],
       log,
       dtype,
+      trace: [],
+      fragments: [],
+      links: [],
+      notes: [],
+      rawCode: '',
+      detection: null,
+      plugin: null,
+      engine: {
+        source: engineMeta.source,
+        attempts: engineMeta.attempts,
+        error: message,
+      },
+      ir: null,
     });
   }
 }

@@ -10,6 +10,29 @@ section>header{border-bottom:1px solid var(--bd);padding:8px 10px;font-weight:60
 .select{padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:#fff}
 .notice{display:none;background:#fff3cd;border:1px solid #ffe69c;color:#856404;padding:8px 10px;border-radius:6px;margin:8px 16px}
 
+#analysisPanel{grid-column:1/-1}
+#analysisPanel[data-has-data="false"] .analysis-combined textarea{opacity:.6}
+.analysis-body{display:flex;flex-direction:column;gap:12px;padding:12px}
+.analysis-summary{display:flex;flex-direction:column;gap:4px;color:#24292f;font-size:13px}
+.analysis-summary p{margin:0}
+.analysis-detection{color:#57606a;font-size:12px}
+.analysis-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.analysis-list{border:1px solid var(--bd);border-radius:6px;background:#fafbfc;padding:8px;max-height:200px;overflow:auto;font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#24292f}
+.analysis-list ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.analysis-fragment{display:flex;flex-direction:column;gap:4px}
+.analysis-fragment__header{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600;font-size:13px}
+.analysis-fragment__meta{color:#57606a;font-size:12px;word-break:break-word}
+.analysis-fragment__anchors{color:#6e7781;font-size:12px}
+.analysis-links{display:flex;flex-direction:column;gap:4px}
+.analysis-link{padding:4px 6px;border-radius:4px;background:#f1f5f9;border:1px solid rgba(27,31,36,0.12);font-size:12px;color:#1f2328}
+.analysis-combined{display:flex;flex-direction:column;gap:6px}
+.analysis-combined__header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.analysis-combined textarea{width:100%;min-height:120px;border:1px solid var(--bd);border-radius:6px;padding:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px;resize:vertical;background:#fafbfc;color:#1f2328}
+.btn-ghost{padding:4px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:#0969da;cursor:pointer;font-size:13px}
+.btn-ghost:hover{background:rgba(9,105,218,0.1)}
+.btn-ghost:active{background:rgba(9,105,218,0.2)}
+.btn-ghost:disabled{color:#8c959f;cursor:not-allowed}
+
 /* P1 Offline Bundle Styles */
 #docsPanel, #configPanel { background: #fff; }
 #docsPanel select, #docsPanel #doc-view { width: 100%; }
