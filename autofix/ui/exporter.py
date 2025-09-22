@@ -55,9 +55,9 @@ SENSITIVE_QUERY_KEYS = {
     "password",
     "signature",
 }
-TOKEN_VALUE_PATTERN = re.compile(r"(?i)(bearer\\s+[a-z0-9\\-_.]+)")
-LONG_TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9\\-_.]{16,}$")
-WHITESPACE_RE = re.compile(r"\\s+")
+TOKEN_VALUE_PATTERN = re.compile(r"(?i)(bearer\s+[a-z0-9\-_.]+)")
+LONG_TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9\-_.]{16,}$")
+WHITESPACE_RE = re.compile(r"\s+")
 
 
 class BlobStore:
