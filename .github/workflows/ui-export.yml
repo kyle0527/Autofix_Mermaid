@@ -1,0 +1,79 @@
+name: History UI Export
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  history-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-test.txt
+      - name: Run tests
+        run: pytest -q
+      - name: Create demo history data
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          data = {
+              "schema_version": "1.0",
+              "project": {"name": "CI Demo", "created_at": "2024-05-10T12:00:00Z"},
+              "run_metadata": {
+                  "branch": "main",
+                  "commit": "ci-demo-commit",
+                  "tool_versions": {
+                      "autofix": "3.4.0",
+                      "ui": "1.0.0",
+                      "mermaid": "10.6.1",
+                  },
+              },
+              "runs": [{
+                  "run_id": "ci-run",
+                  "summary": {"targets": 1, "issues_found": 0, "duration_sec": 2.4},
+                  "history_proxy": [
+                      {
+                          "id": "ci-req-1",
+                          "request": {
+                              "method": "GET",
+                              "url": "https://example.com/api",
+                              "headers": {"Accept": "application/json"},
+                              "body": "",
+                          },
+                          "response": {
+                              "status": 200,
+                              "headers": {"Content-Type": "application/json"},
+                              "body_preview": "{\\"ok\\": true}",
+                          },
+                          "tags": ["info"],
+                          "ts": "2024-05-10T12:00:00Z",
+                      }
+                  ],
+                  "history_repeater": [],
+                  "issues": [],
+                  "artifacts": {"mermaid": []},
+              }],
+          }
+          pathlib.Path("autofix_last_run.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
+          PY
+      - name: Export single-file UI
+        run: python -m autofix.cli.export_ui --single dist/ui/history-viewer.html --data autofix_last_run.json
+      - name: Export static UI bundle
+        run: python -m autofix.cli.export_ui_static --out dist/ui --data autofix_last_run.json
+      - name: Verify exported UI assets
+        run: python tools/verify_history_ui.py
+      - name: Upload UI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-ui
+          path: dist/ui
+          if-no-files-found: error
