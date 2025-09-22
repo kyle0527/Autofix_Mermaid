@@ -178,8 +178,27 @@ function normalizeHeader(text) {
  * @param {Function} initMermaid - Mermaid initialization function
  */
 function initializeUI(renderMermaid, svgToPNG, initMermaid) {
-  let lastResult = { code: '', svg: '', errors: [], log: [], dtype: '' };
+  const initialLastResult = {
+    code: '',
+    svg: '',
+    errors: [],
+    log: [],
+    dtype: '',
+    trace: [],
+    fragments: [],
+    links: [],
+    notes: [],
+    detection: null,
+    plugin: null,
+    rawCode: '',
+    engine: { source: null, version: null, attempts: [] },
+    ir: null,
+    debugText: '',
+    debugMeta: { reason: null, error: null },
+  };
+  let lastResult = { ...initialLastResult };
   const STORAGE_KEY = 'autofix_mermaid_ui_v1';
+  let noticeTimer = null;
 
   /**
    * Set application status
@@ -229,6 +248,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
   onLocaleChange(() => {
     applyStatusLocale();
+    updateDebugPanel(lastResult);
+    updateAnalysisPanel(lastResult);
   });
 
   // mark helper as used to avoid lint warning
@@ -242,9 +263,415 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
   function showNotice(message) {
     const noticeElement = $('notice');
     if (!noticeElement) return;
-    
+
+    if (noticeTimer) {
+      clearTimeout(noticeTimer);
+      noticeTimer = null;
+    }
+
     noticeElement.textContent = message || '';
     noticeElement.style.display = message ? 'block' : 'none';
+  }
+
+  function showTransientNotice(message, duration = 4000) {
+    showNotice(message);
+    if (!message || duration <= 0) return;
+    noticeTimer = setTimeout(() => {
+      try {
+        showNotice('');
+      } catch (error) {
+        console.warn('Failed to clear transient notice:', error);
+      }
+    }, duration);
+  }
+
+  function resetAnalysisPanel() {
+    const panel = $('analysisPanel');
+    if (panel) panel.setAttribute('data-has-data', 'false');
+
+    const summaryElement = $('analysisSummary');
+    if (summaryElement) {
+      summaryElement.textContent = t('panel.analysis.empty');
+    }
+
+    const detectionElement = $('analysisDetection');
+    if (detectionElement) {
+      detectionElement.textContent = '';
+    }
+
+    const fragmentsContainer = $('analysisFragments');
+    if (fragmentsContainer) {
+      fragmentsContainer.innerHTML = '';
+      const placeholder = document.createElement('p');
+      placeholder.textContent = t('panel.analysis.fragmentsEmpty');
+      fragmentsContainer.appendChild(placeholder);
+    }
+
+    const linksContainer = $('analysisLinks');
+    if (linksContainer) {
+      linksContainer.innerHTML = '';
+      const placeholder = document.createElement('p');
+      placeholder.textContent = t('panel.analysis.linksEmpty');
+      linksContainer.appendChild(placeholder);
+    }
+
+    const combined = $('analysisCombined');
+    if (combined instanceof HTMLTextAreaElement) {
+      combined.value = '';
+    }
+  }
+
+  function updateAnalysisPanel(result = lastResult) {
+    const panel = $('analysisPanel');
+    if (!panel) return;
+
+    const fragments = Array.isArray(result?.fragments) ? result.fragments : [];
+    const links = Array.isArray(result?.links) ? result.links : [];
+    const notes = Array.isArray(result?.notes) ? result.notes : [];
+    const dtype = typeof result?.dtype === 'string' ? result.dtype : '';
+    let hasData = false;
+
+    const summaryElement = $('analysisSummary');
+    if (summaryElement) {
+      if (!fragments.length && !links.length && !notes.length && !result?.code) {
+        summaryElement.textContent = t('panel.analysis.empty');
+      } else {
+        hasData = true;
+        const parts = [];
+        if (dtype) parts.push(t('panel.analysis.summary.diagram', { value: dtype }));
+        parts.push(t('panel.analysis.summary.fragments', { count: fragments.length }));
+        parts.push(t('panel.analysis.summary.links', { count: links.length }));
+        if (notes.length) parts.push(t('panel.analysis.summary.notes', { count: notes.length }));
+        if (result?.engine?.source) {
+          parts.push(t('panel.analysis.summary.engine', { source: result.engine.source }));
+        }
+        if (result?.engine?.version) {
+          parts.push(t('panel.analysis.summary.version', { value: result.engine.version }));
+        }
+        summaryElement.textContent = parts.filter(Boolean).join(' • ');
+      }
+    }
+
+    const detectionElement = $('analysisDetection');
+    if (detectionElement) {
+      const detection = result?.detection;
+      if (detection && typeof detection === 'object' && detection.lang) {
+        hasData = true;
+        const confidence = typeof detection.confidence === 'number'
+          ? detection.confidence.toFixed(2)
+          : detection.confidence ?? t('debug.value.na');
+        detectionElement.textContent = t('panel.analysis.detection', {
+          lang: detection.lang,
+          confidence,
+        });
+      } else {
+        detectionElement.textContent = '';
+      }
+    }
+
+    const fragmentsContainer = $('analysisFragments');
+    if (fragmentsContainer) {
+      fragmentsContainer.innerHTML = '';
+      if (!fragments.length) {
+        const placeholder = document.createElement('p');
+        placeholder.textContent = t('panel.analysis.fragmentsEmpty');
+        fragmentsContainer.appendChild(placeholder);
+      } else {
+        hasData = true;
+        const list = document.createElement('ul');
+        fragments.forEach((fragment, index) => {
+          const item = document.createElement('li');
+          item.className = 'analysis-fragment';
+
+          const header = document.createElement('div');
+          header.className = 'analysis-fragment__header';
+
+          const titleSpan = document.createElement('span');
+          const displayTitle = fragment?.title || fragment?.id || t('panel.analysis.fragment.untitled');
+          titleSpan.textContent = `${index + 1}. ${displayTitle}`;
+          header.appendChild(titleSpan);
+
+          if (fragment?.code) {
+            const copyButton = document.createElement('button');
+            copyButton.type = 'button';
+            copyButton.className = 'btn-ghost analysis-fragment__copy';
+            copyButton.textContent = t('panel.analysis.fragment.copy');
+            copyButton.dataset.fragmentIndex = String(index);
+            header.appendChild(copyButton);
+          }
+
+          item.appendChild(header);
+
+          const metaParts = [];
+          if (fragment?.id) metaParts.push(`#${fragment.id}`);
+          const moduleName = fragment?.source?.module;
+          if (moduleName) metaParts.push(t('panel.analysis.fragment.module', { module: moduleName }));
+          const className = fragment?.source?.class;
+          if (className) metaParts.push(t('panel.analysis.fragment.class', { name: className }));
+          const functionName = fragment?.source?.function || fragment?.source?.method;
+          if (functionName) metaParts.push(t('panel.analysis.fragment.function', { name: functionName }));
+          const pathName = fragment?.source?.path;
+          if (pathName) metaParts.push(pathName);
+          if (metaParts.length) {
+            const meta = document.createElement('div');
+            meta.className = 'analysis-fragment__meta';
+            meta.textContent = metaParts.join(' • ');
+            item.appendChild(meta);
+          }
+
+          if (fragment?.anchors?.entry || fragment?.anchors?.exit) {
+            const anchors = document.createElement('div');
+            anchors.className = 'analysis-fragment__anchors';
+            anchors.textContent = t('panel.analysis.fragment.anchors', {
+              entry: fragment?.anchors?.entry || t('panel.analysis.fragment.noAnchor'),
+              exit: fragment?.anchors?.exit || t('panel.analysis.fragment.noAnchor'),
+            });
+            item.appendChild(anchors);
+          }
+
+          list.appendChild(item);
+        });
+        fragmentsContainer.appendChild(list);
+      }
+    }
+
+    const linksContainer = $('analysisLinks');
+    if (linksContainer) {
+      linksContainer.innerHTML = '';
+      if (!links.length) {
+        const placeholder = document.createElement('p');
+        placeholder.textContent = t('panel.analysis.linksEmpty');
+        linksContainer.appendChild(placeholder);
+      } else {
+        hasData = true;
+        const list = document.createElement('div');
+        list.className = 'analysis-links';
+        links.forEach((link) => {
+          const entry = document.createElement('div');
+          entry.className = 'analysis-link';
+          const fromAnchor = link?.fromAnchor ? `:${link.fromAnchor}` : '';
+          const toAnchor = link?.toAnchor ? `:${link.toAnchor}` : '';
+          const label = link?.label ? ` (${link.label})` : '';
+          entry.textContent = t('panel.analysis.link.entry', {
+            from: `${link?.fromFragment || '?' }${fromAnchor}`,
+            to: `${link?.toFragment || '?' }${toAnchor}`,
+            label,
+          });
+          list.appendChild(entry);
+        });
+        linksContainer.appendChild(list);
+      }
+    }
+
+    const combined = $('analysisCombined');
+    if (combined instanceof HTMLTextAreaElement) {
+      const code = typeof result?.code === 'string' ? result.code : '';
+      combined.value = code;
+      if (code && code.trim()) {
+        hasData = true;
+      }
+    }
+
+    panel.setAttribute('data-has-data', hasData ? 'true' : 'false');
+  }
+
+  function clearDebugPanel() {
+    lastResult = { ...initialLastResult };
+    updateDebugPanel(lastResult, { reason: null, error: null });
+    resetAnalysisPanel();
+  }
+
+  function formatLogEntry(entry) {
+    if (!entry) return '';
+    if (typeof entry === 'string') {
+      return entry;
+    }
+    const rule = entry.rule || 'log';
+    const message = entry.msg || entry.message || '';
+    const meta = entry.meta ? ` ${JSON.stringify(entry.meta)}` : '';
+    return `${t('debug.log.entry', { rule, message })}${meta}`;
+  }
+
+  function buildDebugText(result = {}, context = {}) {
+    const target = result || {};
+    const reason = context?.reason || null;
+    const errorMessage = context?.error ? String(context.error) : '';
+    const hasData = Boolean(
+      (target.code && String(target.code).trim()) ||
+      (Array.isArray(target.errors) && target.errors.length) ||
+      (Array.isArray(target.log) && target.log.length) ||
+      (Array.isArray(target.trace) && target.trace.length) ||
+      (Array.isArray(target.fragments) && target.fragments.length) ||
+      (Array.isArray(target.links) && target.links.length) ||
+      (Array.isArray(target.notes) && target.notes.length) ||
+      target.detection ||
+      target.plugin
+    );
+
+    if (!hasData && !reason && !errorMessage) {
+      return t('debug.empty');
+    }
+
+    const lines = [];
+    if (reason === 'direct') {
+      lines.push(t('debug.directRender'));
+    } else if (reason === 'worker') {
+      lines.push(t('debug.workerRender'));
+    }
+    if (errorMessage) {
+      lines.push(t('debug.error', { message: errorMessage }));
+    }
+
+    const engine = target.engine || {};
+    lines.push(`${t('debug.section.engine')}:`);
+    lines.push(`  ${t('debug.engine.source', { value: engine.source || t('debug.value.na') })}`);
+    if (engine.version) {
+      lines.push(`  ${t('debug.engine.version', { value: engine.version })}`);
+    }
+    if (engine.error) {
+      lines.push(`  ${t('debug.engine.error', { value: engine.error })}`);
+    }
+    const attempts = Array.isArray(engine.attempts) ? engine.attempts : [];
+    if (attempts.length) {
+      lines.push(`  ${t('debug.engine.attempts')}`);
+      attempts.slice(0, 10).forEach((attempt) => {
+        const key = attempt?.ok ? 'debug.engine.attempt.ok' : 'debug.engine.attempt.fail';
+        const detail = attempt?.error?.message ? ` ${t('debug.engine.attempt.detail', { message: attempt.error.message })}` : '';
+        lines.push(`    ${t(key, { source: attempt?.source || t('debug.value.unknown') })}${detail}`);
+      });
+      if (attempts.length > 10) {
+        lines.push(`    ${t('debug.value.more', { count: attempts.length - 10 })}`);
+      }
+    }
+
+    const detection = target.detection;
+    if (detection && typeof detection === 'object') {
+      const confidence = typeof detection.confidence === 'number'
+        ? detection.confidence.toFixed(2)
+        : detection.confidence || t('debug.value.na');
+      lines.push('');
+      lines.push(`${t('debug.section.detection')}: ${t('debug.detection.summary', { lang: detection.lang || t('debug.value.unknown'), confidence })}`);
+      if (Array.isArray(detection.matchedFiles) && detection.matchedFiles.length) {
+        lines.push(`  ${t('debug.detection.files', { value: detection.matchedFiles.join(', ') })}`);
+      }
+    }
+
+    const plugin = target.plugin;
+    if (plugin && typeof plugin === 'object') {
+      lines.push('');
+      lines.push(`${t('debug.section.plugin')}: ${t('debug.plugin.summary', { lang: plugin.lang || t('debug.value.unknown'), version: plugin.version || t('debug.value.na') })}`);
+      if (Array.isArray(plugin.aliases) && plugin.aliases.length) {
+        lines.push(`  ${t('debug.plugin.aliases', { value: plugin.aliases.join(', ') })}`);
+      }
+      if (plugin.treeSitterModule) {
+        lines.push(`  ${t('debug.plugin.treeSitter', { value: plugin.treeSitterModule })}`);
+      }
+    }
+
+    const specs = [
+      {
+        title: `${t('debug.section.trace')}:`,
+        values: Array.isArray(target.trace) ? target.trace : [],
+        limit: 12,
+        formatter: (entry) => {
+          if (!entry) return '';
+          const duration = Number.isFinite(entry.durationMs) ? Math.round(entry.durationMs) : t('debug.value.na');
+          const details = entry.details ? ` - ${entry.details}` : '';
+          return `  ${t('debug.trace.entry', { stage: entry.stage || t('debug.value.unknown'), duration, details })}`;
+        },
+      },
+      {
+        title: `${t('debug.section.notes')}:`,
+        values: Array.isArray(target.notes) ? target.notes : [],
+        limit: 10,
+        formatter: (note) => (note ? `  ${t('debug.note.entry', { note })}` : ''),
+      },
+      {
+        title: `${t('debug.section.fragments')}:`,
+        values: Array.isArray(target.fragments) ? target.fragments : [],
+        limit: 8,
+        formatter: (fragment) => `  ${t('debug.fragment.entry', { id: fragment?.id || t('debug.value.unknown'), diagram: fragment?.diagram || t('debug.value.unknown'), title: fragment?.title || t('debug.value.na') })}`,
+      },
+      {
+        title: `${t('debug.section.links')}:`,
+        values: Array.isArray(target.links) ? target.links : [],
+        limit: 8,
+        formatter: (link) => {
+          const label = link?.label ? ` [${link.label}]` : '';
+          return `  ${t('debug.link.entry', { from: link?.fromFragment || t('debug.value.unknown'), to: link?.toFragment || t('debug.value.unknown') })}${label}`;
+        },
+      },
+      {
+        title: `${t('debug.section.errors')}:`,
+        values: Array.isArray(target.errors) ? target.errors : [],
+        limit: 5,
+        formatter: (err) => {
+          const stack = err?.stack ? `\n    ${err.stack}` : '';
+          return `  ${t('debug.errors.entry', { message: err?.message || t('debug.value.unknown') })}${stack}`;
+        },
+      },
+      {
+        title: `${t('debug.section.log')}:`,
+        values: Array.isArray(target.log) ? target.log : [],
+        limit: 12,
+        formatter: (entry) => {
+          const formatted = formatLogEntry(entry);
+          return formatted ? `  ${formatted}` : '';
+        },
+      },
+    ];
+
+    specs.forEach(({ title, values, limit, formatter }) => {
+      if (!values.length) return;
+      lines.push('');
+      lines.push(title);
+      values.slice(0, limit).forEach((value, index) => {
+        const formatted = formatter(value, index);
+        if (formatted) {
+          lines.push(formatted);
+        }
+      });
+      if (values.length > limit) {
+        lines.push(`  ${t('debug.value.more', { count: values.length - limit })}`);
+      }
+    });
+
+    const raw = typeof target.rawCode === 'string' ? target.rawCode : '';
+    lines.push('');
+    lines.push(`${t('debug.section.raw')}:`);
+    lines.push(`  ${t('debug.raw.length', { value: raw ? raw.length : 0 })}`);
+
+    return lines.filter(Boolean).join('\n') || t('debug.empty');
+  }
+
+  function updateDebugPanel(result = lastResult, options = {}) {
+    const target = result && typeof result === 'object' ? result : lastResult;
+    const context = { ...(target?.debugMeta || {}), ...options };
+    const text = buildDebugText(target, context);
+
+    if (target && typeof target === 'object') {
+      target.debugText = text;
+      target.debugMeta = context;
+    }
+    if (lastResult && typeof lastResult === 'object' && lastResult !== target) {
+      lastResult.debugText = text;
+      lastResult.debugMeta = context;
+    }
+
+    const debugElement = $('debugLog');
+    if (debugElement) {
+      debugElement.textContent = text;
+      const panel = $('debugPanel');
+      if (panel) {
+        const computed = typeof window !== 'undefined'
+          ? window.getComputedStyle(panel)
+          : { display: panel.style.display || 'block' };
+        if (computed.display !== 'none') {
+          debugElement.scrollTop = debugElement.scrollHeight;
+        }
+      }
+    }
+    return text;
   }
 
   // Persist a snapshot of current UI settings
@@ -296,6 +723,37 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     saveSettingsSnapshot();
     return processInput({ reason: requestReason });
   };
+
+  async function copyToClipboard(text) {
+    if (typeof text !== 'string' || !text) {
+      return false;
+    }
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (error) {
+      console.warn('navigator.clipboard.writeText failed:', error);
+    }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const ok = document.execCommand('copy');
+      textarea.remove();
+      return ok;
+    } catch (error) {
+      console.warn('Fallback clipboard copy failed:', error);
+      return false;
+    }
+  }
 
   /**
    * Download file to user's computer
@@ -356,6 +814,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     try {
       const svgContainer = $('svg');
       const logElement = $('log');
+
+      clearDebugPanel();
 
       // Clear previous results safely
       if (svgContainer) {
@@ -428,8 +888,30 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
         enableExportButtons();
         setStatus(true, 'status.directRenderSuccess');
-        const directResult = { code: normalizedCode, errors: [], log: [], dtype: 'mermaid' };
-        lastResult = directResult;
+        const directResult = {
+          code: normalizedCode,
+          rawCode: inputText,
+          errors: [],
+          log: [],
+          dtype: 'mermaid',
+          trace: [],
+          fragments: [],
+          links: [],
+          notes: [],
+          detection: null,
+          plugin: null,
+          engine: {
+            source: 'direct',
+            version: window?.mermaid?.version || null,
+            attempts: [],
+            error: null,
+          },
+          svg: renderResult.svg,
+          debugMeta: { reason: 'direct' },
+        };
+        lastResult = { ...initialLastResult, ...directResult };
+        updateDebugPanel(lastResult);
+        updateAnalysisPanel(lastResult);
         if (reason === 'autofix') {
           const srcElement = $('src');
           if (srcElement) {
@@ -437,7 +919,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           }
           saveSettingsSnapshot();
         }
-        return directResult;
+        return lastResult;
       }
 
       // 根據 engineMode 建立 worker 與 payload
@@ -510,8 +992,22 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
             console.warn('Worker termination failed:', error);
           }
 
-          const { code, errors = [], log = [], dtype = '' } = event.data || {};
-          
+          const {
+            code,
+            errors = [],
+            log = [],
+            dtype = '',
+            trace = [],
+            fragments = [],
+            links = [],
+            notes = [],
+            detection = null,
+            plugin = null,
+            rawCode = '',
+            engine = {},
+            ir = null,
+          } = event.data || {};
+
           // Safety: normalize worker output header
           const safeCode = normalizeHeader(code);
           const renderResult = await renderMermaid(safeCode, { width, height });
@@ -553,7 +1049,32 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
           } else {
             setStatus(true, 'status.okShort');
           }
-          resolve({ code: safeCode, errors, log, dtype });
+          const engineInfo = {
+            source: engine?.source ?? null,
+            version: engine?.version ?? null,
+            attempts: Array.isArray(engine?.attempts) ? engine.attempts : [],
+            error: engine?.error ?? null,
+          };
+
+          const workerResult = {
+            code: safeCode,
+            rawCode: typeof rawCode === 'string' && rawCode ? rawCode : safeCode,
+            errors,
+            log,
+            dtype: dtype || '',
+            trace: Array.isArray(trace) ? trace : [],
+            fragments: Array.isArray(fragments) ? fragments : [],
+            links: Array.isArray(links) ? links : [],
+            notes: Array.isArray(notes) ? notes : [],
+            detection: detection || null,
+            plugin: plugin || null,
+            engine: engineInfo,
+            ir: ir || null,
+            svg: renderResult.svg,
+            debugMeta: { reason: 'worker' },
+          };
+
+          resolve(workerResult);
         };
 
         worker.onerror = (error) => {
@@ -575,20 +1096,30 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         worker.postMessage(postPayload);
       });
 
-      lastResult = result;
+      lastResult = { ...initialLastResult, ...result };
+      updateDebugPanel(lastResult);
+      updateAnalysisPanel(lastResult);
       if (reason === 'autofix') {
         const srcElement = $('src');
         if (srcElement) {
-          srcElement.value = result.code;
+          srcElement.value = lastResult.code;
         }
         saveSettingsSnapshot();
       }
-      return result;
+      return lastResult;
 
     } catch (error) {
       console.error('Processing failed:', error);
-      showNotice(t('notice.errorWithMessage', { message: error?.message || error }));
-      setStatus(false, error?.message || String(error));
+      const message = error?.message || String(error);
+      showNotice(t('notice.errorWithMessage', { message }));
+      lastResult = {
+        ...initialLastResult,
+        errors: [{ message }],
+        debugMeta: { reason: 'error', error: message },
+      };
+      updateDebugPanel(lastResult, { reason: 'error', error: message });
+      updateAnalysisPanel(lastResult);
+      setStatus(false, message);
       return null;
     }
   }
@@ -874,8 +1405,17 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
     $('btnDebug')?.addEventListener('click', () => {
       const panel = $('debugPanel');
-      if (panel) {
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      if (!panel) return;
+      const computed = typeof window !== 'undefined'
+        ? window.getComputedStyle(panel)
+        : { display: panel.style.display || 'none' };
+      const isHidden = panel.style.display === 'none'
+        || (panel.style.display === '' && computed.display === 'none');
+      if (isHidden) {
+        panel.style.display = 'block';
+        updateDebugPanel(lastResult);
+      } else {
+        panel.style.display = 'none';
       }
     });
 
@@ -903,13 +1443,35 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     });
 
     $('btnExportErrors')?.addEventListener('click', () => {
-      const errorData = JSON.stringify(lastResult?.errors || [], null, 2);
-      downloadFile('errors.json', errorData, 'application/json');
+      const errors = Array.isArray(lastResult?.errors) ? lastResult.errors : [];
+      const exportAsText = confirm(t('alert.exportErrorsAsText'));
+      if (exportAsText) {
+        const context = lastResult?.debugMeta || {};
+        const text = buildDebugText(lastResult, context);
+        downloadFile('errors.txt', text, 'text/plain');
+      } else {
+        const errorData = JSON.stringify(errors, null, 2);
+        downloadFile('errors.json', errorData, 'application/json');
+      }
     });
 
     $('btnExportFixlog')?.addEventListener('click', () => {
-      const logData = JSON.stringify(lastResult?.log || [], null, 2);
-      downloadFile('fixlog.json', logData, 'application/json');
+      const logEntries = Array.isArray(lastResult?.log) ? lastResult.log : [];
+      const exportAsText = confirm(t('alert.exportFixlogAsText'));
+      if (exportAsText) {
+        if (logEntries.length) {
+          const lines = logEntries.map((entry, index) => {
+            const formatted = formatLogEntry(entry) || '';
+            return formatted ? `${index + 1}. ${formatted}` : `${index + 1}.`;
+          });
+          downloadFile('fixlog.txt', lines.join('\n'), 'text/plain');
+        } else {
+          downloadFile('fixlog.txt', t('debug.log.empty'), 'text/plain');
+        }
+      } else {
+        const logData = JSON.stringify(logEntries, null, 2);
+        downloadFile('fixlog.json', logData, 'application/json');
+      }
     });
 
     // 輸出圖片按鈕 - 提供格式選擇
@@ -994,6 +1556,45 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         alert(`${t('alert.pngConvertFailed', { message })}\n${t('alert.pngConvertReason')}`);
       }
     });
+
+    $('analysisFragments')?.addEventListener('click', async (event) => {
+      const element = event.target instanceof HTMLElement
+        ? event.target.closest('button[data-fragment-index]')
+        : null;
+      if (!(element instanceof HTMLButtonElement)) return;
+
+      const index = Number.parseInt(element.dataset.fragmentIndex || '', 10);
+      if (!Number.isInteger(index)) return;
+
+      const fragments = Array.isArray(lastResult?.fragments) ? lastResult.fragments : [];
+      const fragment = fragments[index];
+      if (!fragment || typeof fragment.code !== 'string' || !fragment.code.trim()) {
+        showTransientNotice(t('panel.analysis.copyEmpty'));
+        return;
+      }
+
+      const ok = await copyToClipboard(fragment.code);
+      if (ok) {
+        const title = fragment.title || fragment.id || t('panel.analysis.fragment.untitled');
+        showTransientNotice(t('panel.analysis.fragment.copySuccess', { title }), 2400);
+      } else {
+        showTransientNotice(t('panel.analysis.copyFailed'), 4000);
+      }
+    });
+
+    $('btnCopyCombined')?.addEventListener('click', async () => {
+      const code = typeof lastResult?.code === 'string' ? lastResult.code : '';
+      if (!code.trim()) {
+        showTransientNotice(t('panel.analysis.copyEmpty'));
+        return;
+      }
+      const ok = await copyToClipboard(code);
+      if (ok) {
+        showTransientNotice(t('panel.analysis.copyCombinedSuccess'), 2400);
+      } else {
+        showTransientNotice(t('panel.analysis.copyFailed'), 4000);
+      }
+    });
   }
 
   // Initialize the UI
@@ -1026,6 +1627,9 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       setTimeout(() => { try { document.getElementById('btnRender')?.click(); } catch {} }, 0);
     }
   } catch {}
+
+  resetAnalysisPanel();
+  updateAnalysisPanel(lastResult);
 
   return { processInput, runAnalysis, saveSettingsSnapshot };
 }

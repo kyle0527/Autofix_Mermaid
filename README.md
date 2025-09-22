@@ -13,17 +13,29 @@
 ## 🚀 快速開始
 
 ### 1️⃣ 啟動應用程式
+
+**快速雙擊啟動（桌面封裝）**
 ```bash
-# 切換到專案目錄
-cd Autofix_Mermaid
-
-# 安裝依賴並啟動開發伺服器
+# 在專案根目錄執行
 npm install
-npm start
+npm run build:engine          # 產生瀏覽器端分析引擎 bundle
+npm run package:desktop       # 以 pkg 打包跨平台可執行檔
 
-# 或以簡易 HTTP 伺服器啟動（例如 Python）
-# python -m http.server 8080
-# 然後造訪 http://localhost:8080
+# dist/ 目錄會輸出對應平台的可執行檔，
+# 下載或複製後即可直接雙擊啟動。
+```
+
+**開發 / 本地伺服器模式**
+```bash
+# 在專案根目錄執行
+npm install
+npm run build:engine          # 首次或更新後請先建立 bundle
+npm run launch                # 自動啟動內建伺服器並開啟預設瀏覽器
+
+# 若偏好手動方式，可改用：
+# npm start                   # 啟動內建靜態伺服器
+# 或 python -m http.server 8080
+# 之後造訪 http://localhost:8080
 ```
 
 ### 2️⃣ 基本使用
@@ -35,8 +47,12 @@ npm start
 
 ### 3️⃣ 驗證環境
 ```bash
+# 在專案根目錄執行
+npm run build:engine
 npm run lint
-npm test
+npm run test
+npm run validate:schema
+npm run validate:packs
 ```
 
 

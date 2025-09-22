@@ -2,29 +2,61 @@
 (function (global) {
   'use strict';
 
+  const ENGINE_CANDIDATES = ['engine.browser.js', 'engine.js'];
+
   let engineLoaded = false;
   let loadError = null;
+  let engineMeta = { source: null, attempts: [] };
 
-  function loadEngine(scriptPath = 'engine.js') {
-    if (engineLoaded || loadError) {
-      return { available: engineLoaded, error: loadError };
+  function toErrorInfo(error) {
+    if (!error) {
+      return { message: 'Unknown error' };
+    }
+    if (error instanceof Error) {
+      return { message: error.message || error.name || 'Error', stack: error.stack || '' };
+    }
+    return { message: String(error) };
+  }
+
+  function loadEngine(scriptPaths = ENGINE_CANDIDATES) {
+    if (engineLoaded) {
+      return { available: true, error: null, source: engineMeta.source, attempts: engineMeta.attempts.slice() };
     }
 
-    try {
-      importScripts(scriptPath);
-    } catch (error) {
-      loadError = error instanceof Error ? error : new Error(String(error));
-      return { available: false, error: loadError };
+    engineMeta = { source: null, attempts: [] };
+    loadError = null;
+
+    const candidates = Array.isArray(scriptPaths) ? scriptPaths : [scriptPaths];
+
+    for (const candidate of candidates) {
+      try {
+        importScripts(candidate);
+      } catch (error) {
+        engineMeta.attempts.push({ source: candidate, ok: false, error: toErrorInfo(error) });
+        continue;
+      }
+
+      const engine = global.DiagramMenderCore;
+      if (engine && typeof engine.runPipeline === 'function') {
+        engineLoaded = true;
+        engineMeta.source = candidate;
+        engineMeta.attempts.push({ source: candidate, ok: true });
+        loadError = null;
+        return { available: true, error: null, source: candidate, attempts: engineMeta.attempts.slice() };
+      }
+
+      engineMeta.attempts.push({
+        source: candidate,
+        ok: false,
+        error: { message: 'DiagramMenderCore.runPipeline not available' },
+      });
     }
 
-    const engine = global.DiagramMenderCore;
-    if (engine && typeof engine.runPipeline === 'function') {
-      engineLoaded = true;
-      return { available: true, error: null };
-    }
-
-    loadError = new Error('DiagramMenderCore.runPipeline 未提供或無法存取');
-    return { available: false, error: loadError };
+    engineLoaded = false;
+    const lastAttempt = engineMeta.attempts[engineMeta.attempts.length - 1];
+    const reason = lastAttempt?.error?.message || 'Unable to load any engine candidate';
+    loadError = new Error(reason);
+    return { available: false, error: loadError, attempts: engineMeta.attempts.slice() };
   }
 
   function isAvailable() {
@@ -47,11 +79,19 @@
     return loadError;
   }
 
+  function getLoadMeta() {
+    return {
+      source: engineMeta.source,
+      attempts: engineMeta.attempts.slice(),
+    };
+  }
+
   global.ClassicEngine = Object.freeze({
     loadEngine,
     isAvailable,
     runPipeline,
     getEngine,
     getLoadError,
+    getLoadMeta,
   });
 })(self);
