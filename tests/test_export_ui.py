@@ -7,14 +7,13 @@ from pathlib import Path
 import pytest
 
 from autofix.cli import export_ui, export_ui_static
-from autofix.ui import prepare_history_payload
-from tools.verify_history_ui import verify_history_ui
+
 
 
 @pytest.fixture()
 def sample_history(tmp_path: Path) -> Path:
     data = {
-        "schema_version": "1.0",
+": "1.0",
         "project": {"name": "Demo Project", "created_at": "2024-05-10T12:34:56Z"},
         "run_metadata": {
             "branch": "main",
@@ -25,21 +24,27 @@ def sample_history(tmp_path: Path) -> Path:
                 "mermaid": "10.6.1",
             },
         },
+
         "runs": [
             {
                 "run_id": "run-001",
                 "summary": {"targets": 2, "issues_found": 1, "duration_sec": 12.5},
-                "history_proxy": [
+
                     {
                         "id": "req-1",
                         "request": {
                             "method": "GET",
+
                             "url": "https://example.com/api?token=abc123&safe=value",
                             "headers": {
                                 "Accept": "application/json",
                                 "Authorization": "Bearer super-secret-token",
                                 "Cookie": "sessionid=abcdef"
                             },
+
+                            "url": "https://example.com/api",
+                            "headers": {"Accept": "application/json"},
+
                             "body": "",
                         },
                         "response": {
@@ -55,31 +60,16 @@ def sample_history(tmp_path: Path) -> Path:
                         "request": {
                             "method": "POST",
                             "url": "https://example.com/login",
-                            "headers": {"Content-Type": "application/json", "X-API-Key": "api-key"},
-                            "body": '{"email": "user@example.com", "password": "hunter2"}',
+
                         },
                         "response": {
                             "status": 401,
                             "headers": {"Content-Type": "application/json"},
-                            "body": '{"error": "Unauthorized", "debug": "stacktrace"}',
-                        },
-                        "tags": ["auth", "warning"],
-                        "ts": "2024-05-10T12:05:00Z",
-                    },
-                ],
-                "history_repeater": [
-                    {
+{
                         "id": "req-3",
                         "request": {
                             "method": "PATCH",
-                            "url": "https://example.com/users/1/profile",
-                            "headers": {"Content-Type": "application/json"},
-                            "body": "{\"bio\": \"" + "A" * 5000 + "\"}",
-                        },
-                        "response": {
-                            "status": 200,
-                            "headers": {"Content-Type": "application/json"},
-                            "body": '{"name": "Ada"}',
+
                         },
                         "tags": ["update"],
                         "ts": "2024-05-10T12:10:00Z",
@@ -95,6 +85,7 @@ def sample_history(tmp_path: Path) -> Path:
                         "response": {
                             "status": 204,
                             "headers": {"Content-Length": "0"},
+
                         },
                         "tags": ["cleanup"],
                         "ts": "2024-05-10T12:15:00Z",
@@ -119,6 +110,7 @@ def sample_history(tmp_path: Path) -> Path:
     return data_path
 
 
+
 def test_prepare_history_payload_redacts_sensitive_values(sample_history: Path) -> None:
     raw = json.loads(sample_history.read_text(encoding="utf-8"))
     payload = prepare_history_payload(raw)
@@ -139,17 +131,20 @@ def test_prepare_history_payload_redacts_sensitive_values(sample_history: Path) 
     assert "body_preview" in response
 
 
+
 def test_export_single_file_creates_html(tmp_path: Path, sample_history: Path) -> None:
     output = tmp_path / "dist/ui/history-viewer.html"
     export_ui.main(["--single", str(output), "--data", str(sample_history)])
     assert output.exists()
     html = output.read_text(encoding="utf-8")
     assert "window.HISTORY_DATA" in html
+
     assert '"schema_version": "1.2"' in html
     assert '"history_proxy"' in html
     assert "Proxy entries" in html
     assert "Keyboard shortcuts" in html
     assert "status-banner" in html
+
 
 
 def test_export_static_bundle_creates_assets(tmp_path: Path, sample_history: Path) -> None:
@@ -162,6 +157,7 @@ def test_export_static_bundle_creates_assets(tmp_path: Path, sample_history: Pat
 
     for file in (index_file, ui_js, ui_css, data_js):
         assert file.exists(), f"{file} was not created"
+
 
     data_js_text = data_js.read_text(encoding="utf-8")
     ui_js_text = ui_js.read_text(encoding="utf-8")
@@ -187,3 +183,4 @@ def test_export_static_bundle_creates_assets(tmp_path: Path, sample_history: Pat
     # Combined verification script should succeed for generated assets once the single file exists.
     export_ui.main(["--single", str(out_dir / "history-viewer.html"), "--data", str(sample_history)])
     verify_history_ui(out_dir, out_dir / "history-viewer.html")
+

@@ -15,6 +15,7 @@ platform.
    python - <<'PY'
    import json, pathlib
    data = {
+
        "schema_version": "1.2",
        "project": {"name": "Demo", "created_at": "2024-05-10T12:00:00Z"},
        "run_metadata": {
@@ -45,6 +46,13 @@ platform.
                "ts": "2024-05-10T12:00:00Z"
            }],
            "history_repeater": [],
+\
+       "project": {"name": "Demo", "created_at": "2024-05-10T12:00:00Z"},
+       "runs": [{
+           "run_id": "demo-run",
+           "summary": {"targets": 1, "issues_found": 0, "duration_sec": 3.2},
+           "history": [],
+\
            "issues": [],
            "artifacts": {"mermaid": []},
        }],
@@ -69,10 +77,6 @@ platform.
 
 Both commands create the output directories automatically. The generated files are safe to share
 internally because all data is embedded via `window.HISTORY_DATA`.
-
-To validate an export, run `python tools/verify_history_ui.py` after generating the assets. The
-helper checks that `window.HISTORY_DATA` is embedded and that the summary labels are present in both
-the single-file and static bundle outputs.
 
 ## Opening the viewer
 
@@ -121,12 +125,14 @@ Keyboard navigation complements the buttons:
 Use the checkboxes next to each row to drive copy/export actions. If nothing is selected, the export
 falls back to the first page of results.
 
+
+
 ## Data contract
 
 The CLI consumes a single JSON file shaped as follows (fields are extensible):
 
 ```json
-{
+
   "schema_version": "1.2",
   "project": { "name": "Example repo", "created_at": "2024-05-10T12:34:56Z" },
   "run_metadata": {
@@ -137,12 +143,16 @@ The CLI consumes a single JSON file shaped as follows (fields are extensible):
       "ui": "1.2.0",
       "mermaid": "10.6.1"
     }
+
+  "project": {
+    "name": "Example repo",
+    "created_at": "2024-05-10T12:34:56Z"
+
   },
   "runs": [
     {
       "run_id": "run-001",
-      "summary": {"targets": 2, "issues_found": 1, "duration_sec": 12.5},
-      "history_proxy": [
+
         {
           "id": "req-123",
           "request": {
@@ -156,11 +166,26 @@ The CLI consumes a single JSON file shaped as follows (fields are extensible):
             "headers": {"Content-Type": "application/json"},
             "body_preview": "{\"ok\": true}",
             "body_blob": "blob-1"
+
+
+            "url": "https://example.com/api",
+            "headers": {
+              "Accept": "application/json"
+            },
+            "body": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body_preview": "{\"ok\": true}"
+
           },
           "tags": ["info"],
           "ts": "2024-05-10T12:00:00Z"
         }
-      ],
+   
       "history_repeater": [],
       "issues": [],
       "artifacts": {"mermaid": []},
@@ -184,3 +209,35 @@ parameters before serialising the payload. Large bodies are stored once in `run.
 rendered when you click “Show full request/response”, keeping the initial DOM lightweight. Despite
 the built-in defences, always review the resulting HTML before sharing and remove any content that
 should remain private.
+
+      "issues": [
+        {
+          "id": "issue-1",
+          "title": "Example issue",
+          "severity": "medium",
+          "evidence": {
+            "request_id": "req-123"
+          },
+          "status": "open",
+          "cwe": "CWE-79"
+        }
+      ],
+      "artifacts": {
+        "mermaid": [
+          {"name": "flow.mmd", "content": "graph TD;"}
+        ]
+      }
+    }
+  ]
+}
+```
+
+Large payloads should prefer `response.body_preview` instead of the full body to keep the UI
+lightweight. Additional sections (issues, blobs, etc.) can be added alongside these fields without
+breaking the viewer.
+
+## Privacy and data hygiene
+
+The exported HTML and asset bundles embed the entire JSON payload. Review the data for secrets or
+personally identifiable information before sharing. Remove or mask request/response bodies,
+

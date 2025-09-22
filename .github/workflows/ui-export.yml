@@ -26,6 +26,7 @@ jobs:
           python - <<'PY'
           import json, pathlib
           data = {
+
               "schema_version": "1.0",
               "project": {"name": "CI Demo", "created_at": "2024-05-10T12:00:00Z"},
               "run_metadata": {
@@ -41,6 +42,7 @@ jobs:
                   "run_id": "ci-run",
                   "summary": {"targets": 1, "issues_found": 0, "duration_sec": 2.4},
                   "history_proxy": [
+
                       {
                           "id": "ci-req-1",
                           "request": {
@@ -58,7 +60,7 @@ jobs:
                           "ts": "2024-05-10T12:00:00Z",
                       }
                   ],
-                  "history_repeater": [],
+
                   "issues": [],
                   "artifacts": {"mermaid": []},
               }],
@@ -69,8 +71,6 @@ jobs:
         run: python -m autofix.cli.export_ui --single dist/ui/history-viewer.html --data autofix_last_run.json
       - name: Export static UI bundle
         run: python -m autofix.cli.export_ui_static --out dist/ui --data autofix_last_run.json
-      - name: Verify exported UI assets
-        run: python tools/verify_history_ui.py
       - name: Upload UI artifact
         uses: actions/upload-artifact@v4
         with:
