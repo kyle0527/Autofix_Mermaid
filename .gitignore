@@ -5,5 +5,3 @@ node_modules/
 npm-debug.log
 coverage/
 test-output/
-__pycache__/
-*.py[cod]

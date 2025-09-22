@@ -6,17 +6,46 @@
   "type": "module",
   "scripts": {
     "start": "node ./scripts/start-server.js",
+    "launch": "node ./scripts/desktop-launcher.js",
+    "dev": "node --input-type=module scripts/dev-server.mjs",
+    "build:engine": "node ./scripts/build-engine-browser.mjs",
+    "build:packs": "node ./scripts/build-packs.mjs",
     "lint": "eslint .",
     "test": "node ./scripts/run-tests.js",
-    "dev": "node --input-type=module scripts/dev-server.mjs",
-
+    "test:ci": "npm run build:engine && npm run lint && npm run test && npm run validate:schema && npm run validate:packs",
+    "test:curriculum": "node ./test-curriculum.cjs",
+    "validate:schema": "node ./validate-schema.js",
+    "validate:packs": "node ./scripts/validate_packs.mjs",
+    "package:desktop": "npm run build:engine && pkg ."
   },
   "engines": {
     "node": ">=18"
   },
+  "bin": {
+    "autofix-mermaid": "scripts/desktop-launcher.js"
+  },
+  "pkg": {
+    "targets": [
+      "node18-linux-x64",
+      "node18-macos-x64",
+      "node18-win-x64"
+    ],
+    "outputPath": "dist",
+    "assets": [
+      "index.html",
+      "css/**/*",
+      "js/**/*",
+      "assets/**/*",
+      "docs/**/*",
+      "rules/**/*",
+      "worker.rules-loader.stub.js"
+    ]
+  },
   "devDependencies": {
     "ajv": "^8.17.1",
+    "esbuild": "^0.23.0",
     "eslint": "^8.57.0",
+    "pkg": "^5.8.1",
     "playwright": "^1.41.2"
   },
   "dependencies": {

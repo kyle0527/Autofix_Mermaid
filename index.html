@@ -176,6 +176,39 @@
         <pre id="log"></pre>
       </section>
 
+      <section id="analysisPanel" data-has-data="false">
+        <header data-i18n="panel.analysis.title">分析結果</header>
+        <div class="analysis-body">
+          <div class="analysis-summary">
+            <p id="analysisSummary" data-i18n="panel.analysis.empty">尚未執行分析。</p>
+            <p id="analysisDetection" class="analysis-detection"></p>
+          </div>
+          <div class="analysis-columns">
+            <div class="analysis-column">
+              <h3 data-i18n="panel.analysis.fragmentsTitle">片段列表</h3>
+              <div class="analysis-list" id="analysisFragments">
+                <p data-i18n="panel.analysis.fragmentsEmpty">尚未產生片段。</p>
+              </div>
+            </div>
+            <div class="analysis-column">
+              <h3 data-i18n="panel.analysis.linksTitle">片段連結</h3>
+              <div class="analysis-list" id="analysisLinks">
+                <p data-i18n="panel.analysis.linksEmpty">沒有跨片段連結。</p>
+              </div>
+            </div>
+          </div>
+          <div class="analysis-combined">
+            <div class="analysis-combined__header">
+              <h3 data-i18n="panel.analysis.combinedTitle">組合後的 Mermaid 代碼</h3>
+              <button class="btn btn-ghost" data-i18n="panel.analysis.copyCombined" id="btnCopyCombined" type="button">
+                複製代碼
+              </button>
+            </div>
+            <textarea id="analysisCombined" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </section>
+
       <section>
         <header data-i18n="panel.preview.title">預覽（SVG）</header>
         <div id="graphDiv">

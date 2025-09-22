@@ -1,9 +1,7 @@
-#!/usr/bin/env node
-import { access } from 'node:fs/promises';
+import { access, readdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
-
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(SCRIPT_DIR, '..');
@@ -14,23 +12,38 @@ async function assertExists(relativePath) {
   console.log(`✔ ${relativePath}`);
 }
 
+async function pathExists(relativePath) {
+  try {
+    const fullPath = join(PROJECT_ROOT, relativePath);
+    await access(fullPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-async function verifyPackBuildOutputs() {
-  const scriptPath = join(PROJECT_ROOT, 'scripts', 'build-packs.mjs');
-  await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [scriptPath, '--check'], {
+async function hasUnitTests() {
+  try {
+    const dir = join(PROJECT_ROOT, 'test', 'unit');
+    const entries = await readdir(dir);
+    return entries.some((entry) => entry.endsWith('.test.mjs'));
+  } catch {
+    return false;
+  }
+}
+
+function runCommand(command, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
       stdio: 'inherit',
+      cwd: PROJECT_ROOT,
+      ...options
     });
-    child.on('error', (error) => {
-      reject(error);
+    child.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`Command failed with exit code ${code}`));
     });
-    child.on('exit', (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`Pack build check exited with code ${code}`));
-      }
-    });
+    child.on('error', reject);
   });
 }
 
@@ -42,70 +55,33 @@ async function main() {
     await assertExists('js/app.js');
     console.log('Sanity checks passed');
 
-    console.log('Running pack schema validation tests...');
-    await runSchemaValidationTests();
-    console.log('Schema validation tests passed');
-
-    console.log('Running rules pipeline fixtures...');
-    await runRulesPipelineTests();
-    console.log('Rules pipeline fixtures passed');
-
-    console.log('Verifying generated rule/prompt packs against source workbook...');
-    await verifyPackBuildOutputs();
-    console.log('Rule/prompt packs are up to date');
-  } catch (error) {
-    console.error(`Test run failed: ${error?.message || error}`);
-    process.exit(2);
-  }
-}
-
-await main();
-
-function runCommand(command, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { 
-      stdio: 'inherit', 
-      cwd: PROJECT_ROOT,
-      ...options 
-    });
-    child.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`Command failed with exit code ${code}`));
-    });
-    child.on('error', reject);
-  });
-}
-
-async function runTests() {
-  try {
-    console.log('=== Checking project layout ===');
-    assertExists('index.html');
-    assertExists('js/main.js');
-    assertExists('js/app.js');
-    console.log('✔ Sanity checks passed\n');
-
-    console.log('=== Running unit tests ===');
-    try {
-      await runCommand('node', ['--test', 'test/unit/*.test.mjs']);
-      console.log('✔ All unit tests passed\n');
-    } catch (error) {
-      // 運行 Schema 驗證測試，即使其他測試失敗
-      console.log('⚠️  Some unit tests failed, but running schema validation tests...');
-      await runCommand('node', ['--test', 'test/unit/schema-validation.test.mjs']);
-      console.log('✔ Schema validation tests passed\n');
+    if (await hasUnitTests()) {
+      console.log('Running unit tests...');
+      await runCommand(process.execPath, ['--import', './test/setup.mjs', '--test', 'test/unit']);
+    } else {
+      console.log('No unit tests found, skipping node --test.');
     }
 
-    console.log('=== Validating schemas ===');
-    await runCommand('node', ['validate-schema.js']);
-    console.log('✔ Schema validation passed\n');
+    console.log('Validating schema definitions...');
+    await runCommand(process.execPath, ['validate-schema.js']);
 
-    console.log('🎉 All tests passed!');
-    process.exit(0);
+    if (await pathExists('rules/rulepack.json') || await pathExists('rules/promptpack.json')) {
+      console.log('Validating rule/prompt packs...');
+      await runCommand(process.execPath, ['scripts/validate_packs.mjs']);
+    } else {
+      console.log('No rule/prompt packs found, skipping validation.');
+    }
+
+    if (await pathExists('scripts/build-packs.mjs')) {
+      console.log('Verifying generated packs (--check)...');
+      await runCommand(process.execPath, ['scripts/build-packs.mjs', '--check']);
+    }
+
+    console.log('All tests completed successfully.');
   } catch (error) {
-    console.error(`❌ Test failed: ${error?.message || error}`);
+    console.error(`Test run failed: ${error?.message || error}`);
     process.exit(1);
   }
 }
 
-runTests();
-
+await main();
