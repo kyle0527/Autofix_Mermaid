@@ -128,7 +128,7 @@ function candidateModuleIds(lang) {
 }
 function tryRequire(moduleId) {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        // eslint-disable-next-line no-undef
         const mod = require(moduleId);
         return extractPlugin(mod);
     }

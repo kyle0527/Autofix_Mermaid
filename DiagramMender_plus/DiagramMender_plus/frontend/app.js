@@ -2,7 +2,7 @@
 const idle = (cb) => (window.requestIdleCallback ? requestIdleCallback(cb, { timeout: 1500 }) : setTimeout(cb, 0));
 const decodeB64 = (s) => { try { return atob(s); } catch { return ''; } };
 
-const $ = (sel, ctx=document) => ctx.querySelector(sel);
+const _$ = (sel, ctx=document) => ctx.querySelector(sel);
 const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
 
 function showCodeBlocks() {

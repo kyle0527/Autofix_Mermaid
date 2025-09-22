@@ -198,7 +198,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
   /**
    * Ensure Mermaid is initialized with current settings
    */
-  function ensureMermaidInit() {
+  function _ensureMermaidInit() {
     const securityLevel = $('secLevel')?.value || 'strict';
     
     try {
@@ -216,7 +216,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
    * @param {boolean} autoMode - Whether in auto mode
    * @returns {Promise<Object|null>} Processing result
    */
-  async function processInput(autoMode) {
+  async function processInput(_autoMode) {
     try {
       const svgContainer = $('svg');
       const logElement = $('log');

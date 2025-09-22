@@ -1,5 +1,5 @@
 // DiagramMender_plus/frontend/sw.js
-self.addEventListener('install', (e) => {
+self.addEventListener('install', (_e) => {
   self.skipWaiting && self.skipWaiting();
 });
 

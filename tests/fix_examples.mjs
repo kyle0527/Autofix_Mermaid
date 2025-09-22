@@ -36,6 +36,7 @@ function applyHeuristics(code){
   }
 
   // Rule 2: remove parentheses around single-word annotations like '(module)' -> ' module'
+
   // better: replace '(word)' with ' word' when inside node label
   const parenGeneric = /\(([^)\s]+)\)/g;
   if (parenGeneric.test(cur)) {
@@ -57,6 +58,7 @@ function applyHeuristics(code){
   }
 
   // Rule 4: if node label contains problematic characters (slash or unmatched quote), wrap label in quotes inside node brackets
+
   // We'll do targeted wrapping: find occurrences like n0([ LABEL ]) and wrap LABEL in quotes if it contains '/'
   cur = cur.replace(/(n\d+\s*\(\[)\s*([^\]]*\S)\s*(\]\))/g, (m, a, label, c) => {
     if (label.includes('/') || /["']/g.test(label)) {

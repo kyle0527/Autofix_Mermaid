@@ -2,7 +2,7 @@
 // When run as a classic script (importScripts), this file can be loaded as-is and will fallback to existing provider scripts.
 // Usage (module worker): import './ai/compat.mjs'; await compat.registerAll(self);
 
-export async function registerAll(scope = self) {
+
   // Try dynamic import of ESM providers
   try {
     // Note: browsers resolve import specifier relative to module URL

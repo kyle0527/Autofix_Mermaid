@@ -2,7 +2,7 @@
 const SW_URL = './sw.js';
 const SW_VERSION = 'v1.0.0'; // 每次部署升級此字串
 
-async function register() {
+async function _register() {
   if (!('serviceWorker' in navigator)) return;
   try {
     const reg = await navigator.serviceWorker.register(SW_URL + '?v=' + SW_VERSION, { scope: './' });
@@ -18,5 +18,5 @@ async function register() {
   }
 }
 
-// 預設不呼叫 register()；待穩定後你再開啟
-// register();
+// 預設不呼叫 _register()；待穩定後你再開啟
+// _register();
