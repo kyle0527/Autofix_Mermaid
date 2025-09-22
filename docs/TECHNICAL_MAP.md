@@ -3,25 +3,30 @@
 此文件以檔案與模組為單位，描述專案主要元件、職責與相互依賴，便於快速定位與擴充。
 
 核心模組
-- `js/autofix.js` - Autofix 引擎入口，整合偵測器、規則與輸出生成。被 `js/main.js`、`js/app.js` 與測試引用。
-- `js/engine/common.js` - 共用工具（如 `guessDiagramType`、applyRegexAll）。
-- `js/engine/ir.js` - 中介表示 (IR) 雛形：entities / relations 與簡單轉換器。
-- `js/engine/rules-validator.js` - (新增) 用來在 loader 與 CI 中驗證 rulepack / promptpack 結構與基礎欄位。
+- `js/main.js` / `js/UI.js` / `js/app.js` – 前端入口。負責初始化 Mermaid、面板（Docs/Config）、狀態欄位與匯出按鈕。`js/app.js` 會從 `rules/state.js` 讀取 manifest 並快取規則版本與面板顯示狀態。
+- `js/rules/state.js` / `js/rules/client.js` – 封裝 RulePack/PromptPack 的 manifest 讀取、快取與預處理（`applyPreprocessRules`）。提供給 UI 以及 worker payload 使用。
+- `worker.rules-loader.stub.js` – 給 worker 與 Node 測試共用的載入邏輯：解析 manifest、fetch JSON、透過 AJV 驗證，並回傳正規化後的 rules/prompt packs。
+- `js/worker.js` / `js/worker.mjs` – 維持經典 worker 與模組化 worker。經典版呼叫 legacy engine；模組版負責 AI provider 管線。兩者皆接受 UI 注入的 `rules` 設定。
+- `js/engine/rules-validator.js` – 使用 AJV 編譯 `rulepack.schema.json` 與 `promptpack.schema.json`。提供 `validateRulepack` / `validatePromptpack` 供 loader、build script 與測試使用。
 
 規則與提示包
-- `worker.rules-loader.stub.js` - Worker loader：fetch JSON、去重、preprocess 應用。現在會呼叫 `rules-validator`，在載入時做基本檢查並清理或警告不合法條目。
-- `rules/` - 預期放置產生的 `rulepack.json` / `promptpack.json`（目前 repo 中沒有此目錄，loader 仍會嘗試讀取）。
-- `rulepack.schema.json` / `promptpack.schema.json` - JSON Schema（作為參考）；驗證器目前實作最小必要欄位檢查，未直接用 AJV。
+- `rules/manifest.json` – 定義版本、來源檔與預設版本。UI 設定面板與 worker 都透過此 manifest 解析實際路徑。
+- `rules/rulepack.json` / `rules/promptpack.json` – 預設快取（會由 `scripts/build-packs.mjs` 同步）。
+- `rules/versions/<date>/` – 每次從 Excel 轉出的版本化結果，方便追蹤差異。
 
 資料產生工具
-- `xlsx_to_json.py` - 把 `diagram_knowledge_pack.xlsx` 中的 `RuleCatalog` 與 `AI_Prompts` 轉為 JSON。
-- `json_to_xlsx.py` - 反向操作，用於 round-trip 編輯。
+- `scripts/build-packs.mjs` – 將 `__not_shipped__/data/diagram_knowledge_pack.xlsx` 轉為 RulePack/PromptPack，驗證後寫入 `rules/versions/` 並更新 manifest。支援 `--check` 模式，僅比對現有輸出是否與 Excel 一致。
 
-測試與 CI
-- `test/unit/*.mjs` - Node 原生 `node:test` 單元測試（applyFixes、guessDiagramType、IR 等）。
-- `.github/workflows/ci.yml` - CI pipeline（Node 18/20），新增步驟會執行 `node scripts/validate_packs.mjs` 來驗證 rules/prompt packs。
-- `scripts/validate_packs.mjs` - (新增) 在 CI 或本地檢查 `rules/rulepack.json` 與 `rules/promptpack.json` 的基本正確性。
+測試與自動化
+- `scripts/run-tests.js` – `npm test` 入口。檢查核心檔案是否存在，接著呼叫兩個測試模組並執行 `build-packs.mjs --check` 確認 Excel 與版本化 JSON 未失同步。
+- `tests/schema-validation.mjs` – 以 AJV 驗證三個壞樣本，確保載入時會擋下不合法結構。
+- `tests/rules-pipeline.mjs` – 驗證 manifest 選擇邏輯並套用預處理規則，確保範例圖表會被正確修正。
 
-擴充點與建議
-- 若需更嚴格驗證：將 `rules-validator` 改使用 `ajv` 與 schema 檔比對，並在 loader 中顯示詳細錯誤。
-- 若 pack 很大或需要頻繁更新：將 `rules/` 內容作為 release artifact 或放 S3，CI pipeline 只負責 fetch + 驗證。
+文件與整理
+- `README.md` / `README_STAGE3.md` – 使用說明與近期成果。已更新 Quick Start、RulePack 選擇與測試流程。
+- `docs/legacy/**` – 歷史文件、原型與 changelog 已集中於此，避免干擾主流程。
+
+擴充建議
+- 若要再增加測試，優先針對 worker 輸出進行快照或比較，以掌握 RulePack 更新的行為差異。
+- 將 `scripts/build-packs.mjs` 串入 CI，確保上傳新的 Excel 版本時會自動產生 JSON 並驗證。
+- 規劃將 classic worker 功能逐步搬到 module worker，長期目標為單一 ESM 管線。

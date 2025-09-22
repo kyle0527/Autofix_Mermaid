@@ -7,44 +7,45 @@ import { validateRulepack, validatePromptpack } from '../js/engine/rules-validat
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rulesDir = path.join(__dirname, '..', 'rules');
 
+function logIssues(label, issues) {
+  if (!issues.length) return;
+  console.error(`${label} validation issues:`);
+  for (const issue of issues) {
+    console.error('  -', issue);
+  }
+}
+
+async function validateFile(filePath, validator, label) {
+  try {
+    const json = JSON.parse(await fs.readFile(filePath, 'utf8'));
+    const issues = await validator(json);
+    if (issues.length) {
+      logIssues(label, issues);
+      return false;
+    }
+    console.log(`${label} OK`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to read/parse ${label}:`, error?.message || error);
+    return false;
+  }
+}
+
 async function run() {
   try {
     const rp = path.join(rulesDir, 'rulepack.json');
     const pp = path.join(rulesDir, 'promptpack.json');
-    let fail = false;
-    try {
-      const rj = JSON.parse(await fs.readFile(rp, 'utf8'));
-      const issues = validateRulepack(rj);
-      if (issues.length) {
-        console.error('rulepack.json validation issues:');
-        issues.forEach(i => console.error('  -', i));
-        fail = true;
-      } else {
-        console.log('rulepack.json OK');
-      }
-    } catch (e) {
-      console.error('Failed to read/parse rulepack.json:', e.message);
-      fail = true;
-    }
 
-    try {
-      const pj = JSON.parse(await fs.readFile(pp, 'utf8'));
-      const issues2 = validatePromptpack(pj);
-      if (issues2.length) {
-        console.error('promptpack.json validation issues:');
-        issues2.forEach(i => console.error('  -', i));
-        fail = true;
-      } else {
-        console.log('promptpack.json OK');
-      }
-    } catch (e) {
-      console.error('Failed to read/parse promptpack.json:', e.message);
-      fail = true;
-    }
+    const [ruleOk, promptOk] = await Promise.all([
+      validateFile(rp, validateRulepack, 'rulepack.json'),
+      validateFile(pp, validatePromptpack, 'promptpack.json'),
+    ]);
 
-    if (fail) process.exitCode = 2;
-  } catch (e) {
-    console.error('Unexpected error validating packs:', e);
+    if (!ruleOk || !promptOk) {
+      process.exitCode = 2;
+    }
+  } catch (error) {
+    console.error('Unexpected error validating packs:', error);
     process.exitCode = 2;
   }
 }

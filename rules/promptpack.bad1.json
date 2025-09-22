@@ -1,0 +1,11 @@
+{
+  "prompts": [
+    {
+      "prompt_id": "P-BAD-001",
+      "intent": "lint_suggest",
+      "template": "Test template without input_type field",
+      "schema_ref": "schemas/lint_suggestion.schema.json",
+      "system_instructions": "Return STRICT JSON that matches the schema."
+    }
+  ]
+}

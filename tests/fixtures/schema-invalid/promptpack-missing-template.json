@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "prompts": [
+    {
+      "prompt_id": "P-INVALID-001",
+      "intent": "lint_suggest",
+      "input_type": "mermaid"
+    }
+  ]
+}

@@ -197,6 +197,18 @@
             </select>
           </label>
           <label>
+            <span data-i18n="config.rules.versionLabel">Rules version</span>
+            <select id="ruleVersionSelect" name="rulesVersion">
+              <option data-i18n="config.rules.versionLoading" value="">
+                Loading rule versions…
+              </option>
+            </select>
+          </label>
+          <p
+            id="ruleVersionInfo"
+            style="display: none; margin: 4px 0 8px; color: #555; font-size: 12px"
+          ></p>
+          <label>
             <span data-i18n="config.theme">Theme</span>
             <select name="theme">
               <option data-i18n="config.theme.default" value="default">default</option>
