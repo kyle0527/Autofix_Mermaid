@@ -1,10 +1,11 @@
-# 🎯 AutoFix Mermaid v3.7
+# 🎯 AutoFix Mermaid v3.8
 
-**智能 Python 程式碼轉 Mermaid 圖表工具**
+**智能多語言程式碼轉 Mermaid 圖表工具**
 
-![Version](https://img.shields.io/badge/version-3.7-blue.svg)
-![Updated](https://img.shields.io/badge/updated-2025.09.16-green.svg)
-![Tree-sitter](https://img.shields.io/badge/tree--sitter-enabled-orange.svg)
+![Version](https://img.shields.io/badge/version-3.8-blue.svg)
+![Updated](https://img.shields.io/badge/updated-2025.09.23-green.svg)
+![Tree-sitter](https://img.shields.io/badge/tree--sitter-integrated-orange.svg)
+![Multi-Language](https://img.shields.io/badge/multi--language-JS%7CTS%7CPython-brightgreen.svg)
 
 > 延伸詳細功能與里程碑請見： [FEATURES_AND_ROADMAP.md](./FEATURES_AND_ROADMAP.md)
 
@@ -61,7 +62,10 @@ npm run validate:packs
 ## ✨ 主要功能
 
 ### 🔍 智能程式碼分析
+- **多語言支援**：JavaScript/TypeScript、Python 完整支援，自動語言偵測與統一分析流程。
+- **Tree-sitter 整合**：WASM 解析器優先，正則表達式後備，確保解析穩定性。
 - **Worker 管線**：UI 與 `js/worker.js` / `js/worker.mjs` 對接，可在規則與 AI 模式間切換。
+- **混合分析策略**：Tree-sitter AST 遍歷 + regex fallback，支援類別、函數、匯入關係萃取。
 - **Mermaid 預處理**：RulePack `preprocess` 規則會在直接渲染前自動修正常見語法。
 - **自動 Fallback**：無 WASM / engine 時改走規則或 AI mock 管線。
 
@@ -373,10 +377,13 @@ Autofix_Mermaid/
 
 ## 🎯 V3.4 新功能
 
-### ⭐ Tree-sitter 整合 (2025.09.11)
-- **精確解析**：使用業界標準語法分析器
-- **完整支援**：web-tree-sitter.js + Python WASM
-- **自動降級**：優雅的備援機制
+### ⭐ Tree-sitter 整合架構完成 (2025.09.23)
+- **多語言支援**：JavaScript/TypeScript + Python 完整實作
+- **精確解析**：使用業界標準語法分析器，支援 AST 遍歷
+- **完整支援**：web-tree-sitter.js + Python WASM，統一載入器架構
+- **混合策略**：Tree-sitter 優先 + regex fallback，確保解析穩定性
+- **測試驗證**：75% 測試通過率，JavaScript (3 實體/2 關係)、Python (10 實體/7 關係)
+- **現代配置**：TypeScript 配置升級至 bundler 模式，消除 deprecation 警告
 
 ### 🎨 UI/UX 改進
 - **統一控制**：移除重複的尺寸輸入框

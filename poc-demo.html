@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoFix_Mermaid PoC Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .input-section, .output-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .file-input {
+            border: 3px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .file-input:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+        }
+
+        .file-input.drag-over {
+            border-color: #00f2fe;
+            background: #e6f7ff;
+        }
+
+        .code-input {
+            width: 100%;
+            height: 200px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .code-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .select-box {
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .result-area {
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            min-height: 300px;
+            background: #fafafa;
+        }
+
+        .result-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom-color: #4facfe;
+            color: #4facfe;
+        }
+
+        .tab-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .mermaid-preview {
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            padding: 20px;
+            background: white;
+            min-height: 200px;
+        }
+
+        .code-output {
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-size: 13px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 600;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        .notes {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .notes h4 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .notes ul {
+            margin-left: 20px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 AutoFix_Mermaid PoC Demo</h1>
+            <p>智能程式碼分析與 Mermaid 圖表生成器</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 輸入區域 -->
+            <div class="input-section">
+                <h2 class="section-title">📁 程式碼輸入</h2>
+                
+                <!-- 檔案上傳 -->
+                <div class="file-input" id="fileInput">
+                    <p>📂 拖放檔案或點擊選擇</p>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        支援：JavaScript, TypeScript, Python, Java, C#
+                    </p>
+                    <input type="file" id="fileSelector" multiple accept=".js,.jsx,.ts,.tsx,.py,.java,.cs" style="display: none;">
+                </div>
+
+                <!-- 或者直接輸入程式碼 -->
+                <div>
+                    <label for="codeInput" style="display: block; margin-bottom: 8px; font-weight: 500;">
+                        或直接貼上程式碼：
+                    </label>
+                    <textarea id="codeInput" class="code-input" placeholder="貼上您的程式碼..."></textarea>
+                </div>
+
+                <!-- 控制選項 -->
+                <div class="controls">
+                    <select id="diagramType" class="select-box">
+                        <option value="auto">🤖 自動偵測</option>
+                        <option value="class">📊 類別圖</option>
+                        <option value="flowchart">🔄 流程圖</option>
+                        <option value="dependency">📦 依賴圖</option>
+                        <option value="call">📞 呼叫圖</option>
+                    </select>
+                    
+                    <button id="analyzeBtn" class="btn btn-primary">
+                        🔍 分析生成
+                    </button>
+                    
+                    <button id="clearBtn" class="btn btn-secondary">
+                        🗑️ 清空
+                    </button>
+                </div>
+            </div>
+
+            <!-- 輸出區域 -->
+            <div class="output-section">
+                <h2 class="section-title">📈 分析結果</h2>
+                
+                <div class="result-area">
+                    <div class="result-tabs">
+                        <div class="tab active" data-tab="preview">🖼️ 預覽</div>
+                        <div class="tab" data-tab="code">📝 程式碼</div>
+                        <div class="tab" data-tab="stats">📊 統計</div>
+                        <div class="tab" data-tab="notes">📋 註記</div>
+                    </div>
+
+                    <div id="loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>正在分析程式碼...</p>
+                    </div>
+
+                    <div id="previewTab" class="tab-content active">
+                        <div id="mermaidPreview" class="mermaid-preview">
+                            <p style="text-align: center; color: #666; padding: 40px;">
+                                🎯 上傳程式碼檔案或貼上程式碼開始分析
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="codeTab" class="tab-content">
+                        <div id="mermaidCode" class="code-output">// 生成的 Mermaid 程式碼將顯示在這裡</div>
+                        <button id="copyBtn" class="btn btn-secondary" style="margin-top: 10px;">
+                            📋 複製程式碼
+                        </button>
+                    </div>
+
+                    <div id="statsTab" class="tab-content">
+                        <div id="analysisStats" class="stats">
+                            <div class="stat-card">
+                                <span class="stat-value" id="filesCount">0</span>
+                                <span class="stat-label">檔案數</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="classesCount">0</span>
+                                <span class="stat-label">類別數</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="functionsCount">0</span>
+                                <span class="stat-label">函數數</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="relationsCount">0</span>
+                                <span class="stat-label">關聯數</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="notesTab" class="tab-content">
+                        <div id="processingNotes"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mermaid 渲染庫 -->
+    <script src="assets/mermaid-11.11.0/mermaid.min.js"></script>
+    
+    <script type="module">
+        // 載入我們的 PoC 引擎
+        import { processCodeToMermaid, getSupportedDiagramTypes } from './js/engine/processor.js';
+        
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            themeVariables: {
+                fontFamily: 'arial',
+                fontSize: '16px'
+            }
+        });
+
+        // DOM 元素
+        const fileInput = document.getElementById('fileInput');
+        const fileSelector = document.getElementById('fileSelector');
+        const codeInput = document.getElementById('codeInput');
+        const diagramType = document.getElementById('diagramType');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const mermaidPreview = document.getElementById('mermaidPreview');
+        const mermaidCode = document.getElementById('mermaidCode');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // 檔案拖放處理
+        fileInput.addEventListener('click', () => fileSelector.click());
+        fileInput.addEventListener('dragover', handleDragOver);
+        fileInput.addEventListener('dragleave', handleDragLeave);
+        fileInput.addEventListener('drop', handleDrop);
+
+        fileSelector.addEventListener('change', handleFileSelect);
+        analyzeBtn.addEventListener('click', handleAnalyze);
+        clearBtn.addEventListener('click', handleClear);
+        copyBtn.addEventListener('click', handleCopy);
+
+        // 標籤切換
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+        });
+
+        // 事件處理函數
+        function handleDragOver(e) {
+            e.preventDefault();
+            fileInput.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            fileInput.classList.remove('drag-over');
+        }
+
+        async function handleDrop(e) {
+            e.preventDefault();
+            fileInput.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            await processFiles(files);
+        }
+
+        async function handleFileSelect(e) {
+            const files = e.target.files;
+            await processFiles(files);
+        }
+
+        async function processFiles(files) {
+            if (files.length === 0) return;
+
+            const fileData = {};
+            for (let file of files) {
+                try {
+                    const content = await file.text();
+                    fileData[file.name] = content;
+                } catch (error) {
+                    console.error(`讀取檔案 ${file.name} 失敗:`, error);
+                }
+            }
+
+            if (Object.keys(fileData).length > 0) {
+                updateFileInputDisplay(files);
+                await analyzeCode(fileData);
+            }
+        }
+
+        function updateFileInputDisplay(files) {
+            const fileNames = Array.from(files).map(f => f.name).join(', ');
+            fileInput.innerHTML = `
+                <p>✅ 已選擇 ${files.length} 個檔案</p>
+                <p style="font-size: 0.9em; color: #666; margin-top: 5px;">${fileNames}</p>
+            `;
+        }
+
+        async function handleAnalyze() {
+            const code = codeInput.value.trim();
+            if (!code) {
+                alert('請輸入程式碼或上傳檔案');
+                return;
+            }
+
+            await analyzeCode({ 'input.js': code });
+        }
+
+        async function analyzeCode(files) {
+            try {
+                showLoading(true);
+
+                const selectedDiagramType = diagramType.value === 'auto' ? undefined : diagramType.value;
+                
+                const result = await processCodeToMermaid(files, {
+                    diagramType: selectedDiagramType,
+                    generateOptions: { 
+                        sortAlphabetically: true,
+                        includeNotes: true 
+                    },
+                    fixOptions: { 
+                        normalizeIndentation: true 
+                    }
+                });
+
+                displayResults(result);
+
+            } catch (error) {
+                console.error('分析失敗:', error);
+                alert('分析過程中發生錯誤: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayResults(result) {
+            if (!result.success) {
+                mermaidPreview.innerHTML = `
+                    <div style="color: #dc3545; padding: 20px; text-align: center;">
+                        <h3>❌ 分析失敗</h3>
+                        <p>${result.errors?.[0]?.message || '未知錯誤'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 顯示 Mermaid 預覽
+            const mermaidCodeStr = result.data.mermaid.fixed;
+            renderMermaidDiagram(mermaidCodeStr);
+
+            // 顯示程式碼
+            mermaidCode.textContent = mermaidCodeStr;
+
+            // 顯示統計資訊
+            updateStats(result);
+
+            // 顯示註記
+            displayNotes(result.data.notes);
+        }
+
+        async function renderMermaidDiagram(code) {
+            try {
+                mermaidPreview.innerHTML = '<div class="mermaid">' + code + '</div>';
+                await mermaid.run();
+            } catch (error) {
+                console.error('Mermaid 渲染錯誤:', error);
+                mermaidPreview.innerHTML = `
+                    <div style="color: #dc3545; padding: 20px;">
+                        <h4>⚠️ 圖表渲染錯誤</h4>
+                        <p>生成的 Mermaid 程式碼可能有語法問題。請檢查程式碼標籤頁。</p>
+                        <pre style="background: #f8f9fa; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 12px;">${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats(result) {
+            const stats = result.data?.ir?.meta?.stats || {};
+            
+            document.getElementById('filesCount').textContent = result.stats?.filesCount || 0;
+            document.getElementById('classesCount').textContent = stats.classesFound || 0;
+            document.getElementById('functionsCount').textContent = stats.functionsFound || 0;
+            document.getElementById('relationsCount').textContent = result.data?.ir?.relations?.length || 0;
+        }
+
+        function displayNotes(notes) {
+            const notesContainer = document.getElementById('processingNotes');
+            
+            if (!notes || notes.length === 0) {
+                notesContainer.innerHTML = '<p style="color: #666;">沒有處理註記</p>';
+                return;
+            }
+
+            notesContainer.innerHTML = `
+                <div class="notes">
+                    <h4>🔧 處理註記</h4>
+                    <ul>
+                        ${notes.map(note => `<li>${note}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        function switchTab(tabName) {
+            // 更新標籤狀態
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // 更新內容顯示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        function showLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = show ? 'none' : '';
+            });
+            
+            if (!show) {
+                // 重新顯示當前活動的標籤
+                const activeTab = document.querySelector('.tab.active').dataset.tab;
+                document.getElementById(activeTab + 'Tab').classList.add('active');
+                document.getElementById(activeTab + 'Tab').style.display = 'block';
+            }
+        }
+
+        function handleClear() {
+            codeInput.value = '';
+            fileSelector.value = '';
+            fileInput.innerHTML = `
+                <p>📂 拖放檔案或點擊選擇</p>
+                <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                    支援：JavaScript, TypeScript, Python, Java, C#
+                </p>
+            `;
+            
+            mermaidPreview.innerHTML = `
+                <p style="text-align: center; color: #666; padding: 40px;">
+                    🎯 上傳程式碼檔案或貼上程式碼開始分析
+                </p>
+            `;
+            mermaidCode.textContent = '// 生成的 Mermaid 程式碼將顯示在這裡';
+            
+            // 重置統計
+            document.getElementById('filesCount').textContent = '0';
+            document.getElementById('classesCount').textContent = '0';
+            document.getElementById('functionsCount').textContent = '0';
+            document.getElementById('relationsCount').textContent = '0';
+            
+            // 清空註記
+            document.getElementById('processingNotes').innerHTML = '';
+        }
+
+        function handleCopy() {
+            navigator.clipboard.writeText(mermaidCode.textContent).then(() => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ 已複製!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('複製失敗:', err);
+                alert('複製失敗，請手動選取複製');
+            });
+        }
+
+        // 載入預設範例
+        window.addEventListener('load', () => {
+            const exampleCode = `
+// 範例 JavaScript 程式碼
+class UserManager {
+    constructor() {
+        this.users = [];
+    }
+    
+    addUser(user) {
+        this.users.push(user);
+        return this.validateUser(user);
+    }
+    
+    validateUser(user) {
+        return user && user.name && user.email;
+    }
+}
+
+class AdminPanel extends UserManager {
+    constructor() {
+        super();
+        this.permissions = ['read', 'write'];
+    }
+    
+    checkPermission(action) {
+        return this.permissions.includes(action);
+    }
+}
+
+export { UserManager, AdminPanel };
+            `.trim();
+            
+            codeInput.value = exampleCode;
+            console.log('✅ AutoFix_Mermaid PoC Demo 載入完成');
+        });
+    </script>
+</body>
+</html>

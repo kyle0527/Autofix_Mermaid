@@ -37,6 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Dependencies
 - 新增 `ajv ^8.17.1` 作為開發依賴，支援 JSON Schema 驗證功能
 
+### Fixed
+- **TypeScript 配置現代化** - 解決 TypeScript 編譯器deprecation 警告
+  - 更新所有 `tsconfig.json` 檔案中的 `moduleResolution` 設定
+  - 將過時的 `"node"` 模式升級為現代的 `"bundler"` 模式
+  - 影響範圍：JavaScript、TypeScript、Python 解析器配置
+  - 確保與 TypeScript 5.x 版本的完全相容性
+
 ## [3.7] - 2025-09-16
 
 ### Added

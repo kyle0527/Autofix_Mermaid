@@ -1,6 +1,6 @@
 {
   "name": "autofix-mermaid",
-  "version": "0.0.0-dev",
+  "version": "3.8.0",
   "description": "Mermaid AutoFix - modular refactor scaffold",
   "private": true,
   "type": "module",
@@ -49,6 +49,7 @@
     "playwright": "^1.41.2"
   },
   "dependencies": {
+    "tree-sitter": "^0.25.0",
     "xlsx": "^0.18.5"
   }
 }
