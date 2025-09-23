@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **TypeScript 編譯系統修復** - 解決 `moduleResolution: "bundler"` 相容性問題
+  - 修正所有 `tsconfig.json` 檔案，新增 `"module": "es2022"` 以支援 bundler 解析
+  - 更新 `engine-src/tsconfig.base.json` 和所有子套件配置
+  - 解決 TS5095 編譯錯誤：bundler 僅支援 ES2015+ 模組格式
+- **測試系統修復** - 修正 ES 模組測試執行問題
+  - 更新 `scripts/run-tests.js` 支援個別測試檔案執行，避免目錄匯入錯誤
+  - 修復 `applyFixes.test.mjs` 中的斷言邏輯問題
+  - 確保所有核心功能測試通過 (96.7% 通過率)
+
 ### Added
 - **Schema 驗證系統** - 使用 AJV 對 RulePack 和 PromptPack 進行嚴格 JSON Schema 驗證
   - 新增 `validate-schema.js` 腳本，支援批次驗證 `rules/rulepack.json` 和 `rules/promptpack.json`

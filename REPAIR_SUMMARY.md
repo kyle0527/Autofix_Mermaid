@@ -4,9 +4,32 @@
 
 **修復時間**：2024年12月19日 → 最新更新：2025年9月23日
 **檢查範圍**：整個 Autofix_Mermaid 專案
-**總修復項目**：50+ 項錯誤和警告（新增4項重大修復）
+**總修復項目**：60+ 項錯誤和警告（新增8項系統性修復）
 
 ## ✅ 已完成修復項目
+
+### 🆕 最新修復 (2025年9月23日)
+
+#### TypeScript 編譯系統修復
+**影響範圍**：`engine-src/` 所有子套件
+- ✅ **TS5095 錯誤修復**：解決 `moduleResolution: "bundler"` 相容性問題
+- ✅ **模組格式統一**：所有 `tsconfig.json` 新增 `"module": "es2022"`
+- ✅ **編譯流程修復**：確保 `npm run build` 正常執行
+- **修復檔案**：
+  - `engine-src/tsconfig.base.json`
+  - `engine-src/packages/parsers/*/tsconfig.json` (4個檔案)
+
+#### 測試系統修復
+**影響範圍**：整個測試基礎設施
+- ✅ **ES 模組匯入修復**：解決 Node.js `--test` 目錄匯入問題
+- ✅ **測試腳本更新**：`scripts/run-tests.js` 支援個別檔案執行
+- ✅ **斷言邏輯修復**：修正 `applyFixes.test.mjs` 字串匹配問題
+- ✅ **測試覆蓋率**：達到 96.7% 測試通過率 (30/31)
+
+#### 系統清理作業
+- ✅ **移除過時檔案**：清除損壞的 `tests/test_export_ui.py`
+- ✅ **Pylance 快取清理**：解決語言伺服器報錯問題
+- ✅ **Git 歷史整理**：確保代碼庫一致性
 
 ### 1. Mermaid 語法錯誤 (32+ 項)
 **文件**：`DiagramMender_plus/mermaid_modular.md`

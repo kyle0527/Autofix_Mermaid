@@ -22,13 +22,15 @@ async function pathExists(relativePath) {
   }
 }
 
-async function hasUnitTests() {
+async function getUnitTestFiles() {
   try {
     const dir = join(PROJECT_ROOT, 'test', 'unit');
     const entries = await readdir(dir);
-    return entries.some((entry) => entry.endsWith('.test.mjs'));
+    return entries
+      .filter((entry) => entry.endsWith('.test.mjs') || entry.endsWith('.test.js'))
+      .map((entry) => join('test', 'unit', entry));
   } catch {
-    return false;
+    return [];
   }
 }
 
@@ -55,9 +57,10 @@ async function main() {
     await assertExists('js/app.js');
     console.log('Sanity checks passed');
 
-    if (await hasUnitTests()) {
+    const unitTestFiles = await getUnitTestFiles();
+    if (unitTestFiles.length > 0) {
       console.log('Running unit tests...');
-      await runCommand(process.execPath, ['--import', './test/setup.mjs', '--test', 'test/unit']);
+      await runCommand(process.execPath, ['--import', './test/setup.mjs', '--test', ...unitTestFiles]);
     } else {
       console.log('No unit tests found, skipping node --test.');
     }

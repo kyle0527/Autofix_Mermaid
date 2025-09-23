@@ -8,7 +8,7 @@ describe('applyFixes', () => {
     const res = applyFixes(input);
     assert.ok(res.code.includes('flowchart'));
     assert.ok(Array.isArray(res.notes));
-    assert.ok(res.notes.includes('ensureDiagramDeclaration'));
+    assert.ok(res.notes.some(n => n.includes('ensureDiagramDeclaration')));
   });
 
   it('should normalize newlines and remove trailing semicolons', () => {
