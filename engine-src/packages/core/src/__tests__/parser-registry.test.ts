@@ -87,3 +87,24 @@ test('resolveParserPlugin requires files when language is auto', async () => {
     /requires files/,
   );
 });
+
+test('resolveParserPlugin falls back to generic parser when no dedicated plugin exists', async () => {
+  clearParserPlugins();
+
+  const files = {
+    'src/Main.java': 'public class Main { public static void main(String[] args) {} }',
+  };
+
+  const { plugin, detection } = await resolveParserPlugin({ files });
+
+  assert.strictEqual(plugin.lang, 'java');
+  assert.ok(plugin.capabilities?.fallback);
+  assert.ok(detection);
+  assert.strictEqual(detection?.lang, 'java');
+  assert.strictEqual(detection?.confidence, 'medium');
+  assert.ok(detection?.reason?.includes('Main.java'));
+
+  const project = await plugin.parseProject(files);
+  assert.strictEqual(project.parserMeta?.implementation, 'fallback');
+  assert.ok(project.fixNotes?.some((note) => note.includes('fallback parser')));
+});

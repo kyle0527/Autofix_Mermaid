@@ -11,6 +11,7 @@ exports.getRegisteredParserPlugin = getRegisteredParserPlugin;
 exports.loadParserPlugin = loadParserPlugin;
 exports.resolveParserPlugin = resolveParserPlugin;
 const node_path_1 = __importDefault(require("node:path"));
+const fallback_parser_1 = require("./fallback-parser");
 const registry = new Map();
 function normalizeLang(lang) {
     return lang.trim().toLowerCase();
@@ -92,6 +93,7 @@ function collectHeuristicCandidates(files) {
             : `Found ${meta.count} files (${exts.join(', ')})`;
         heuristics.set(lang, {
             count: meta.count,
+            extensions: exts,
             detection: {
                 lang,
                 confidence: meta.confidence,
@@ -196,13 +198,32 @@ async function loadParserPlugin(lang) {
 async function resolveParserPlugin(options) {
     const { lang, files, candidates = [], detect = true, allowHeuristics = true, } = options;
     if (lang && lang !== 'auto') {
-        const plugin = await loadParserPlugin(lang);
+        const normalizedLang = normalizeLang(lang);
+        const heuristics = files && allowHeuristics
+            ? collectHeuristicCandidates(files)
+            : undefined;
+        let plugin;
         let detection;
-        if (detect && files && typeof plugin.detect === 'function') {
+        try {
+            plugin = await loadParserPlugin(lang);
+        }
+        catch (err) {
+            if (err instanceof ParserPluginNotFoundError) {
+                const fallback = (0, fallback_parser_1.createFallbackParserPlugin)(normalizedLang, {
+                    extensions: heuristics?.get(normalizedLang)?.extensions,
+                });
+                plugin = registerParserPlugin(fallback);
+                detection = heuristics?.get(normalizedLang)?.detection;
+            }
+            else {
+                throw err;
+            }
+        }
+        if (!detection && detect && files && typeof plugin.detect === 'function') {
             detection = plugin.detect(files) ?? undefined;
         }
-        if (!detection && files && allowHeuristics) {
-            detection = collectHeuristicCandidates(files).get(normalizeLang(plugin.lang))?.detection;
+        if (!detection && heuristics) {
+            detection = heuristics.get(normalizeLang(plugin.lang))?.detection;
         }
         return { plugin, detection };
     }
@@ -267,8 +288,12 @@ async function resolveParserPlugin(options) {
     }
     if (resolutions.length === 0) {
         if (missing.length) {
-            const langId = missing[0];
-            throw new ParserPluginNotFoundError(langId, candidateModuleIds(langId));
+            const langId = normalizeLang(missing[0]);
+            const heuristic = heuristics.get(langId);
+            const fallback = registerParserPlugin((0, fallback_parser_1.createFallbackParserPlugin)(langId, {
+                extensions: heuristic?.extensions,
+            }));
+            return { plugin: fallback, detection: heuristic?.detection };
         }
         const hinted = Array.from(candidatesByLang.keys());
         if (hinted.length) {

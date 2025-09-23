@@ -6,6 +6,9 @@ import {
   ParserPlugin,
   ParserParseOptions,
   ParserDetectionResult,
+  ParserRuntime,
+  ParserMeta,
+  WebTreeSitterConfig,
 } from '@diagrammender/types';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'];
@@ -20,6 +23,22 @@ type ParserInstance = {
   parse(source: string): any;
 };
 
+interface WebTreeSitterState {
+  initialized: boolean;
+  languages: Map<string, any>;
+}
+
+const webTreeSitterStates = new WeakMap<any, WebTreeSitterState>();
+
+function getWebTreeSitterState(module: any): WebTreeSitterState {
+  let state = webTreeSitterStates.get(module);
+  if (!state) {
+    state = { initialized: false, languages: new Map<string, any>() };
+    webTreeSitterStates.set(module, state);
+  }
+  return state;
+}
+
 function moduleNameFromPath(p: string): string {
   return p
     .replace(/\\/g, '/')
@@ -33,6 +52,11 @@ function shouldUseTreeSitter(options?: ParserParseOptions): boolean {
   return true;
 }
 
+function shouldUseWebTreeSitter(options?: ParserParseOptions): boolean {
+  if (options?.preferTreeSitter === false) return false;
+  return options?.runtime === 'browser' && !!options?.webTreeSitter;
+}
+
 function filterTypeScriptEntries(files: Record<string, string>): FileEntry[] {
   return Object.entries(files).filter(([filePath]) =>
     TS_EXTENSIONS.some((ext) => filePath.endsWith(ext))
@@ -43,10 +67,24 @@ function stripQuotes(value: string): string {
   return value.replace(/^['"]|['"]$/g, '');
 }
 
-function parseTypeScriptProjectInternal(files: Record<string, string>, options?: ParserParseOptions): IRProject {
+async function parseTypeScriptProjectInternal(files: Record<string, string>, options?: ParserParseOptions): Promise<IRProject> {
   const entries = filterTypeScriptEntries(files);
   if (entries.length === 0) {
     throw new Error('No TypeScript source files found in project. Provide at least one .ts/.tsx file.');
+  }
+
+  if (shouldUseWebTreeSitter(options)) {
+    const config = options?.webTreeSitter;
+    if (config && config.module) {
+      try {
+        return await parseWithWebTreeSitter(entries, config);
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          throw error;
+        }
+        // continue to other strategies on initialization errors
+      }
+    }
   }
 
   if (shouldUseTreeSitter(options)) {
@@ -60,7 +98,10 @@ function parseTypeScriptProjectInternal(files: Record<string, string>, options?:
         inst.setLanguage(tsx);
         return inst;
       })() : null;
-      return parseWithTreeSitter(entries, parserTs, parserTsx);
+      return parseWithTreeSitter(entries, parserTs, parserTsx, options?.runtime ?? 'node', 'tree-sitter', {
+        grammar: 'tree-sitter-typescript',
+        mode: 'native',
+      });
     } catch (err: any) {
       if (!err || err.code !== 'MODULE_NOT_FOUND') {
         throw err;
@@ -88,11 +129,18 @@ function detectTypeScriptProject(files: Record<string, string>): ParserDetection
   };
 }
 
-export function parseTypeScriptProject(files: Record<string, string>, options?: ParserParseOptions): IRProject {
-  return parseTypeScriptProjectInternal(files, options);
+export async function parseTypeScriptProject(files: Record<string, string>, options?: ParserParseOptions): Promise<IRProject> {
+  return await parseTypeScriptProjectInternal(files, options);
 }
 
-function parseWithTreeSitter(entries: FileEntry[], parserTs: ParserInstance, parserTsx: ParserInstance | null): IRProject {
+function parseWithTreeSitter(
+  entries: FileEntry[],
+  parserTs: ParserInstance,
+  parserTsx: ParserInstance | null,
+  runtime: ParserRuntime = 'node',
+  implementation: ParserMeta['implementation'] = 'tree-sitter',
+  details?: Record<string, unknown>,
+): IRProject {
   const modules: Record<string, IRModule> = {};
 
   for (const [filePath, source] of entries) {
@@ -311,7 +359,105 @@ function parseWithTreeSitter(entries: FileEntry[], parserTs: ParserInstance, par
     };
   }
 
-  return { modules, fixNotes: [] };
+  const project: IRProject = { modules, fixNotes: [] };
+  project.parserMeta = { implementation, runtime, details } satisfies ParserMeta;
+  return project;
+}
+
+async function parseWithWebTreeSitter(entries: FileEntry[], config: WebTreeSitterConfig): Promise<IRProject> {
+  const module = config.module;
+  if (!module || typeof module.Parser !== 'function') {
+    throw new Error('Invalid web-tree-sitter module provided for typescript parser.');
+  }
+  const state = getWebTreeSitterState(module);
+  if (!state.initialized) {
+    if (typeof module.init === 'function') {
+      const initOptions: Record<string, unknown> = {};
+      if (typeof config.locateFile === 'function') {
+        initOptions.locateFile = config.locateFile;
+      } else if (config.runtimeUrl) {
+        initOptions.locateFile = (scriptName: string, scriptDirectory?: string) => {
+          if (scriptName === 'tree-sitter.wasm') {
+            return config.runtimeUrl!;
+          }
+          if (typeof config.locateFile === 'function') {
+            return config.locateFile(scriptName, scriptDirectory);
+          }
+          return scriptDirectory ? `${scriptDirectory}${scriptName}` : scriptName;
+        };
+      }
+      await module.init(initOptions);
+    }
+    state.initialized = true;
+  }
+  if (!module.Language || typeof module.Language.load !== 'function') {
+    throw new Error('web-tree-sitter module is missing Language.load API.');
+  }
+  const tsResult = await loadWebTreeSitterLanguage(module, state, config, 'typescript');
+  let tsxResult: { language: any; source?: string } | null = null;
+  try {
+    tsxResult = await loadWebTreeSitterLanguage(module, state, config, 'tsx');
+  } catch {
+    tsxResult = null;
+  }
+  const parserTs: ParserInstance = new module.Parser();
+  parserTs.setLanguage(tsResult.language);
+  let parserTsx: ParserInstance | null = null;
+  if (tsxResult?.language) {
+    const tsxParser: ParserInstance = new module.Parser();
+    tsxParser.setLanguage(tsxResult.language);
+    parserTsx = tsxParser;
+  }
+  const details: Record<string, unknown> = { grammar: 'tree-sitter-typescript', mode: 'web' };
+  if (tsResult.source) details.languageSource = tsResult.source;
+  if (tsxResult?.source) details.languageSourceTsx = tsxResult.source;
+  if (config.runtimeUrl) details.runtimeUrl = config.runtimeUrl;
+  return parseWithTreeSitter(entries, parserTs, parserTsx, 'browser', 'web-tree-sitter', details);
+}
+
+function deriveLanguageUrl(runtimeUrl: string | undefined, lang: string): string | undefined {
+  if (typeof runtimeUrl !== 'string') return undefined;
+  if (runtimeUrl.includes('tree-sitter.wasm')) {
+    return runtimeUrl.replace(/tree-sitter\.wasm(?:\?.*)?$/i, `tree-sitter-${lang}.wasm`);
+  }
+  return undefined;
+}
+
+async function loadWebTreeSitterLanguage(
+  module: any,
+  state: WebTreeSitterState,
+  config: WebTreeSitterConfig,
+  lang: string,
+): Promise<{ language: any; source?: string }> {
+  const cached = state.languages.get(lang);
+  if (cached) {
+    return { language: cached, source: 'cache' };
+  }
+  let language: any;
+  let source: string | undefined;
+  const entry = config.languages?.[lang];
+  if (typeof entry === 'string') {
+    language = await module.Language.load(entry);
+    source = entry;
+  } else if (entry && typeof entry === 'object') {
+    if (entry.language) {
+      language = entry.language;
+      source = 'provided';
+    } else if (entry.load) {
+      language = await entry.load();
+      source = 'loader';
+    } else if (entry.url) {
+      language = await module.Language.load(entry.url);
+      source = entry.url;
+    }
+  }
+  if (!language) {
+    const derived = deriveLanguageUrl(config.runtimeUrl, lang) ?? `tree-sitter-${lang}.wasm`;
+    language = await module.Language.load(derived);
+    source = derived;
+  }
+  state.languages.set(lang, language);
+  return { language, source };
 }
 
 function parseWithFallback(entries: FileEntry[]): IRProject {
