@@ -164,13 +164,23 @@ function parseWithFallback(
     }
 
     // functions
-    const funcRe = /^\s*def\s+(\w+)\s*\(([^\)]*)\)\s*:/gm;
+    const funcRe = /^(\s*)def\s+(\w+)\s*\(([^\)]*)\)\s*:/gm;
     while ((m = funcRe.exec(src))) {
-      const fname = m[1];
-      const params = (m[2] || '').split(',').map(s => s.trim()).filter(Boolean);
-      const calls = Array.from(new Set(Array.from(src.matchAll(/([A-Za-z_][A-Za-z0-9_\.]+)\s*\(/g)).map(mm => mm[1])));
+      const indent = m[1] ?? '';
+      const fname = m[2];
+      const params = (m[3] || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const start = funcRe.lastIndex;
+      const { body } = extractPythonBlock(src, start, indent);
+      const line = lineNumberAt(src, m.index ?? 0);
+      const calls = collectPythonCalls(body);
       functions.push({
-        id: `${name}.${fname}`, name: fname, params, body: [], calls, pos: { file: path, line: 1 }, doc: ''
+        id: `${name}.${fname}`,
+        name: fname,
+        params,
+        body: [],
+        calls,
+        pos: { file: path, line },
+        doc: '',
       });
     }
 
@@ -178,14 +188,88 @@ function parseWithFallback(
     const classRe = /^\s*class\s+(\w+)\s*(?:\(([^\)]*)\))?\s*:/gm;
     while ((m = classRe.exec(src))) {
       const cname = m[1];
-      const bases = (m[2] || '').split(',').map(s => s.trim()).filter(Boolean);
-      classes.push({ id: `${name}.${cname}`, name: cname, bases, attrs: [], methods: [], pos: { file: path, line: 1 }, doc: '' });
+      const bases = (m[2] || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const line = lineNumberAt(src, m.index ?? 0);
+      classes.push({ id: `${name}.${cname}`, name: cname, bases, attrs: [], methods: [], pos: { file: path, line }, doc: '' });
     }
     modules[name] = { name, path, classes, functions, imports };
   }
   const project: IRProject = { modules, fixNotes: [] };
   project.parserMeta = { implementation: 'fallback', runtime, details } satisfies ParserMeta;
   return project;
+}
+
+function lineNumberAt(source: string, index: number): number {
+  let line = 1;
+  const limit = Math.min(index, source.length);
+  for (let i = 0; i < limit; i += 1) {
+    if (source[i] === '\n') {
+      line += 1;
+    }
+  }
+  return line;
+}
+
+function extractPythonBlock(source: string, start: number, indent: string): { body: string } {
+  let index = start;
+  let bodyEnd = start;
+  const baseIndent = indent ?? '';
+  while (index < source.length) {
+    const newlineIndex = source.indexOf('\n', index);
+    const lineEnd = newlineIndex === -1 ? source.length : newlineIndex + 1;
+    const line = source.slice(index, lineEnd);
+    const trimmed = line.trim();
+    if (trimmed === '') {
+      bodyEnd = lineEnd;
+      index = lineEnd;
+      continue;
+    }
+    const leading = line.match(/^(\s*)/)?.[1] ?? '';
+    const isIndented = baseIndent.length === 0
+      ? leading.length > 0
+      : leading.startsWith(baseIndent) && leading.length >= baseIndent.length;
+    if (!isIndented) {
+      break;
+    }
+    bodyEnd = lineEnd;
+    index = lineEnd;
+  }
+  return { body: source.slice(start, bodyEnd) };
+}
+
+const PYTHON_CALL_KEYWORDS = new Set([
+  'def',
+  'class',
+  'if',
+  'elif',
+  'else',
+  'for',
+  'while',
+  'with',
+  'return',
+  'yield',
+  'await',
+  'async',
+  'lambda',
+  'try',
+  'except',
+  'finally',
+  'assert',
+  'raise',
+]);
+
+function collectPythonCalls(body: string): string[] {
+  const calls = new Set<string>();
+  const callRe = /([A-Za-z_][A-Za-z0-9_\.]*)\s*\(/g;
+  let match: RegExpExecArray | null;
+  while ((match = callRe.exec(body))) {
+    const callee = match[1];
+    if (!callee || PYTHON_CALL_KEYWORDS.has(callee)) {
+      continue;
+    }
+    calls.add(callee);
+  }
+  return Array.from(calls);
 }
 
 export const pythonParserPlugin: ParserPlugin = {

@@ -13,7 +13,7 @@ test('detectTypeScriptProject identifies TS files with high confidence', () => {
   assert.ok(detection?.matchedFiles?.includes('src/app.ts'));
 });
 
-test('parseTypeScriptProject extracts entities and edges', () => {
+test('parseTypeScriptProject extracts entities and edges', async () => {
   const files = {
     'src/service.ts': `
 import type { Config } from './types';
@@ -35,27 +35,33 @@ export function bootstrap(): void {
 `,
   };
 
-  const ir = parseTypeScriptProject(files);
+  const ir = await parseTypeScriptProject(files);
   const mod = ir.modules['src.service'];
-  assert.ok(mod, 'module not found');
-  assert.ok(mod.imports.some((imp) => imp.includes('./helper')));
-  assert.ok(mod.imports.some((imp) => imp.includes('./types')));
+  if (!mod) {
+    throw new Error('module not found');
+  }
+  assert.ok(mod.imports.some((imp: string) => imp.includes('./helper')));
+  assert.ok(mod.imports.some((imp: string) => imp.includes('./types')));
   const service = mod.classes.find((cls) => cls.name === 'Service');
-  assert.ok(service, 'Service class missing');
+  if (!service) {
+    throw new Error('Service class missing');
+  }
   const run = service.methods.find((m) => m.name === 'run');
-  assert.ok(run, 'run method missing');
+  if (!run) {
+    throw new Error('run method missing');
+  }
   assert.ok(run.calls.includes('helper'));
   assert.ok(mod.functions.some((fn) => fn.name === 'bootstrap'));
 });
 
-test('parseTypeScriptProject throws on syntax errors', () => {
-  assert.throws(() => {
-    parseTypeScriptProject({ 'broken.ts': 'export function nope(: void { return; }' });
+test('parseTypeScriptProject throws on syntax errors', async () => {
+  await assert.rejects(async () => {
+    await parseTypeScriptProject({ 'broken.ts': 'export function nope(: void { return; }' });
   }, /syntax error/i);
 });
 
-test('parseTypeScriptProject throws when no TS files are provided', () => {
-  assert.throws(() => {
-    parseTypeScriptProject({ 'README.md': '# docs' });
+test('parseTypeScriptProject throws when no TS files are provided', async () => {
+  await assert.rejects(async () => {
+    await parseTypeScriptProject({ 'README.md': '# docs' });
   }, /No TypeScript source files/);
 });

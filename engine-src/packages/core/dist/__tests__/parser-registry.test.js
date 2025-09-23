@@ -66,3 +66,19 @@ function createStubPlugin(name, aliases = []) {
     (0, parsers_1.clearParserPlugins)();
     await strict_1.default.rejects((0, parsers_1.resolveParserPlugin)({ lang: 'auto' }), /requires files/);
 });
+(0, node_test_1.default)('resolveParserPlugin falls back to generic parser when no dedicated plugin exists', async () => {
+    (0, parsers_1.clearParserPlugins)();
+    const files = {
+        'src/Main.java': 'public class Main { public static void main(String[] args) {} }',
+    };
+    const { plugin, detection } = await (0, parsers_1.resolveParserPlugin)({ files });
+    strict_1.default.strictEqual(plugin.lang, 'java');
+    strict_1.default.ok(plugin.capabilities?.fallback);
+    strict_1.default.ok(detection);
+    strict_1.default.strictEqual(detection?.lang, 'java');
+    strict_1.default.strictEqual(detection?.confidence, 'medium');
+    strict_1.default.ok(detection?.reason?.includes('Main.java'));
+    const project = await plugin.parseProject(files);
+    strict_1.default.strictEqual(project.parserMeta?.implementation, 'fallback');
+    strict_1.default.ok(project.fixNotes?.some((note) => note.includes('fallback parser')));
+});

@@ -22,11 +22,14 @@ function normalizeDiagram(diagram) {
 function normalizeParserOptions(options) {
     const normalized = { ...options };
     normalized.runtime = 'browser';
-    if (normalized.webTreeSitter && normalized.preferTreeSitter !== false) {
+    if (normalized.preferTreeSitter === false) {
+        return normalized;
+    }
+    if (normalized.webTreeSitter) {
         normalized.preferTreeSitter = true;
     }
     else if (typeof normalized.preferTreeSitter === 'undefined') {
-        normalized.preferTreeSitter = false;
+        normalized.preferTreeSitter = true;
     }
     return normalized;
 }

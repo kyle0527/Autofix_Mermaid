@@ -4,6 +4,15 @@ exports.parserPlugin = exports.typescriptParserPlugin = void 0;
 exports.parseTypeScriptProject = parseTypeScriptProject;
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'];
 const TS_PLUGIN_VERSION = '0.3.0';
+const webTreeSitterStates = new WeakMap();
+function getWebTreeSitterState(module) {
+    let state = webTreeSitterStates.get(module);
+    if (!state) {
+        state = { initialized: false, languages: new Map() };
+        webTreeSitterStates.set(module, state);
+    }
+    return state;
+}
 function moduleNameFromPath(p) {
     return p
         .replace(/\\/g, '/')
@@ -17,16 +26,35 @@ function shouldUseTreeSitter(options) {
         return false;
     return true;
 }
+function shouldUseWebTreeSitter(options) {
+    if (options?.preferTreeSitter === false)
+        return false;
+    return options?.runtime === 'browser' && !!options?.webTreeSitter;
+}
 function filterTypeScriptEntries(files) {
     return Object.entries(files).filter(([filePath]) => TS_EXTENSIONS.some((ext) => filePath.endsWith(ext)));
 }
 function stripQuotes(value) {
     return value.replace(/^['"]|['"]$/g, '');
 }
-function parseTypeScriptProjectInternal(files, options) {
+async function parseTypeScriptProjectInternal(files, options) {
     const entries = filterTypeScriptEntries(files);
     if (entries.length === 0) {
         throw new Error('No TypeScript source files found in project. Provide at least one .ts/.tsx file.');
+    }
+    if (shouldUseWebTreeSitter(options)) {
+        const config = options?.webTreeSitter;
+        if (config && config.module) {
+            try {
+                return await parseWithWebTreeSitter(entries, config);
+            }
+            catch (error) {
+                if (error instanceof SyntaxError) {
+                    throw error;
+                }
+                // continue to other strategies on initialization errors
+            }
+        }
     }
     if (shouldUseTreeSitter(options)) {
         try {
@@ -39,7 +67,10 @@ function parseTypeScriptProjectInternal(files, options) {
                 inst.setLanguage(tsx);
                 return inst;
             })() : null;
-            return parseWithTreeSitter(entries, parserTs, parserTsx);
+            return parseWithTreeSitter(entries, parserTs, parserTsx, options?.runtime ?? 'node', 'tree-sitter', {
+                grammar: 'tree-sitter-typescript',
+                mode: 'native',
+            });
         }
         catch (err) {
             if (!err || err.code !== 'MODULE_NOT_FOUND') {
@@ -64,10 +95,10 @@ function detectTypeScriptProject(files) {
         matchedFiles: matched.slice(0, 5),
     };
 }
-function parseTypeScriptProject(files, options) {
-    return parseTypeScriptProjectInternal(files, options);
+async function parseTypeScriptProject(files, options) {
+    return await parseTypeScriptProjectInternal(files, options);
 }
-function parseWithTreeSitter(entries, parserTs, parserTsx) {
+function parseWithTreeSitter(entries, parserTs, parserTsx, runtime = 'node', implementation = 'tree-sitter', details) {
     const modules = {};
     for (const [filePath, source] of entries) {
         const moduleName = moduleNameFromPath(filePath);
@@ -282,7 +313,106 @@ function parseWithTreeSitter(entries, parserTs, parserTsx) {
             imports: Array.from(importSet),
         };
     }
-    return { modules, fixNotes: [] };
+    const project = { modules, fixNotes: [] };
+    project.parserMeta = { implementation, runtime, details };
+    return project;
+}
+async function parseWithWebTreeSitter(entries, config) {
+    const module = config.module;
+    if (!module || typeof module.Parser !== 'function') {
+        throw new Error('Invalid web-tree-sitter module provided for typescript parser.');
+    }
+    const state = getWebTreeSitterState(module);
+    if (!state.initialized) {
+        if (typeof module.init === 'function') {
+            const initOptions = {};
+            if (typeof config.locateFile === 'function') {
+                initOptions.locateFile = config.locateFile;
+            }
+            else if (config.runtimeUrl) {
+                initOptions.locateFile = (scriptName, scriptDirectory) => {
+                    if (scriptName === 'tree-sitter.wasm') {
+                        return config.runtimeUrl;
+                    }
+                    if (typeof config.locateFile === 'function') {
+                        return config.locateFile(scriptName, scriptDirectory);
+                    }
+                    return scriptDirectory ? `${scriptDirectory}${scriptName}` : scriptName;
+                };
+            }
+            await module.init(initOptions);
+        }
+        state.initialized = true;
+    }
+    if (!module.Language || typeof module.Language.load !== 'function') {
+        throw new Error('web-tree-sitter module is missing Language.load API.');
+    }
+    const tsResult = await loadWebTreeSitterLanguage(module, state, config, 'typescript');
+    let tsxResult = null;
+    try {
+        tsxResult = await loadWebTreeSitterLanguage(module, state, config, 'tsx');
+    }
+    catch {
+        tsxResult = null;
+    }
+    const parserTs = new module.Parser();
+    parserTs.setLanguage(tsResult.language);
+    let parserTsx = null;
+    if (tsxResult?.language) {
+        const tsxParser = new module.Parser();
+        tsxParser.setLanguage(tsxResult.language);
+        parserTsx = tsxParser;
+    }
+    const details = { grammar: 'tree-sitter-typescript', mode: 'web' };
+    if (tsResult.source)
+        details.languageSource = tsResult.source;
+    if (tsxResult?.source)
+        details.languageSourceTsx = tsxResult.source;
+    if (config.runtimeUrl)
+        details.runtimeUrl = config.runtimeUrl;
+    return parseWithTreeSitter(entries, parserTs, parserTsx, 'browser', 'web-tree-sitter', details);
+}
+function deriveLanguageUrl(runtimeUrl, lang) {
+    if (typeof runtimeUrl !== 'string')
+        return undefined;
+    if (runtimeUrl.includes('tree-sitter.wasm')) {
+        return runtimeUrl.replace(/tree-sitter\.wasm(?:\?.*)?$/i, `tree-sitter-${lang}.wasm`);
+    }
+    return undefined;
+}
+async function loadWebTreeSitterLanguage(module, state, config, lang) {
+    const cached = state.languages.get(lang);
+    if (cached) {
+        return { language: cached, source: 'cache' };
+    }
+    let language;
+    let source;
+    const entry = config.languages?.[lang];
+    if (typeof entry === 'string') {
+        language = await module.Language.load(entry);
+        source = entry;
+    }
+    else if (entry && typeof entry === 'object') {
+        if (entry.language) {
+            language = entry.language;
+            source = 'provided';
+        }
+        else if (entry.load) {
+            language = await entry.load();
+            source = 'loader';
+        }
+        else if (entry.url) {
+            language = await module.Language.load(entry.url);
+            source = entry.url;
+        }
+    }
+    if (!language) {
+        const derived = deriveLanguageUrl(config.runtimeUrl, lang) ?? `tree-sitter-${lang}.wasm`;
+        language = await module.Language.load(derived);
+        source = derived;
+    }
+    state.languages.set(lang, language);
+    return { language, source };
 }
 function parseWithFallback(entries) {
     const modules = {};

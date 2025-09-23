@@ -4,6 +4,15 @@ exports.parserPlugin = exports.javascriptParserPlugin = void 0;
 exports.parseJavaScriptProject = parseJavaScriptProject;
 const JS_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs'];
 const JS_PLUGIN_VERSION = '0.3.0';
+const webTreeSitterStates = new WeakMap();
+function getWebTreeSitterState(module) {
+    let state = webTreeSitterStates.get(module);
+    if (!state) {
+        state = { initialized: false, languages: new Map() };
+        webTreeSitterStates.set(module, state);
+    }
+    return state;
+}
 function moduleNameFromPath(p) {
     return p
         .replace(/\\/g, '/')
@@ -17,22 +26,44 @@ function shouldUseTreeSitter(options) {
         return false;
     return true;
 }
+function shouldUseWebTreeSitter(options) {
+    if (options?.preferTreeSitter === false)
+        return false;
+    return options?.runtime === 'browser' && !!options?.webTreeSitter;
+}
 function filterJavaScriptEntries(files) {
     return Object.entries(files).filter(([filePath]) => JS_EXTENSIONS.some((ext) => filePath.endsWith(ext)));
 }
 function stripQuotes(text) {
     return text.replace(/^['"]|['"]$/g, '');
 }
-function parseJavaScriptProjectInternal(files, options) {
+async function parseJavaScriptProjectInternal(files, options) {
     const entries = filterJavaScriptEntries(files);
     if (entries.length === 0) {
         throw new Error('No JavaScript source files found in project. Provide at least one .js/.jsx/.mjs/.cjs file.');
+    }
+    if (shouldUseWebTreeSitter(options)) {
+        const config = options?.webTreeSitter;
+        if (config && config.module) {
+            try {
+                return await parseWithWebTreeSitter(entries, config);
+            }
+            catch (error) {
+                if (error instanceof SyntaxError) {
+                    throw error;
+                }
+                // fall through to other strategies on initialization errors
+            }
+        }
     }
     if (shouldUseTreeSitter(options)) {
         try {
             const Parser = require('tree-sitter');
             const JavaScript = require('tree-sitter-javascript');
-            return parseWithTreeSitter(Parser, JavaScript, entries);
+            return parseWithTreeSitter(Parser, JavaScript, entries, options?.runtime ?? 'node', 'tree-sitter', {
+                grammar: 'tree-sitter-javascript',
+                mode: 'native',
+            });
         }
         catch (err) {
             if (!err || err.code !== 'MODULE_NOT_FOUND') {
@@ -57,10 +88,10 @@ function detectJavaScriptProject(files) {
         matchedFiles: matched.slice(0, 5),
     };
 }
-function parseJavaScriptProject(files, options) {
-    return parseJavaScriptProjectInternal(files, options);
+async function parseJavaScriptProject(files, options) {
+    return await parseJavaScriptProjectInternal(files, options);
 }
-function parseWithTreeSitter(Parser, JavaScript, entries) {
+function parseWithTreeSitter(Parser, JavaScript, entries, runtime = 'node', implementation = 'tree-sitter', details) {
     const parser = new Parser();
     parser.setLanguage(JavaScript);
     const modules = {};
@@ -276,7 +307,89 @@ function parseWithTreeSitter(Parser, JavaScript, entries) {
             imports: Array.from(importSet),
         };
     }
-    return { modules, fixNotes: [] };
+    const project = { modules, fixNotes: [] };
+    project.parserMeta = { implementation, runtime, details };
+    return project;
+}
+async function parseWithWebTreeSitter(entries, config) {
+    const module = config.module;
+    if (!module || typeof module.Parser !== 'function') {
+        throw new Error('Invalid web-tree-sitter module provided for javascript parser.');
+    }
+    const state = getWebTreeSitterState(module);
+    if (!state.initialized) {
+        if (typeof module.init === 'function') {
+            const initOptions = {};
+            if (typeof config.locateFile === 'function') {
+                initOptions.locateFile = config.locateFile;
+            }
+            else if (config.runtimeUrl) {
+                initOptions.locateFile = (scriptName, scriptDirectory) => {
+                    if (scriptName === 'tree-sitter.wasm') {
+                        return config.runtimeUrl;
+                    }
+                    if (typeof config.locateFile === 'function') {
+                        return config.locateFile(scriptName, scriptDirectory);
+                    }
+                    return scriptDirectory ? `${scriptDirectory}${scriptName}` : scriptName;
+                };
+            }
+            await module.init(initOptions);
+        }
+        state.initialized = true;
+    }
+    if (!module.Language || typeof module.Language.load !== 'function') {
+        throw new Error('web-tree-sitter module is missing Language.load API.');
+    }
+    const { language, source } = await loadWebTreeSitterLanguage(module, state, config, 'javascript');
+    const details = { grammar: 'tree-sitter-javascript', mode: 'web' };
+    if (source)
+        details.languageSource = source;
+    if (config.runtimeUrl)
+        details.runtimeUrl = config.runtimeUrl;
+    return parseWithTreeSitter(module.Parser, language, entries, 'browser', 'web-tree-sitter', details);
+}
+function deriveLanguageUrl(runtimeUrl, lang) {
+    if (typeof runtimeUrl !== 'string')
+        return undefined;
+    if (runtimeUrl.includes('tree-sitter.wasm')) {
+        return runtimeUrl.replace(/tree-sitter\.wasm(?:\?.*)?$/i, `tree-sitter-${lang}.wasm`);
+    }
+    return undefined;
+}
+async function loadWebTreeSitterLanguage(module, state, config, lang) {
+    const cached = state.languages.get(lang);
+    if (cached) {
+        return { language: cached, source: 'cache' };
+    }
+    let language;
+    let source;
+    const entry = config.languages?.[lang];
+    if (typeof entry === 'string') {
+        language = await module.Language.load(entry);
+        source = entry;
+    }
+    else if (entry && typeof entry === 'object') {
+        if (entry.language) {
+            language = entry.language;
+            source = 'provided';
+        }
+        else if (entry.load) {
+            language = await entry.load();
+            source = 'loader';
+        }
+        else if (entry.url) {
+            language = await module.Language.load(entry.url);
+            source = entry.url;
+        }
+    }
+    if (!language) {
+        const derived = deriveLanguageUrl(config.runtimeUrl, lang) ?? `tree-sitter-${lang}.wasm`;
+        language = await module.Language.load(derived);
+        source = derived;
+    }
+    state.languages.set(lang, language);
+    return { language, source };
 }
 function parseWithFallback(entries) {
     const modules = {};
