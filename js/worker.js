@@ -1,6 +1,7 @@
 /* eslint-env worker */
 
 importScripts(
+  'workers/tree-sitter-support.js',
   'workers/classic-utils.js',
   'workers/classic-renderer.js',
   'workers/classic-engine.js',
@@ -109,6 +110,27 @@ async function handleAnalysisMessage(data = {}) {
   const startTs = Date.now();
   const locale = resolveLocale(options?.locale || options?.language || data?.locale);
 
+  const baseParserOptions = { ...(options?.parserOptions || {}), runtime: 'browser' };
+  let pipelineOptions = { ...options, parserOptions: baseParserOptions };
+  try {
+    if (typeof self.WebTreeSitterSupport?.prepareConfig === 'function') {
+      const webConfig = await self.WebTreeSitterSupport.prepareConfig(self, files);
+      if (webConfig) {
+        const preferTreeSitter = pipelineOptions.parserOptions?.preferTreeSitter !== false;
+        pipelineOptions = {
+          ...pipelineOptions,
+          parserOptions: {
+            ...pipelineOptions.parserOptions,
+            webTreeSitter: webConfig,
+            preferTreeSitter,
+          },
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('web-tree-sitter configuration failed:', error);
+  }
+
   if (!ClassicEngine.isAvailable()) {
     const fallbackResponse = directRenderFallback(files, options, dtype, locale);
     self.postMessage(fallbackResponse);
@@ -116,7 +138,7 @@ async function handleAnalysisMessage(data = {}) {
   }
 
   try {
-    const result = await ClassicEngine.runPipeline(files, options);
+    const result = await ClassicEngine.runPipeline(files, pipelineOptions);
     const engineMeta = getEngineMeta();
     const engineInfo = {
       source: result?.engine?.source || engineMeta.source || null,

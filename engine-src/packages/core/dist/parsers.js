@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ParserPluginNotFoundError = void 0;
 exports.registerParserPlugin = registerParserPlugin;
 exports.clearParserPlugins = clearParserPlugins;
 exports.listParserPlugins = listParserPlugins;
@@ -126,9 +127,23 @@ function candidateModuleIds(lang) {
     ids.add(node_path_1.default.join(localRoot, 'dist', 'src'));
     return Array.from(ids);
 }
+class ParserPluginNotFoundError extends Error {
+    constructor(lang, attempted) {
+        const fallback = attempted.length
+            ? `Tried dynamic module ids: ${attempted.join(', ')}`
+            : 'No dynamic module ids were generated for this language.';
+        super(`Parser plugin not found for language "${lang}". ` +
+            'Install the appropriate @diagrammender/parsers-* package or provide a manual parser.\n' +
+            fallback);
+        this.name = 'ParserPluginNotFoundError';
+        this.lang = lang;
+        this.attempted = attempted;
+    }
+}
+exports.ParserPluginNotFoundError = ParserPluginNotFoundError;
 function tryRequire(moduleId) {
     try {
-        // eslint-disable-next-line no-undef
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const mod = require(moduleId);
         return extractPlugin(mod);
     }
@@ -166,7 +181,9 @@ async function loadParserPlugin(lang) {
     const existing = registry.get(normalized);
     if (existing)
         return existing;
+    const attempted = [];
     for (const moduleId of candidateModuleIds(normalized)) {
+        attempted.push(moduleId);
         const plugin = tryRequire(moduleId);
         if (plugin) {
             registerParserPlugin(plugin);
@@ -174,7 +191,7 @@ async function loadParserPlugin(lang) {
             return plugin;
         }
     }
-    throw new Error(`Parser plugin not found for language: ${lang}`);
+    throw new ParserPluginNotFoundError(lang, attempted);
 }
 async function resolveParserPlugin(options) {
     const { lang, files, candidates = [], detect = true, allowHeuristics = true, } = options;
@@ -204,12 +221,16 @@ async function resolveParserPlugin(options) {
         throw new Error('Unable to detect parser language from provided files. Specify lang explicitly.');
     }
     const resolutions = [];
+    const missing = [];
     for (const [langId, meta] of candidatesByLang) {
         let plugin;
         try {
             plugin = await loadParserPlugin(langId);
         }
         catch (err) {
+            if (err instanceof ParserPluginNotFoundError) {
+                missing.push(err.lang);
+            }
             continue;
         }
         let detection;
@@ -245,6 +266,10 @@ async function resolveParserPlugin(options) {
         resolutions.push({ plugin, detection, score });
     }
     if (resolutions.length === 0) {
+        if (missing.length) {
+            const langId = missing[0];
+            throw new ParserPluginNotFoundError(langId, candidateModuleIds(langId));
+        }
         const hinted = Array.from(candidatesByLang.keys());
         if (hinted.length) {
             throw new Error(`No parser plugin available for detected languages: ${hinted.join(', ')}`);

@@ -24,9 +24,15 @@ function createStubPlugin(name, aliases = []) {
     strict_1.default.strictEqual(plugins.length, 1);
     strict_1.default.strictEqual(plugins[0], plugin);
 });
-(0, node_test_1.default)('loadParserPlugin throws for unknown languages', async () => {
+(0, node_test_1.default)('loadParserPlugin throws ParserPluginNotFoundError for unknown languages with fallback hint', async () => {
     (0, parsers_1.clearParserPlugins)();
-    await strict_1.default.rejects((0, parsers_1.loadParserPlugin)('unknown-lang'), /Parser plugin not found/);
+    await strict_1.default.rejects((0, parsers_1.loadParserPlugin)('unknown-lang'), (err) => {
+        strict_1.default.ok(err instanceof parsers_1.ParserPluginNotFoundError);
+        strict_1.default.match(err.message, /Install the appropriate/);
+        strict_1.default.ok(Array.isArray(err.attempted));
+        strict_1.default.ok(err.attempted.length > 0);
+        return true;
+    });
 });
 (0, node_test_1.default)('resolveParserPlugin auto-detects using heuristics when lang is omitted', async () => {
     (0, parsers_1.clearParserPlugins)();

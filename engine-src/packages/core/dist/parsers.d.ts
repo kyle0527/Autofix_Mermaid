@@ -1,4 +1,9 @@
 import { ParserPlugin, ParserDetectionResult } from '@diagrammender/types';
+export declare class ParserPluginNotFoundError extends Error {
+    readonly lang: string;
+    readonly attempted: string[];
+    constructor(lang: string, attempted: string[]);
+}
 export declare function registerParserPlugin(plugin: ParserPlugin): ParserPlugin;
 export declare function clearParserPlugins(): void;
 export declare function listParserPlugins(): ParserPlugin[];

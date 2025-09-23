@@ -45,9 +45,16 @@ function createStubProject() {
             },
         ],
         functions: [mainFn],
+        imports: ['demo.widgets', 'external-lib'],
+    };
+    const widgetsModule = {
+        name: 'demo.widgets',
+        path: 'demo/widgets.demo',
+        classes: [],
+        functions: [],
         imports: [],
     };
-    return { modules: { demo: module } };
+    return { modules: { demo: module, 'demo.widgets': widgetsModule } };
 }
 function createStubPlugin() {
     return {
@@ -80,9 +87,51 @@ function createStubPlugin() {
         strict_1.default.ok(result.trace.some((entry) => entry.stage === 'emit'));
         strict_1.default.ok(result.ir.callGraph);
         strict_1.default.ok(result.ir.callGraph?.edges.length); // ensure analyzer ran
+        strict_1.default.ok(result.ir.dependencyGraph);
+        strict_1.default.ok(result.ir.dependencyGraph?.edges.some((edge) => edge.from === 'demo' && edge.to === 'demo.widgets'));
+        const external = result.ir.dependencyGraph?.edges.find((edge) => edge.from === 'demo' && edge.to === 'external-lib');
+        strict_1.default.ok(external);
+        strict_1.default.strictEqual(external?.isExternal, true);
         strict_1.default.ok(result.fragments.some((fragment) => fragment.id === 'demo.main'));
         strict_1.default.ok(result.fragments.some((fragment) => fragment.id === 'demo.Widget.render'));
         strict_1.default.ok(result.links.some((link) => link.fromFragment === 'demo.main' && link.toFragment === 'demo.Widget.render'));
+    }
+    finally {
+        (0, parsers_1.clearParserPlugins)();
+    }
+});
+(0, node_test_1.default)('runPipeline emits callGraph diagrams', async () => {
+    (0, parsers_1.clearParserPlugins)();
+    const plugin = createStubPlugin();
+    (0, parsers_1.registerParserPlugin)(plugin);
+    try {
+        const result = await (0, pipeline_1.runPipeline)({ 'demo/app.demo': 'class Widget: pass' }, {
+            lang: 'demo',
+            diagram: 'callGraph',
+        });
+        strict_1.default.ok(result.rawCode.startsWith('graph TD'));
+        strict_1.default.strictEqual(result.links.length, 0);
+        strict_1.default.ok(result.fragments.length > 0);
+        strict_1.default.ok(result.ir.callGraph?.edges.length);
+        strict_1.default.ok(result.ir.dependencyGraph?.edges.length);
+    }
+    finally {
+        (0, parsers_1.clearParserPlugins)();
+    }
+});
+(0, node_test_1.default)('runPipeline emits dependency graphs', async () => {
+    (0, parsers_1.clearParserPlugins)();
+    const plugin = createStubPlugin();
+    (0, parsers_1.registerParserPlugin)(plugin);
+    try {
+        const result = await (0, pipeline_1.runPipeline)({ 'demo/app.demo': 'class Widget: pass' }, {
+            lang: 'demo',
+            diagram: 'dependencyGraph',
+        });
+        strict_1.default.ok(result.rawCode.startsWith('graph LR'));
+        strict_1.default.strictEqual(result.links.length, 0);
+        strict_1.default.ok(result.fragments.length > 0);
+        strict_1.default.ok(result.ir.dependencyGraph?.edges.length);
     }
     finally {
         (0, parsers_1.clearParserPlugins)();

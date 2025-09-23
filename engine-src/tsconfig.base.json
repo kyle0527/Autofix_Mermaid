@@ -21,6 +21,10 @@
       "@diagrammender/fix-rules-mermaid-compat/*": ["packages/fix-rules/mermaid-compat/dist/*"],
       "@diagrammender/parsers-python": ["packages/parsers/python/dist/index"],
       "@diagrammender/parsers-python/*": ["packages/parsers/python/dist/*"],
+      "@diagrammender/parsers-javascript": ["packages/parsers/javascript/dist/index"],
+      "@diagrammender/parsers-javascript/*": ["packages/parsers/javascript/dist/*"],
+      "@diagrammender/parsers-typescript": ["packages/parsers/typescript/dist/index"],
+      "@diagrammender/parsers-typescript/*": ["packages/parsers/typescript/dist/*"],
       "@diagrammender/core": ["packages/core/dist/index"],
       "@diagrammender/core/*": ["packages/core/dist/*"]
     }

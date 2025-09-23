@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UniqueIds = void 0;
 exports.UniqueIds = {
     name: 'UniqueIds', priority: 50,
-    run(code, _ctx) {
+    run(code, ctx) {
         const lines = code.split(/\r?\n/);
         const seen = {};
         const notes = [];

@@ -7,11 +7,13 @@ import {
   MermaidFragment,
   MermaidLink,
 } from '@diagrammender/types';
-import { buildCFG, buildCallGraph } from '@diagrammender/analyzers';
+import { buildCFG, buildCallGraph, buildDependencyGraph } from '@diagrammender/analyzers';
 import {
   emitFlowchartFragments,
   emitClassDiagramFragments,
   emitSequenceFragments,
+  emitCallGraphFragments,
+  emitDependencyGraphFragments,
   composeMermaid,
   buildFlowchartLinks,
 } from '@diagrammender/emitters-mermaid';
@@ -104,6 +106,7 @@ export async function runPipeline(files: Record<string,string>, opts: PipelineOp
     }
   }
   ir.callGraph = buildCallGraph(ir);
+  ir.dependencyGraph = buildDependencyGraph(ir);
   trace.push({
     stage: 'analyze',
     startedAt: analyzeStart,
@@ -113,6 +116,7 @@ export async function runPipeline(files: Record<string,string>, opts: PipelineOp
       methods: methodCount,
       classes: classCount,
       callEdges: ir.callGraph?.edges.length ?? 0,
+      dependencyEdges: ir.dependencyGraph?.edges.length ?? 0,
     },
   });
 
@@ -129,6 +133,12 @@ export async function runPipeline(files: Record<string,string>, opts: PipelineOp
       break;
     case 'sequenceDiagram':
       fragments = emitSequenceFragments(ir);
+      break;
+    case 'callGraph':
+      fragments = emitCallGraphFragments(ir);
+      break;
+    case 'dependencyGraph':
+      fragments = emitDependencyGraphFragments(ir);
       break;
     default:
       fragments = emitFlowchartFragments(ir);
@@ -153,7 +163,11 @@ export async function runPipeline(files: Record<string,string>, opts: PipelineOp
 
   // fix
   const fixStart = now();
-  const { code: fixed, notes } = applyAll(rawCode, { diagram, mermaidVersion: opts.mermaidVersion ?? 'v11' });
+  const fixDiagram: 'flowchart' | 'classDiagram' | 'sequenceDiagram' =
+    diagram === 'flowchart' || diagram === 'classDiagram' || diagram === 'sequenceDiagram'
+      ? diagram
+      : 'flowchart';
+  const { code: fixed, notes } = applyAll(rawCode, { diagram: fixDiagram, mermaidVersion: opts.mermaidVersion ?? 'v11' });
   trace.push({
     stage: 'fix',
     startedAt: fixStart,

@@ -5,6 +5,7 @@ import { aiAssist } from './ai/ai-assist.js';
 import { runPipeline, runPipelineIR } from './engine-wrapper.mjs';
 import { aiAnalyze } from './ai/aiEngine-esm.mjs';
 import { guessDiagramFromCode } from './workers/diagram-utils.mjs';
+import './workers/tree-sitter-support.js';
 
 // mark imported but optional engine helpers as used to avoid lint warnings
 void runPipelineIR;
@@ -31,7 +32,23 @@ self.onmessage = async (event) => {
     const useEngine = !!(uiOptions && (uiOptions.useEngine || uiOptions.mode === 'engine'));
     if (useEngine) {
       try {
-        const result = await runPipeline(files, uiOptions || {});
+        const engineOptions = { ...(uiOptions || {}) };
+        const parserOptions = { ...(engineOptions.parserOptions || {}), runtime: 'browser' };
+        try {
+          if (typeof self.WebTreeSitterSupport?.prepareConfig === 'function') {
+            const webConfig = await self.WebTreeSitterSupport.prepareConfig(self, files);
+            if (webConfig) {
+              parserOptions.webTreeSitter = webConfig;
+              if (parserOptions.preferTreeSitter !== false) {
+                parserOptions.preferTreeSitter = true;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn('module worker web-tree-sitter configuration failed:', error);
+        }
+        engineOptions.parserOptions = parserOptions;
+        const result = await runPipeline(files, engineOptions);
         // result shape is { code, errors, log, dtype }
         self.postMessage(result);
         return;

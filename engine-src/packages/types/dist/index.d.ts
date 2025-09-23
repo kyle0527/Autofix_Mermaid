@@ -12,6 +12,10 @@ export interface IRProject {
     fixNotes?: string[];
     /** Call graph analysis result */
     callGraph?: CallGraph;
+    /** Module level dependency graph */
+    dependencyGraph?: DependencyGraph;
+    /** Metadata about the parser implementation used for this IR. */
+    parserMeta?: ParserMeta;
 }
 /**
  * Single module (file) representation
@@ -67,6 +71,17 @@ export interface IRFunction {
     doc?: string;
     /** Control flow graph (from analyzer) */
     cfg?: CFG;
+}
+/**
+ * Metadata describing how a parser produced the IR.
+ */
+export interface ParserMeta {
+    /** Identifier of the underlying implementation. */
+    implementation?: 'tree-sitter' | 'web-tree-sitter' | 'fallback';
+    /** Runtime environment that executed the parser. */
+    runtime?: ParserRuntime;
+    /** Optional version or additional details (library version, strategy, etc.). */
+    details?: Record<string, unknown>;
 }
 /**
  * Python statement types
@@ -175,9 +190,29 @@ export interface CallGraph {
     edges: CallEdge[];
 }
 /**
+ * Dependency edge between modules/files.
+ */
+export interface DependencyEdge {
+    /** Source module issuing the dependency. */
+    from: string;
+    /** Target module identifier or import spec. */
+    to: string;
+    /** Optional imported symbols associated with the dependency. */
+    symbols?: string[];
+    /** Whether the dependency targets an external module. */
+    isExternal?: boolean;
+}
+/**
+ * Complete dependency graph (module level imports / depends-on relationships).
+ */
+export interface DependencyGraph {
+    /** All dependency edges captured from imports. */
+    edges: DependencyEdge[];
+}
+/**
  * Supported diagram types
  */
-export type DiagramKind = 'flowchart' | 'classDiagram' | 'sequenceDiagram';
+export type DiagramKind = 'flowchart' | 'classDiagram' | 'sequenceDiagram' | 'callGraph' | 'dependencyGraph';
 /**
  * Anchor points that other fragments or links can target when composing diagrams.
  *
@@ -252,6 +287,10 @@ export interface ParserParseOptions {
      * Runtime environment where the parser executes.
      */
     runtime?: ParserRuntime;
+    /**
+     * Optional configuration for web-tree-sitter when running inside browsers/workers.
+     */
+    webTreeSitter?: WebTreeSitterConfig;
 }
 /**
  * Confidence score returned by parser detection heuristics.
@@ -280,6 +319,30 @@ export interface ParserCapabilities {
     treeSitter?: boolean;
     /** Provides a fallback parser when tree-sitter is unavailable. */
     fallback?: boolean;
+}
+/**
+ * Configuration describing how to load a specific web-tree-sitter language.
+ */
+export interface WebTreeSitterLanguageConfig {
+    /** Preloaded Language object. */
+    language?: any;
+    /** Explicit URL to the language wasm file. */
+    url?: string;
+    /** Custom async loader returning the Language instance. */
+    load?: () => Promise<any>;
+}
+/**
+ * Configuration passed to parsers to enable web-tree-sitter execution.
+ */
+export interface WebTreeSitterConfig {
+    /** web-tree-sitter module (e.g. the value returned from importing 'web-tree-sitter'). */
+    module: any;
+    /** Optional explicit runtime wasm URL (tree-sitter.wasm). */
+    runtimeUrl?: string;
+    /** Optional locateFile hook for web-tree-sitter initialisation. */
+    locateFile?: (scriptName: string, scriptDirectory?: string) => string;
+    /** Optional mapping of language identifiers to loading strategies. */
+    languages?: Record<string, WebTreeSitterLanguageConfig | string>;
 }
 /**
  * Parser plugin contract used by the core pipeline.

@@ -5,6 +5,8 @@ const DIAGRAM_HEADERS = {
     flowchart: 'flowchart TD',
     classDiagram: 'classDiagram',
     sequenceDiagram: 'sequenceDiagram',
+    callGraph: 'graph TD',
+    dependencyGraph: 'graph LR',
 };
 function uniqueFragments(fragments, include, exclude) {
     const seen = new Set();
