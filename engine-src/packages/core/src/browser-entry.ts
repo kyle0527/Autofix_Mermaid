@@ -13,11 +13,13 @@ import {
   emitFlowchartFragments,
   emitClassDiagramFragments,
   emitSequenceFragments,
+  emitCallGraphFragments,
+  emitDependencyGraphFragments,
   composeMermaid,
   buildFlowchartLinks,
 } from '@diagrammender/emitters-mermaid';
 import { applyAll } from '@diagrammender/fix-rules-mermaid-compat';
-import { buildCFG, buildCallGraph } from '@diagrammender/analyzers';
+import { buildCFG, buildCallGraph, buildDependencyGraph } from '@diagrammender/analyzers';
 
 const ENGINE_VERSION = '0.3.0';
 const ENGINE_SOURCE = `browser-core@${ENGINE_VERSION}`;
@@ -52,6 +54,8 @@ function normalizeDiagram(diagram?: string | null): DiagramKind {
   switch (diagram) {
     case 'sequenceDiagram':
     case 'classDiagram':
+    case 'callGraph':
+    case 'dependencyGraph':
       return diagram;
     default:
       return 'flowchart';
@@ -61,7 +65,11 @@ function normalizeDiagram(diagram?: string | null): DiagramKind {
 function normalizeParserOptions(options?: ParserParseOptions): ParserParseOptions {
   const normalized = { ...options };
   normalized.runtime = 'browser';
-  normalized.preferTreeSitter = false;
+  if (normalized.webTreeSitter && normalized.preferTreeSitter !== false) {
+    normalized.preferTreeSitter = true;
+  } else if (typeof normalized.preferTreeSitter === 'undefined') {
+    normalized.preferTreeSitter = false;
+  }
   return normalized;
 }
 
@@ -103,6 +111,24 @@ function buildLogEntries(result: PipelineResult, diagram: DiagramKind): WorkerLo
       msg: `detected ${result.detection.lang} (${result.detection.confidence})`,
       meta: { ...result.detection },
     });
+  }
+  if (result.ir?.parserMeta) {
+    const meta = result.ir.parserMeta;
+    if (meta.implementation === 'web-tree-sitter') {
+      entries.push({ rule: 'worker.wts', msg: 'web-tree-sitter used', meta: { ...meta } as any });
+    } else if (meta.implementation === 'tree-sitter') {
+      entries.push({
+        rule: 'pipeline.parser',
+        msg: `tree-sitter (${meta.runtime ?? 'node'})`,
+        meta: { ...meta } as any,
+      });
+    } else if (meta.implementation === 'fallback') {
+      entries.push({
+        rule: 'pipeline.parser',
+        msg: 'fallback parser used',
+        meta: { ...meta } as any,
+      });
+    }
   }
   for (const entry of result.trace || []) {
     entries.push({
@@ -171,6 +197,9 @@ function ensureAnalysis(ir: IRProject): void {
   if (!ir.callGraph || !Array.isArray(ir.callGraph.edges)) {
     ir.callGraph = buildCallGraph(ir);
   }
+  if (!ir.dependencyGraph || !Array.isArray(ir.dependencyGraph.edges)) {
+    ir.dependencyGraph = buildDependencyGraph(ir);
+  }
 }
 
 export async function runPipelineIR(ir: IRProject, options: any = {}): Promise<BrowserPipelineResult> {
@@ -186,6 +215,12 @@ export async function runPipelineIR(ir: IRProject, options: any = {}): Promise<B
     case 'sequenceDiagram':
       fragments = emitSequenceFragments(project);
       break;
+    case 'callGraph':
+      fragments = emitCallGraphFragments(project);
+      break;
+    case 'dependencyGraph':
+      fragments = emitDependencyGraphFragments(project);
+      break;
     default:
       fragments = emitFlowchartFragments(project);
       break;
@@ -197,7 +232,11 @@ export async function runPipelineIR(ir: IRProject, options: any = {}): Promise<B
 
   const rawCode = composeMermaid(diagram, fragments, { links });
   const mermaidVersion = options?.mermaidVersion === 'v10' ? 'v10' : 'v11';
-  const { code, notes } = applyAll(rawCode, { diagram, mermaidVersion });
+  const fixDiagram: 'flowchart' | 'classDiagram' | 'sequenceDiagram' =
+    diagram === 'flowchart' || diagram === 'classDiagram' || diagram === 'sequenceDiagram'
+      ? diagram
+      : 'flowchart';
+  const { code, notes } = applyAll(rawCode, { diagram: fixDiagram, mermaidVersion });
 
   const trace: PipelineTraceEntry[] = [
     {

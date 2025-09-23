@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnsureParticipants = void 0;
 exports.EnsureParticipants = {
     name: 'EnsureParticipants', priority: 60,
-    run(code, _ctx) {
+    run(code, ctx) {
         if (ctx.diagram !== 'sequenceDiagram')
             return { code, notes: [] };
         // ensure every arrow has both sides declared as participants (Mermaid v11 stricter)

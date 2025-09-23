@@ -32,7 +32,7 @@ function walk(dir: string, acc: Record<string,string>) {
 }
 
 function usageAndExit() {
-  console.error(`Usage: diagrammender emit -i <path> [--lang <language|auto>] --diagram <flowchart|classDiagram|sequenceDiagram> [--format <mmd|html>] --out <file-or-dir> [--debug] [--fragments-dir <dir>]`);
+  console.error(`Usage: diagrammender emit -i <path> [--lang <language|auto>] --diagram <flowchart|classDiagram|sequenceDiagram|callGraph|dependencyGraph> [--format <mmd|html>] --out <file-or-dir> [--debug] [--fragments-dir <dir>]`);
   process.exit(2);
 }
 

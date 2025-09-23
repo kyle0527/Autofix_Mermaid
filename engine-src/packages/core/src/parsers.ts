@@ -139,6 +139,25 @@ function candidateModuleIds(lang: string): string[] {
   return Array.from(ids);
 }
 
+export class ParserPluginNotFoundError extends Error {
+  readonly lang: string;
+  readonly attempted: string[];
+
+  constructor(lang: string, attempted: string[]) {
+    const fallback = attempted.length
+      ? `Tried dynamic module ids: ${attempted.join(', ')}`
+      : 'No dynamic module ids were generated for this language.';
+    super(
+      `Parser plugin not found for language "${lang}". ` +
+      'Install the appropriate @diagrammender/parsers-* package or provide a manual parser.\n' +
+      fallback,
+    );
+    this.name = 'ParserPluginNotFoundError';
+    this.lang = lang;
+    this.attempted = attempted;
+  }
+}
+
 function tryRequire(moduleId: string): ParserPlugin | null {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -183,7 +202,9 @@ export async function loadParserPlugin(lang: string): Promise<ParserPlugin> {
   const existing = registry.get(normalized);
   if (existing) return existing;
 
+  const attempted: string[] = [];
   for (const moduleId of candidateModuleIds(normalized)) {
+    attempted.push(moduleId);
     const plugin = tryRequire(moduleId);
     if (plugin) {
       registerParserPlugin(plugin);
@@ -192,7 +213,7 @@ export async function loadParserPlugin(lang: string): Promise<ParserPlugin> {
     }
   }
 
-  throw new Error(`Parser plugin not found for language: ${lang}`);
+  throw new ParserPluginNotFoundError(lang, attempted);
 }
 
 export interface ResolveParserOptions {
@@ -254,11 +275,15 @@ export async function resolveParserPlugin(options: ResolveParserOptions): Promis
 
   const resolutions: Array<{ plugin: ParserPlugin; detection?: ParserDetectionResult; score: number }> = [];
 
+  const missing: string[] = [];
   for (const [langId, meta] of candidatesByLang) {
     let plugin: ParserPlugin;
     try {
       plugin = await loadParserPlugin(langId);
     } catch (err) {
+      if (err instanceof ParserPluginNotFoundError) {
+        missing.push(err.lang);
+      }
       continue;
     }
 
@@ -294,6 +319,10 @@ export async function resolveParserPlugin(options: ResolveParserOptions): Promis
   }
 
   if (resolutions.length === 0) {
+    if (missing.length) {
+      const langId = missing[0];
+      throw new ParserPluginNotFoundError(langId, candidateModuleIds(langId));
+    }
     const hinted = Array.from(candidatesByLang.keys());
     if (hinted.length) {
       throw new Error(`No parser plugin available for detected languages: ${hinted.join(', ')}`);

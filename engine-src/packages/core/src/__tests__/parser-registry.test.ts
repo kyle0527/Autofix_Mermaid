@@ -6,6 +6,7 @@ import {
   loadParserPlugin,
   listParserPlugins,
   resolveParserPlugin,
+  ParserPluginNotFoundError,
 } from '../parsers';
 import type { ParserPlugin } from '@diagrammender/types';
 
@@ -31,9 +32,18 @@ test('registerParserPlugin stores aliases and resolves via loader', async () => 
   assert.strictEqual(plugins[0], plugin);
 });
 
-test('loadParserPlugin throws for unknown languages', async () => {
+test('loadParserPlugin throws ParserPluginNotFoundError for unknown languages with fallback hint', async () => {
   clearParserPlugins();
-  await assert.rejects(loadParserPlugin('unknown-lang'), /Parser plugin not found/);
+  await assert.rejects(
+    loadParserPlugin('unknown-lang'),
+    (err: any) => {
+      assert.ok(err instanceof ParserPluginNotFoundError);
+      assert.match(err.message, /Install the appropriate/);
+      assert.ok(Array.isArray(err.attempted));
+      assert.ok(err.attempted.length > 0);
+      return true;
+    },
+  );
 });
 
 test('resolveParserPlugin auto-detects using heuristics when lang is omitted', async () => {

@@ -59,6 +59,7 @@ async function runPipeline(files, opts) {
         }
     }
     ir.callGraph = (0, analyzers_1.buildCallGraph)(ir);
+    ir.dependencyGraph = (0, analyzers_1.buildDependencyGraph)(ir);
     trace.push({
         stage: 'analyze',
         startedAt: analyzeStart,
@@ -68,6 +69,7 @@ async function runPipeline(files, opts) {
             methods: methodCount,
             classes: classCount,
             callEdges: ir.callGraph?.edges.length ?? 0,
+            dependencyEdges: ir.dependencyGraph?.edges.length ?? 0,
         },
     });
     // emit
@@ -83,6 +85,12 @@ async function runPipeline(files, opts) {
             break;
         case 'sequenceDiagram':
             fragments = (0, emitters_mermaid_1.emitSequenceFragments)(ir);
+            break;
+        case 'callGraph':
+            fragments = (0, emitters_mermaid_1.emitCallGraphFragments)(ir);
+            break;
+        case 'dependencyGraph':
+            fragments = (0, emitters_mermaid_1.emitDependencyGraphFragments)(ir);
             break;
         default:
             fragments = (0, emitters_mermaid_1.emitFlowchartFragments)(ir);
@@ -105,7 +113,10 @@ async function runPipeline(files, opts) {
     });
     // fix
     const fixStart = now();
-    const { code: fixed, notes } = (0, fix_rules_mermaid_compat_1.applyAll)(rawCode, { diagram, mermaidVersion: opts.mermaidVersion ?? 'v11' });
+    const fixDiagram = diagram === 'flowchart' || diagram === 'classDiagram' || diagram === 'sequenceDiagram'
+        ? diagram
+        : 'flowchart';
+    const { code: fixed, notes } = (0, fix_rules_mermaid_compat_1.applyAll)(rawCode, { diagram: fixDiagram, mermaidVersion: opts.mermaidVersion ?? 'v11' });
     trace.push({
         stage: 'fix',
         startedAt: fixStart,

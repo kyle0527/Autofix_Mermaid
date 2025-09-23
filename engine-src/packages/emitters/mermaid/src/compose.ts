@@ -4,6 +4,8 @@ const DIAGRAM_HEADERS: Record<DiagramKind, string> = {
   flowchart: 'flowchart TD',
   classDiagram: 'classDiagram',
   sequenceDiagram: 'sequenceDiagram',
+  callGraph: 'graph TD',
+  dependencyGraph: 'graph LR',
 };
 
 export interface ComposeMermaidOptions {

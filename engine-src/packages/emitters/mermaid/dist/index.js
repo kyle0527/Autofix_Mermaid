@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitSequenceFragments = exports.emitSequenceDiagram = exports.emitClassDiagramFragments = exports.emitClassDiagram = exports.buildFlowchartLinks = exports.emitFlowchartFragments = exports.emitFlowchart = exports.composeMermaid = void 0;
+exports.emitDependencyGraphFragments = exports.emitDependencyGraph = exports.emitCallGraphFragments = exports.emitCallGraph = exports.emitSequenceFragments = exports.emitSequenceDiagram = exports.emitClassDiagramFragments = exports.emitClassDiagram = exports.buildFlowchartLinks = exports.emitFlowchartFragments = exports.emitFlowchart = exports.composeMermaid = void 0;
 var compose_1 = require("./compose");
 Object.defineProperty(exports, "composeMermaid", { enumerable: true, get: function () { return compose_1.composeMermaid; } });
 var flowchart_1 = require("./flowchart");
@@ -13,3 +13,9 @@ Object.defineProperty(exports, "emitClassDiagramFragments", { enumerable: true, 
 var sequence_1 = require("./sequence");
 Object.defineProperty(exports, "emitSequenceDiagram", { enumerable: true, get: function () { return sequence_1.emitSequenceDiagram; } });
 Object.defineProperty(exports, "emitSequenceFragments", { enumerable: true, get: function () { return sequence_1.emitSequenceFragments; } });
+var callGraph_1 = require("./callGraph");
+Object.defineProperty(exports, "emitCallGraph", { enumerable: true, get: function () { return callGraph_1.emitCallGraph; } });
+Object.defineProperty(exports, "emitCallGraphFragments", { enumerable: true, get: function () { return callGraph_1.emitCallGraphFragments; } });
+var dependencyGraph_1 = require("./dependencyGraph");
+Object.defineProperty(exports, "emitDependencyGraph", { enumerable: true, get: function () { return dependencyGraph_1.emitDependencyGraph; } });
+Object.defineProperty(exports, "emitDependencyGraphFragments", { enumerable: true, get: function () { return dependencyGraph_1.emitDependencyGraphFragments; } });
