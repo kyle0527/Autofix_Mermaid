@@ -49,7 +49,7 @@ async function analyzeMultiLanguageProject(projectPath, options = {}) {
         });
         
         if (results.javascript && results.javascript.stats) {
-          results.combined.metadata.languages.push('javascript');
+          results.combined.ir.metadata.languages.push('javascript');
           results.combined.stats.languages.javascript = results.javascript.stats;
           
           console.log(`✅ JavaScript 分析完成: ${results.javascript.stats.filesProcessed} 檔案, ${results.javascript.stats.entitiesFound} 實體`);
@@ -70,7 +70,7 @@ async function analyzeMultiLanguageProject(projectPath, options = {}) {
         results.python = await analyzePythonProject(projectPath);
         
         if (results.python && results.python.stats) {
-          results.combined.metadata.languages.push('python');
+          results.combined.ir.metadata.languages.push('python');
           results.combined.stats.languages.python = results.python.stats;
           
           console.log(`✅ Python 分析完成: ${results.python.stats.filesProcessed} 檔案, ${results.python.stats.entitiesFound} 實體`);

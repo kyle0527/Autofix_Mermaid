@@ -108,7 +108,7 @@ async function parsePythonFile(loader, ir, filePath, content, moduleName, stats)
     stats.filesProcessed++;
     
     // 使用 Tree-sitter 解析
-    const parseResult = await loader.parse('python', content);
+    const parseResult = await loader.parse(content, 'python');
     
     if (parseResult.success && parseResult.tree) {
       console.log(`[Python Analyzer] 成功解析: ${filePath}`);

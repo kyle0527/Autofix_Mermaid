@@ -97,7 +97,7 @@ class TreeSitterLoader {
   async loadNodeTreeSitter() {
     try {
       // 嘗試載入 tree-sitter
-      const TreeSitter = require('tree-sitter');
+      const TreeSitter = (await import('tree-sitter')).default;
       this.TreeSitter = TreeSitter;
     } catch (error) {
       throw new Error('tree-sitter package not found. Install with: npm install tree-sitter');
@@ -166,7 +166,7 @@ class TreeSitterLoader {
           throw new Error(`No Node.js package for language: ${languageName}`);
         }
         
-        const Language = require(packageName);
+        const Language = (await import(packageName)).default;
         return Language;
       }
     } catch (error) {
@@ -206,7 +206,7 @@ class TreeSitterLoader {
       const tree = parser.parse(code);
       
       // 檢查解析錯誤
-      if (tree.rootNode.hasError()) {
+      if (tree.rootNode.hasError) {
         const error = this.findFirstError(tree.rootNode);
         const line = error ? error.startPosition.row + 1 : 0;
         const column = error ? error.startPosition.column + 1 : 0;

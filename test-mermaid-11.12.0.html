@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid 11.12.0 Test</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "mermaid": "./assets/mermaid-11.12.0/mermaid.esm.min.mjs"
+        }
+      }
+    </script>
+</head>
+<body>
+    <h1>Mermaid 11.12.0 測試</h1>
+    
+    <h2>測試 1: 基本流程圖</h2>
+    <div id="diagram1"></div>
+    
+    <h2>測試 2: 序列圖</h2>
+    <div id="diagram2"></div>
+    
+    <script type="module">
+        import mermaid from 'mermaid';
+        
+        // 初始化 Mermaid 使用推薦設置
+        mermaid.initialize({
+            startOnLoad: false,        // 建議關閉自動
+            securityLevel: 'strict',   // 安全預設
+            theme: 'default',
+            flowchart: { curve: 'basis' } // 11.12.0 推薦設置
+        });
+        
+        console.log('Mermaid version:', mermaid.version);
+        
+        // 測試基本流程圖
+        const flowchartCode = `
+            flowchart TD
+                A[開始] --> B{檢查條件}
+                B -->|是| C[執行操作]
+                B -->|否| D[跳過]
+                C --> E[結束]
+                D --> E
+        `;
+        
+        // 測試序列圖
+        const sequenceCode = `
+            sequenceDiagram
+                participant A as 用戶
+                participant B as 系統
+                A->>B: 發送請求
+                B->>B: 處理請求
+                B-->>A: 返回結果
+        `;
+        
+        try {
+            // 渲染流程圖
+            const { svg: svg1 } = await mermaid.render('diagram1-svg', flowchartCode);
+            document.getElementById('diagram1').innerHTML = svg1;
+            console.log('✅ 流程圖渲染成功');
+            
+            // 渲染序列圖
+            const { svg: svg2 } = await mermaid.render('diagram2-svg', sequenceCode);
+            document.getElementById('diagram2').innerHTML = svg2;
+            console.log('✅ 序列圖渲染成功');
+            
+            console.log('🎉 Mermaid 11.12.0 測試完全成功！');
+            
+        } catch (error) {
+            console.error('❌ Mermaid 渲染錯誤:', error);
+            document.body.innerHTML += `<div style="color: red; padding: 10px; background: #fee;">
+                <h3>渲染錯誤</h3>
+                <pre>${error.message}</pre>
+            </div>`;
+        }
+    </script>
+</body>
+</html>

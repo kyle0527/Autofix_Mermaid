@@ -1,7 +1,7 @@
 /**
  * Mermaid Renderer Module
  * @fileoverview Provides Mermaid initialization, rendering, and export functionality
- * Uses ESM import for Mermaid 11.11.0
+ * Uses ESM import for Mermaid 11.12.0
  */
 
 import mermaid from 'mermaid';
@@ -44,6 +44,7 @@ export function initMermaid(options = {}) {
     startOnLoad: MERMAID_CONFIG.START_ON_LOAD,
     securityLevel: MERMAID_CONFIG.SECURITY_LEVEL,
     theme: getDefaultTheme(),
+    flowchart: { curve: 'basis' } // 11.12.0 recommended setting
   };
 
   const config = { ...defaults, ...options };
