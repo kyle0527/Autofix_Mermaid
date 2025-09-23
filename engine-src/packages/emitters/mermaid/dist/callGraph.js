@@ -1,18 +1,14 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitCallGraphFragments = emitCallGraphFragments;
-exports.emitCallGraph = emitCallGraph;
-const compose_1 = require("./compose");
-const utils_1 = require("./utils");
+import { composeMermaid } from './compose';
+import { esc, wrap, trunc, sid } from './utils';
 function formatLabel(primary, secondary) {
     const parts = [primary];
     if (secondary && secondary !== primary) {
         parts.push(secondary);
     }
     const formatted = parts
-        .map((part) => (0, utils_1.wrap)((0, utils_1.trunc)(part, 96), 32))
+        .map((part) => wrap(trunc(part, 96), 32))
         .join('\n');
-    return (0, utils_1.esc)(formatted);
+    return esc(formatted);
 }
 function collectFunctionNodes(ir) {
     const nodes = new Map();
@@ -21,7 +17,7 @@ function collectFunctionNodes(ir) {
         const moduleName = mod.name || mod.path;
         const functions = [...(mod.functions || [])].sort((a, b) => a.id.localeCompare(b.id));
         for (const fn of functions) {
-            const nodeId = (0, utils_1.sid)('call', fn.id);
+            const nodeId = sid('call', fn.id);
             const label = formatLabel(moduleName, fn.name);
             nodes.set(fn.id, { nodeId, label, sortKey: `${moduleName}|${fn.name}|${nodeId}` });
         }
@@ -29,7 +25,7 @@ function collectFunctionNodes(ir) {
         for (const cls of classes) {
             const methods = [...(cls.methods || [])].sort((a, b) => a.id.localeCompare(b.id));
             for (const method of methods) {
-                const nodeId = (0, utils_1.sid)('call', method.id);
+                const nodeId = sid('call', method.id);
                 const label = formatLabel(moduleName, `${cls.name}.${method.name}`);
                 nodes.set(method.id, { nodeId, label, sortKey: `${moduleName}|${cls.name}.${method.name}|${nodeId}` });
             }
@@ -43,7 +39,7 @@ function ensureExternalNode(externalNodes, toName, toId) {
     if (existing)
         return existing;
     const labelSource = toName || toId || 'external';
-    const nodeId = (0, utils_1.sid)('call_ext', key);
+    const nodeId = sid('call_ext', key);
     existing = {
         nodeId,
         label: formatLabel(labelSource),
@@ -57,7 +53,7 @@ function buildEdgeLabel(edgeName, targetId) {
         return undefined;
     if (targetId && edgeName === targetId)
         return undefined;
-    return (0, utils_1.esc)((0, utils_1.wrap)((0, utils_1.trunc)(edgeName, 96), 32));
+    return esc(wrap(trunc(edgeName, 96), 32));
 }
 function buildCallGraphEdges(ir, functionNodes) {
     const externalNodes = new Map();
@@ -92,7 +88,7 @@ function buildCallGraphEdges(ir, functionNodes) {
     edgeRecords.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     return { edges: edgeRecords, externals: externalNodes };
 }
-function emitCallGraphFragments(ir) {
+export function emitCallGraphFragments(ir) {
     const functionNodes = collectFunctionNodes(ir);
     const { edges, externals } = buildCallGraphEdges(ir, functionNodes);
     const internalNodes = Array.from(functionNodes.values()).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
@@ -125,6 +121,6 @@ function emitCallGraphFragments(ir) {
             code: lines.join('\n'),
         }];
 }
-function emitCallGraph(ir) {
-    return (0, compose_1.composeMermaid)('callGraph', emitCallGraphFragments(ir));
+export function emitCallGraph(ir) {
+    return composeMermaid('callGraph', emitCallGraphFragments(ir));
 }

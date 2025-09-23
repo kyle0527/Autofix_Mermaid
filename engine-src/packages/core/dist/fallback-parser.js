@@ -1,10 +1,4 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createFallbackParserPlugin = createFallbackParserPlugin;
-const node_path_1 = __importDefault(require("node:path"));
+import path from 'node:path';
 const FALLBACK_PLUGIN_VERSION = '0.1.0';
 const FALLBACK_EXTENSION_MAP = {
     java: ['.java'],
@@ -369,7 +363,7 @@ function filterEntries(files, lang, extensions) {
             entries.push([filePath, source]);
             continue;
         }
-        const ext = node_path_1.default.extname(filePath).toLowerCase();
+        const ext = path.extname(filePath).toLowerCase();
         if (extSet.has(ext)) {
             entries.push([filePath, source]);
         }
@@ -390,7 +384,7 @@ function buildParserMeta(lang, runtime, extensions) {
         details,
     };
 }
-function createFallbackParserPlugin(lang, config = {}) {
+export function createFallbackParserPlugin(lang, config = {}) {
     const normalized = lang.trim().toLowerCase();
     const extensions = config.extensions && config.extensions.length
         ? config.extensions
@@ -420,4 +414,4 @@ function createFallbackParserPlugin(lang, config = {}) {
         capabilities: { fallback: true },
     };
 }
-exports.default = createFallbackParserPlugin;
+export default createFallbackParserPlugin;

@@ -1,13 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const node_test_1 = __importDefault(require("node:test"));
-const strict_1 = __importDefault(require("node:assert/strict"));
-const pipeline_1 = require("../pipeline");
-const parsers_1 = require("../parsers");
-const emitters_mermaid_1 = require("@diagrammender/emitters-mermaid");
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { runPipeline } from '../pipeline';
+import { clearParserPlugins, registerParserPlugin } from '../parsers';
+import { composeMermaid } from '@diagrammender/emitters-mermaid';
 function createStubProject() {
     const mainFn = {
         id: 'demo.main',
@@ -69,71 +64,71 @@ function createStubPlugin() {
         },
     };
 }
-(0, node_test_1.default)('runPipeline exposes raw output, fragments and trace for debugging', async () => {
-    (0, parsers_1.clearParserPlugins)();
+test('runPipeline exposes raw output, fragments and trace for debugging', async () => {
+    clearParserPlugins();
     const plugin = createStubPlugin();
-    (0, parsers_1.registerParserPlugin)(plugin);
+    registerParserPlugin(plugin);
     try {
-        const result = await (0, pipeline_1.runPipeline)({ 'demo/app.demo': 'class Widget: pass' }, {
+        const result = await runPipeline({ 'demo/app.demo': 'class Widget: pass' }, {
             lang: 'demo',
             diagram: 'flowchart',
         });
-        strict_1.default.strictEqual(result.plugin, plugin);
-        strict_1.default.ok(result.detection);
-        strict_1.default.ok(result.rawCode.startsWith('flowchart TD'));
-        strict_1.default.ok(result.fragments.length > 0);
-        strict_1.default.ok(result.links.length > 0);
-        strict_1.default.strictEqual((0, emitters_mermaid_1.composeMermaid)('flowchart', result.fragments, { links: result.links }), result.rawCode);
-        strict_1.default.ok(result.trace.some((entry) => entry.stage === 'emit'));
-        strict_1.default.ok(result.ir.callGraph);
-        strict_1.default.ok(result.ir.callGraph?.edges.length); // ensure analyzer ran
-        strict_1.default.ok(result.ir.dependencyGraph);
-        strict_1.default.ok(result.ir.dependencyGraph?.edges.some((edge) => edge.from === 'demo' && edge.to === 'demo.widgets'));
+        assert.strictEqual(result.plugin, plugin);
+        assert.ok(result.detection);
+        assert.ok(result.rawCode.startsWith('flowchart TD'));
+        assert.ok(result.fragments.length > 0);
+        assert.ok(result.links.length > 0);
+        assert.strictEqual(composeMermaid('flowchart', result.fragments, { links: result.links }), result.rawCode);
+        assert.ok(result.trace.some((entry) => entry.stage === 'emit'));
+        assert.ok(result.ir.callGraph);
+        assert.ok(result.ir.callGraph?.edges.length); // ensure analyzer ran
+        assert.ok(result.ir.dependencyGraph);
+        assert.ok(result.ir.dependencyGraph?.edges.some((edge) => edge.from === 'demo' && edge.to === 'demo.widgets'));
         const external = result.ir.dependencyGraph?.edges.find((edge) => edge.from === 'demo' && edge.to === 'external-lib');
-        strict_1.default.ok(external);
-        strict_1.default.strictEqual(external?.isExternal, true);
-        strict_1.default.ok(result.fragments.some((fragment) => fragment.id === 'demo.main'));
-        strict_1.default.ok(result.fragments.some((fragment) => fragment.id === 'demo.Widget.render'));
-        strict_1.default.ok(result.links.some((link) => link.fromFragment === 'demo.main' && link.toFragment === 'demo.Widget.render'));
+        assert.ok(external);
+        assert.strictEqual(external?.isExternal, true);
+        assert.ok(result.fragments.some((fragment) => fragment.id === 'demo.main'));
+        assert.ok(result.fragments.some((fragment) => fragment.id === 'demo.Widget.render'));
+        assert.ok(result.links.some((link) => link.fromFragment === 'demo.main' && link.toFragment === 'demo.Widget.render'));
     }
     finally {
-        (0, parsers_1.clearParserPlugins)();
+        clearParserPlugins();
     }
 });
-(0, node_test_1.default)('runPipeline emits callGraph diagrams', async () => {
-    (0, parsers_1.clearParserPlugins)();
+test('runPipeline emits callGraph diagrams', async () => {
+    clearParserPlugins();
     const plugin = createStubPlugin();
-    (0, parsers_1.registerParserPlugin)(plugin);
+    registerParserPlugin(plugin);
     try {
-        const result = await (0, pipeline_1.runPipeline)({ 'demo/app.demo': 'class Widget: pass' }, {
+        const result = await runPipeline({ 'demo/app.demo': 'class Widget: pass' }, {
             lang: 'demo',
             diagram: 'callGraph',
         });
-        strict_1.default.ok(result.rawCode.startsWith('graph TD'));
-        strict_1.default.strictEqual(result.links.length, 0);
-        strict_1.default.ok(result.fragments.length > 0);
-        strict_1.default.ok(result.ir.callGraph?.edges.length);
-        strict_1.default.ok(result.ir.dependencyGraph?.edges.length);
+        assert.ok(result.rawCode.startsWith('graph TD'));
+        assert.strictEqual(result.links.length, 0);
+        assert.ok(result.fragments.length > 0);
+        assert.ok(result.ir.callGraph?.edges.length);
+        assert.ok(result.ir.dependencyGraph?.edges.length);
     }
     finally {
-        (0, parsers_1.clearParserPlugins)();
+        clearParserPlugins();
     }
 });
-(0, node_test_1.default)('runPipeline emits dependency graphs', async () => {
-    (0, parsers_1.clearParserPlugins)();
+test('runPipeline emits dependency graphs', async () => {
+    clearParserPlugins();
     const plugin = createStubPlugin();
-    (0, parsers_1.registerParserPlugin)(plugin);
+    registerParserPlugin(plugin);
     try {
-        const result = await (0, pipeline_1.runPipeline)({ 'demo/app.demo': 'class Widget: pass' }, {
+        const result = await runPipeline({ 'demo/app.demo': 'class Widget: pass' }, {
             lang: 'demo',
             diagram: 'dependencyGraph',
         });
-        strict_1.default.ok(result.rawCode.startsWith('graph LR'));
-        strict_1.default.strictEqual(result.links.length, 0);
-        strict_1.default.ok(result.fragments.length > 0);
-        strict_1.default.ok(result.ir.dependencyGraph?.edges.length);
+        assert.ok(result.rawCode.startsWith('graph LR'));
+        assert.strictEqual(result.links.length, 0);
+        assert.ok(result.fragments.length > 0);
+        assert.ok(result.ir.dependencyGraph?.edges.length);
     }
     finally {
-        (0, parsers_1.clearParserPlugins)();
+        clearParserPlugins();
     }
 });

@@ -1,8 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitClassDiagramFragments = emitClassDiagramFragments;
-exports.emitClassDiagram = emitClassDiagram;
-const compose_1 = require("./compose");
+import { composeMermaid } from './compose';
 function buildClassFragment(modName, modPath, cls) {
     const lines = [];
     lines.push(`class ${cls.name} {`);
@@ -21,7 +17,7 @@ function buildClassFragment(modName, modPath, cls) {
         source: { module: modName, path: modPath },
     };
 }
-function emitClassDiagramFragments(ir) {
+export function emitClassDiagramFragments(ir) {
     const fragments = [];
     for (const mod of Object.values(ir.modules)) {
         for (const cls of mod.classes) {
@@ -38,6 +34,6 @@ function emitClassDiagramFragments(ir) {
     }
     return fragments;
 }
-function emitClassDiagram(ir) {
-    return (0, compose_1.composeMermaid)('classDiagram', emitClassDiagramFragments(ir));
+export function emitClassDiagram(ir) {
+    return composeMermaid('classDiagram', emitClassDiagramFragments(ir));
 }

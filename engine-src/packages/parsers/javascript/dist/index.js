@@ -1,7 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.parserPlugin = exports.javascriptParserPlugin = void 0;
-exports.parseJavaScriptProject = parseJavaScriptProject;
 const JS_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs'];
 const JS_PLUGIN_VERSION = '0.3.0';
 const webTreeSitterStates = new WeakMap();
@@ -88,7 +84,7 @@ function detectJavaScriptProject(files) {
         matchedFiles: matched.slice(0, 5),
     };
 }
-async function parseJavaScriptProject(files, options) {
+export async function parseJavaScriptProject(files, options) {
     return await parseJavaScriptProjectInternal(files, options);
 }
 function parseWithTreeSitter(Parser, JavaScript, entries, runtime = 'node', implementation = 'tree-sitter', details) {
@@ -625,7 +621,7 @@ function findFirstError(node) {
     }
     return null;
 }
-exports.javascriptParserPlugin = {
+export const javascriptParserPlugin = {
     lang: 'javascript',
     version: JS_PLUGIN_VERSION,
     aliases: ['js', 'jsx'],
@@ -638,5 +634,5 @@ exports.javascriptParserPlugin = {
     },
     treeSitterModule: 'tree-sitter-javascript',
 };
-exports.parserPlugin = exports.javascriptParserPlugin;
-exports.default = exports.javascriptParserPlugin;
+export const parserPlugin = javascriptParserPlugin;
+export default javascriptParserPlugin;

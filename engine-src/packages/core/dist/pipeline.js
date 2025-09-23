@@ -1,15 +1,12 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.runPipeline = runPipeline;
-const analyzers_1 = require("@diagrammender/analyzers");
-const emitters_mermaid_1 = require("@diagrammender/emitters-mermaid");
-const fix_rules_mermaid_compat_1 = require("@diagrammender/fix-rules-mermaid-compat");
-const parsers_1 = require("./parsers");
-async function runPipeline(files, opts) {
+import { buildCFG, buildCallGraph, buildDependencyGraph } from '@diagrammender/analyzers';
+import { emitFlowchartFragments, emitClassDiagramFragments, emitSequenceFragments, emitCallGraphFragments, emitDependencyGraphFragments, composeMermaid, buildFlowchartLinks, } from '@diagrammender/emitters-mermaid';
+import { applyAll } from '@diagrammender/fix-rules-mermaid-compat';
+import { resolveParserPlugin } from './parsers';
+export async function runPipeline(files, opts) {
     const trace = [];
     const now = () => Date.now();
     const detectStart = now();
-    const { plugin, detection } = await (0, parsers_1.resolveParserPlugin)({
+    const { plugin, detection } = await resolveParserPlugin({
         lang: opts.lang,
         files,
         detect: opts.detect !== false,
@@ -48,18 +45,18 @@ async function runPipeline(files, opts) {
         classCount += mod.classes?.length ?? 0;
         for (const fn of mod.functions) {
             functionCount += 1;
-            fn.cfg = (0, analyzers_1.buildCFG)(fn);
+            fn.cfg = buildCFG(fn);
         }
         for (const cls of mod.classes || []) {
             for (const method of cls.methods || []) {
                 functionCount += 1;
                 methodCount += 1;
-                method.cfg = (0, analyzers_1.buildCFG)(method);
+                method.cfg = buildCFG(method);
             }
         }
     }
-    ir.callGraph = (0, analyzers_1.buildCallGraph)(ir);
-    ir.dependencyGraph = (0, analyzers_1.buildDependencyGraph)(ir);
+    ir.callGraph = buildCallGraph(ir);
+    ir.dependencyGraph = buildDependencyGraph(ir);
     trace.push({
         stage: 'analyze',
         startedAt: analyzeStart,
@@ -78,28 +75,28 @@ async function runPipeline(files, opts) {
     let fragments = [];
     switch (diagram) {
         case 'flowchart':
-            fragments = (0, emitters_mermaid_1.emitFlowchartFragments)(ir);
+            fragments = emitFlowchartFragments(ir);
             break;
         case 'classDiagram':
-            fragments = (0, emitters_mermaid_1.emitClassDiagramFragments)(ir);
+            fragments = emitClassDiagramFragments(ir);
             break;
         case 'sequenceDiagram':
-            fragments = (0, emitters_mermaid_1.emitSequenceFragments)(ir);
+            fragments = emitSequenceFragments(ir);
             break;
         case 'callGraph':
-            fragments = (0, emitters_mermaid_1.emitCallGraphFragments)(ir);
+            fragments = emitCallGraphFragments(ir);
             break;
         case 'dependencyGraph':
-            fragments = (0, emitters_mermaid_1.emitDependencyGraphFragments)(ir);
+            fragments = emitDependencyGraphFragments(ir);
             break;
         default:
-            fragments = (0, emitters_mermaid_1.emitFlowchartFragments)(ir);
+            fragments = emitFlowchartFragments(ir);
             break;
     }
     const links = diagram === 'flowchart'
-        ? (0, emitters_mermaid_1.buildFlowchartLinks)(ir.callGraph, fragments)
+        ? buildFlowchartLinks(ir.callGraph, fragments)
         : [];
-    const rawCode = (0, emitters_mermaid_1.composeMermaid)(diagram, fragments, { links });
+    const rawCode = composeMermaid(diagram, fragments, { links });
     trace.push({
         stage: 'emit',
         startedAt: emitStart,
@@ -116,7 +113,7 @@ async function runPipeline(files, opts) {
     const fixDiagram = diagram === 'flowchart' || diagram === 'classDiagram' || diagram === 'sequenceDiagram'
         ? diagram
         : 'flowchart';
-    const { code: fixed, notes } = (0, fix_rules_mermaid_compat_1.applyAll)(rawCode, { diagram: fixDiagram, mermaidVersion: opts.mermaidVersion ?? 'v11' });
+    const { code: fixed, notes } = applyAll(rawCode, { diagram: fixDiagram, mermaidVersion: opts.mermaidVersion ?? 'v11' });
     trace.push({
         stage: 'fix',
         startedAt: fixStart,

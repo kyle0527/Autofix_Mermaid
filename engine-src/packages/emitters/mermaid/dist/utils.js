@@ -1,13 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.esc = esc;
-exports.wrap = wrap;
-exports.trunc = trunc;
-exports.sid = sid;
-function esc(s) {
+export function esc(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '\\"');
 }
-function wrap(s, width = 28) {
+export function wrap(s, width = 28) {
     const out = [];
     let line = '';
     for (const ch of s) {
@@ -21,10 +15,10 @@ function wrap(s, width = 28) {
         out.push(line);
     return out.join('\n');
 }
-function trunc(s, max = 240) {
+export function trunc(s, max = 240) {
     return s.length <= max ? s : s.slice(0, max - 10) + '...(truncated)';
 }
-function sid(prefix, key) {
+export function sid(prefix, key) {
     let h = 2166136261 >>> 0;
     for (let i = 0; i < key.length; i++) {
         h ^= key.charCodeAt(i);

@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.NormalizeArrows = void 0;
-exports.NormalizeArrows = {
+export const NormalizeArrows = {
     name: 'NormalizeArrows', priority: 30,
     run(code, ctx) {
         let c = code;

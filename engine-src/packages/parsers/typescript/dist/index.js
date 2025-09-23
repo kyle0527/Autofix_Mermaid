@@ -1,7 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.parserPlugin = exports.typescriptParserPlugin = void 0;
-exports.parseTypeScriptProject = parseTypeScriptProject;
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'];
 const TS_PLUGIN_VERSION = '0.3.0';
 const webTreeSitterStates = new WeakMap();
@@ -95,7 +91,7 @@ function detectTypeScriptProject(files) {
         matchedFiles: matched.slice(0, 5),
     };
 }
-async function parseTypeScriptProject(files, options) {
+export async function parseTypeScriptProject(files, options) {
     return await parseTypeScriptProjectInternal(files, options);
 }
 function parseWithTreeSitter(entries, parserTs, parserTsx, runtime = 'node', implementation = 'tree-sitter', details) {
@@ -742,7 +738,7 @@ function findFirstError(node) {
     }
     return null;
 }
-exports.typescriptParserPlugin = {
+export const typescriptParserPlugin = {
     lang: 'typescript',
     version: TS_PLUGIN_VERSION,
     aliases: ['ts', 'tsx'],
@@ -755,5 +751,5 @@ exports.typescriptParserPlugin = {
     },
     treeSitterModule: 'tree-sitter-typescript',
 };
-exports.parserPlugin = exports.typescriptParserPlugin;
-exports.default = exports.typescriptParserPlugin;
+export const parserPlugin = typescriptParserPlugin;
+export default typescriptParserPlugin;

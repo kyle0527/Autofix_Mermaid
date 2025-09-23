@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EscapeLabels = void 0;
-exports.EscapeLabels = {
+export const EscapeLabels = {
     name: 'EscapeLabels', priority: 40,
     run(code, ctx) {
         const c = code.replace(/([\[\{])(.*?)([\]\}])/g, (m, a, inner, b) => {

@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EnsureParticipants = void 0;
-exports.EnsureParticipants = {
+export const EnsureParticipants = {
     name: 'EnsureParticipants', priority: 60,
     run(code, ctx) {
         if (ctx.diagram !== 'sequenceDiagram')

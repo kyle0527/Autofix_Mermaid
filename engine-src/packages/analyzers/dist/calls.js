@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildCallGraph = buildCallGraph;
-function buildCallGraph(project) {
+export function buildCallGraph(project) {
     const edges = [];
     const nameToId = new Map();
     const register = (name, id) => {

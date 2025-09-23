@@ -1,7 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.parserPlugin = exports.pythonParserPlugin = void 0;
-exports.parsePythonProject = parsePythonProject;
 const PY_EXTENSIONS = ['.py', '.pyw', '.pyi'];
 function relModuleName(p) {
     return p
@@ -112,7 +108,7 @@ function detectPythonProject(files) {
         matchedFiles: matched.slice(0, 5),
     };
 }
-async function parsePythonProject(files, options) {
+export async function parsePythonProject(files, options) {
     return await parsePythonProjectInternal(files, options);
 }
 function parseWithFallback(entries, runtime = 'node', details) {
@@ -234,7 +230,7 @@ function collectPythonCalls(body) {
     }
     return Array.from(calls);
 }
-exports.pythonParserPlugin = {
+export const pythonParserPlugin = {
     lang: 'python',
     version: PYTHON_PLUGIN_VERSION,
     aliases: ['py'],
@@ -247,8 +243,8 @@ exports.pythonParserPlugin = {
     },
     treeSitterModule: 'tree-sitter-python',
 };
-exports.parserPlugin = exports.pythonParserPlugin;
-exports.default = exports.pythonParserPlugin;
+export const parserPlugin = pythonParserPlugin;
+export default pythonParserPlugin;
 function parseWithTreeSitter(Parser, Python, entries, runtime = 'node') {
     const parser = new Parser();
     parser.setLanguage(Python);

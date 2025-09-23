@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.GraphToFlowchart = void 0;
-exports.GraphToFlowchart = {
+export const GraphToFlowchart = {
     name: 'GraphToFlowchart', priority: 20,
     run(code, ctx) {
         if (/^graph\s+[A-Z]{2}/mi.test(code)) {

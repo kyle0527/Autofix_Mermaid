@@ -1,11 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.runPipeline = runPipeline;
-exports.runPipelineIR = runPipelineIR;
-const pipeline_1 = require("./pipeline");
-const emitters_mermaid_1 = require("@diagrammender/emitters-mermaid");
-const fix_rules_mermaid_compat_1 = require("@diagrammender/fix-rules-mermaid-compat");
-const analyzers_1 = require("@diagrammender/analyzers");
+import { runPipeline as runCorePipeline } from './pipeline';
+import { emitFlowchartFragments, emitClassDiagramFragments, emitSequenceFragments, emitCallGraphFragments, emitDependencyGraphFragments, composeMermaid, buildFlowchartLinks, } from '@diagrammender/emitters-mermaid';
+import { applyAll } from '@diagrammender/fix-rules-mermaid-compat';
+import { buildCFG, buildCallGraph, buildDependencyGraph } from '@diagrammender/analyzers';
 const ENGINE_VERSION = '0.3.0';
 const ENGINE_SOURCE = `browser-core@${ENGINE_VERSION}`;
 function normalizeDiagram(diagram) {
@@ -132,65 +128,65 @@ function createBrowserResult(diagram, pipeline, extras = {}) {
         ...extras,
     };
 }
-async function runPipeline(files, options = {}) {
+export async function runPipeline(files, options = {}) {
     const diagram = normalizeDiagram(options.diagram || options.mode || options.dtype);
     const pipelineOptions = normalizePipelineOptions(diagram, options);
-    const pipelineResult = await (0, pipeline_1.runPipeline)(files || {}, pipelineOptions);
+    const pipelineResult = await runCorePipeline(files || {}, pipelineOptions);
     return createBrowserResult(diagram, pipelineResult);
 }
 function ensureAnalysis(ir) {
     for (const mod of Object.values(ir.modules || {})) {
         for (const fn of mod.functions || []) {
             if (!fn.cfg) {
-                fn.cfg = (0, analyzers_1.buildCFG)(fn);
+                fn.cfg = buildCFG(fn);
             }
         }
         for (const cls of mod.classes || []) {
             for (const method of cls.methods || []) {
                 if (!method.cfg) {
-                    method.cfg = (0, analyzers_1.buildCFG)(method);
+                    method.cfg = buildCFG(method);
                 }
             }
         }
     }
     if (!ir.callGraph || !Array.isArray(ir.callGraph.edges)) {
-        ir.callGraph = (0, analyzers_1.buildCallGraph)(ir);
+        ir.callGraph = buildCallGraph(ir);
     }
     if (!ir.dependencyGraph || !Array.isArray(ir.dependencyGraph.edges)) {
-        ir.dependencyGraph = (0, analyzers_1.buildDependencyGraph)(ir);
+        ir.dependencyGraph = buildDependencyGraph(ir);
     }
 }
-async function runPipelineIR(ir, options = {}) {
+export async function runPipelineIR(ir, options = {}) {
     const diagram = normalizeDiagram(options.diagram || options.mode || options.dtype);
     const project = ir || { modules: {} };
     ensureAnalysis(project);
     let fragments = [];
     switch (diagram) {
         case 'classDiagram':
-            fragments = (0, emitters_mermaid_1.emitClassDiagramFragments)(project);
+            fragments = emitClassDiagramFragments(project);
             break;
         case 'sequenceDiagram':
-            fragments = (0, emitters_mermaid_1.emitSequenceFragments)(project);
+            fragments = emitSequenceFragments(project);
             break;
         case 'callGraph':
-            fragments = (0, emitters_mermaid_1.emitCallGraphFragments)(project);
+            fragments = emitCallGraphFragments(project);
             break;
         case 'dependencyGraph':
-            fragments = (0, emitters_mermaid_1.emitDependencyGraphFragments)(project);
+            fragments = emitDependencyGraphFragments(project);
             break;
         default:
-            fragments = (0, emitters_mermaid_1.emitFlowchartFragments)(project);
+            fragments = emitFlowchartFragments(project);
             break;
     }
     const links = diagram === 'flowchart'
-        ? (0, emitters_mermaid_1.buildFlowchartLinks)(project.callGraph, fragments)
+        ? buildFlowchartLinks(project.callGraph, fragments)
         : [];
-    const rawCode = (0, emitters_mermaid_1.composeMermaid)(diagram, fragments, { links });
+    const rawCode = composeMermaid(diagram, fragments, { links });
     const mermaidVersion = options?.mermaidVersion === 'v10' ? 'v10' : 'v11';
     const fixDiagram = diagram === 'flowchart' || diagram === 'classDiagram' || diagram === 'sequenceDiagram'
         ? diagram
         : 'flowchart';
-    const { code, notes } = (0, fix_rules_mermaid_compat_1.applyAll)(rawCode, { diagram: fixDiagram, mermaidVersion });
+    const { code, notes } = applyAll(rawCode, { diagram: fixDiagram, mermaidVersion });
     const trace = [
         {
             stage: 'emit',
@@ -233,10 +229,10 @@ async function runPipelineIR(ir, options = {}) {
 const DiagramMenderCore = {
     runPipeline,
     runPipelineIR,
-    composeMermaid: emitters_mermaid_1.composeMermaid,
+    composeMermaid,
     version: ENGINE_SOURCE,
 };
 if (typeof globalThis !== 'undefined') {
     globalThis.DiagramMenderCore = DiagramMenderCore;
 }
-exports.default = DiagramMenderCore;
+export default DiagramMenderCore;

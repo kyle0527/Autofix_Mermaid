@@ -1,10 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitFlowchartFragments = emitFlowchartFragments;
-exports.buildFlowchartLinks = buildFlowchartLinks;
-exports.emitFlowchart = emitFlowchart;
-const utils_1 = require("./utils");
-const compose_1 = require("./compose");
+import { esc, wrap, trunc, sid } from './utils';
+import { composeMermaid } from './compose';
 function buildFunctionFragment(modName, modPath, fn, ctx) {
     const fragmentId = fn.id || `${modName}.${fn.name}`;
     const lines = [`subgraph ${fragmentId}`];
@@ -12,8 +7,8 @@ function buildFunctionFragment(modName, modPath, fn, ctx) {
     let entryNode;
     let exitNode;
     if (!cfg || cfg.nodes.length === 0) {
-        const A = (0, utils_1.sid)('A', fragmentId);
-        const B = (0, utils_1.sid)('B', fragmentId);
+        const A = sid('A', fragmentId);
+        const B = sid('B', fragmentId);
         lines.push(`${A}((Start))`);
         lines.push(`${B}((End))`);
         lines.push(`${A} --> ${B}`);
@@ -22,8 +17,8 @@ function buildFunctionFragment(modName, modPath, fn, ctx) {
     }
     else {
         for (const n of cfg.nodes) {
-            const label = (0, utils_1.esc)((0, utils_1.wrap)((0, utils_1.trunc)(n.label || n.kind, 120)));
-            const id = (0, utils_1.sid)('N', fragmentId + ':' + n.id);
+            const label = esc(wrap(trunc(n.label || n.kind, 120)));
+            const id = sid('N', fragmentId + ':' + n.id);
             switch (n.kind) {
                 case 'start':
                     lines.push(`${id}((Start))`);
@@ -43,17 +38,17 @@ function buildFunctionFragment(modName, modPath, fn, ctx) {
             }
         }
         for (const e of cfg.edges) {
-            const a = (0, utils_1.sid)('N', fragmentId + ':' + e.from);
-            const b = (0, utils_1.sid)('N', fragmentId + ':' + e.to);
-            const lab = e.label ? ` -- ${(0, utils_1.esc)(e.label)} --> ` : ' --> ';
+            const a = sid('N', fragmentId + ':' + e.from);
+            const b = sid('N', fragmentId + ':' + e.to);
+            const lab = e.label ? ` -- ${esc(e.label)} --> ` : ' --> ';
             lines.push(`${a}${lab}${b}`);
         }
         if (!entryNode && cfg.nodes.length > 0) {
-            entryNode = (0, utils_1.sid)('N', fragmentId + ':' + cfg.nodes[0].id);
+            entryNode = sid('N', fragmentId + ':' + cfg.nodes[0].id);
         }
         if (!exitNode && cfg.nodes.length > 0) {
             const last = cfg.nodes[cfg.nodes.length - 1];
-            exitNode = (0, utils_1.sid)('N', fragmentId + ':' + last.id);
+            exitNode = sid('N', fragmentId + ':' + last.id);
         }
     }
     lines.push('end');
@@ -66,7 +61,7 @@ function buildFunctionFragment(modName, modPath, fn, ctx) {
         anchors: entryNode || exitNode ? { entry: entryNode, exit: exitNode } : undefined,
     };
 }
-function emitFlowchartFragments(ir) {
+export function emitFlowchartFragments(ir) {
     const fragments = [];
     for (const mod of Object.values(ir.modules)) {
         for (const fn of mod.functions) {
@@ -88,7 +83,7 @@ function emitFlowchartFragments(ir) {
     }
     return fragments;
 }
-function buildFlowchartLinks(callGraph, fragments) {
+export function buildFlowchartLinks(callGraph, fragments) {
     if (!callGraph?.edges?.length) {
         return [];
     }
@@ -125,8 +120,8 @@ function buildFlowchartLinks(callGraph, fragments) {
     }
     return links;
 }
-function emitFlowchart(ir) {
+export function emitFlowchart(ir) {
     const fragments = emitFlowchartFragments(ir);
     const links = buildFlowchartLinks(ir.callGraph, fragments);
-    return (0, compose_1.composeMermaid)('flowchart', fragments, { links });
+    return composeMermaid('flowchart', fragments, { links });
 }

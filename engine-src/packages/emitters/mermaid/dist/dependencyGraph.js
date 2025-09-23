@@ -1,24 +1,20 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitDependencyGraphFragments = emitDependencyGraphFragments;
-exports.emitDependencyGraph = emitDependencyGraph;
-const compose_1 = require("./compose");
-const utils_1 = require("./utils");
+import { composeMermaid } from './compose';
+import { esc, wrap, trunc, sid } from './utils';
 function formatLabel(primary, secondary) {
     const parts = [primary];
     if (secondary && secondary !== primary) {
         parts.push(secondary);
     }
     const formatted = parts
-        .map((part) => (0, utils_1.wrap)((0, utils_1.trunc)(part, 96), 32))
+        .map((part) => wrap(trunc(part, 96), 32))
         .join('\n');
-    return (0, utils_1.esc)(formatted);
+    return esc(formatted);
 }
 function collectModuleNodes(ir) {
     const nodes = new Map();
     const modules = Object.values(ir.modules || {}).sort((a, b) => a.name.localeCompare(b.name));
     for (const mod of modules) {
-        const nodeId = (0, utils_1.sid)('dep', mod.name || mod.path);
+        const nodeId = sid('dep', mod.name || mod.path);
         const secondary = mod.path && mod.path !== mod.name ? mod.path : undefined;
         const label = formatLabel(mod.name, secondary);
         nodes.set(mod.name, { nodeId, label, sortKey: `${mod.name}|${nodeId}` });
@@ -36,7 +32,7 @@ function ensureDependencyTarget(modules, externals, target, isExternal) {
     let existing = externals.get(key);
     if (existing)
         return existing;
-    const nodeId = (0, utils_1.sid)('dep_ext', key);
+    const nodeId = sid('dep_ext', key);
     existing = {
         nodeId,
         label: formatLabel(target),
@@ -61,7 +57,7 @@ function buildDependencyEdges(ir, modules) {
         const isExternal = toNode.external ?? edge.isExternal ?? false;
         const arrow = isExternal ? '-.->' : '-->';
         const labelText = edge.symbols && edge.symbols.length
-            ? (0, utils_1.esc)((0, utils_1.wrap)((0, utils_1.trunc)(edge.symbols.join(', '), 96), 32))
+            ? esc(wrap(trunc(edge.symbols.join(', '), 96), 32))
             : undefined;
         const labelChunk = labelText ? `|${labelText}|` : '';
         const key = `${fromNode.nodeId}|${toNode.nodeId}|${labelChunk}|${arrow}`;
@@ -76,7 +72,7 @@ function buildDependencyEdges(ir, modules) {
     records.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     return { edges: records, externals };
 }
-function emitDependencyGraphFragments(ir) {
+export function emitDependencyGraphFragments(ir) {
     const moduleNodes = collectModuleNodes(ir);
     const { edges, externals } = buildDependencyEdges(ir, moduleNodes);
     const internalNodes = Array.from(moduleNodes.values()).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
@@ -109,6 +105,6 @@ function emitDependencyGraphFragments(ir) {
             code: lines.join('\n'),
         }];
 }
-function emitDependencyGraph(ir) {
-    return (0, compose_1.composeMermaid)('dependencyGraph', emitDependencyGraphFragments(ir));
+export function emitDependencyGraph(ir) {
+    return composeMermaid('dependencyGraph', emitDependencyGraphFragments(ir));
 }

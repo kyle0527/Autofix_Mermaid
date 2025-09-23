@@ -1,11 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const node_test_1 = __importDefault(require("node:test"));
-const strict_1 = __importDefault(require("node:assert/strict"));
-const parsers_1 = require("../parsers");
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { clearParserPlugins, registerParserPlugin, loadParserPlugin, listParserPlugins, resolveParserPlugin, ParserPluginNotFoundError, } from '../parsers';
 function createStubPlugin(name, aliases = []) {
     return {
         lang: name,
@@ -14,71 +9,71 @@ function createStubPlugin(name, aliases = []) {
         parseProject: async () => ({ modules: {}, fixNotes: [] }),
     };
 }
-(0, node_test_1.default)('registerParserPlugin stores aliases and resolves via loader', async () => {
-    (0, parsers_1.clearParserPlugins)();
+test('registerParserPlugin stores aliases and resolves via loader', async () => {
+    clearParserPlugins();
     const plugin = createStubPlugin('demo', ['demo-alt']);
-    (0, parsers_1.registerParserPlugin)(plugin);
-    const loaded = await (0, parsers_1.loadParserPlugin)('demo-alt');
-    strict_1.default.strictEqual(loaded, plugin);
-    const plugins = (0, parsers_1.listParserPlugins)();
-    strict_1.default.strictEqual(plugins.length, 1);
-    strict_1.default.strictEqual(plugins[0], plugin);
+    registerParserPlugin(plugin);
+    const loaded = await loadParserPlugin('demo-alt');
+    assert.strictEqual(loaded, plugin);
+    const plugins = listParserPlugins();
+    assert.strictEqual(plugins.length, 1);
+    assert.strictEqual(plugins[0], plugin);
 });
-(0, node_test_1.default)('loadParserPlugin throws ParserPluginNotFoundError for unknown languages with fallback hint', async () => {
-    (0, parsers_1.clearParserPlugins)();
-    await strict_1.default.rejects((0, parsers_1.loadParserPlugin)('unknown-lang'), (err) => {
-        strict_1.default.ok(err instanceof parsers_1.ParserPluginNotFoundError);
-        strict_1.default.match(err.message, /Install the appropriate/);
-        strict_1.default.ok(Array.isArray(err.attempted));
-        strict_1.default.ok(err.attempted.length > 0);
+test('loadParserPlugin throws ParserPluginNotFoundError for unknown languages with fallback hint', async () => {
+    clearParserPlugins();
+    await assert.rejects(loadParserPlugin('unknown-lang'), (err) => {
+        assert.ok(err instanceof ParserPluginNotFoundError);
+        assert.match(err.message, /Install the appropriate/);
+        assert.ok(Array.isArray(err.attempted));
+        assert.ok(err.attempted.length > 0);
         return true;
     });
 });
-(0, node_test_1.default)('resolveParserPlugin auto-detects using heuristics when lang is omitted', async () => {
-    (0, parsers_1.clearParserPlugins)();
+test('resolveParserPlugin auto-detects using heuristics when lang is omitted', async () => {
+    clearParserPlugins();
     const plugin = createStubPlugin('python');
-    (0, parsers_1.registerParserPlugin)(plugin);
-    const { plugin: resolved, detection } = await (0, parsers_1.resolveParserPlugin)({
+    registerParserPlugin(plugin);
+    const { plugin: resolved, detection } = await resolveParserPlugin({
         files: { 'src/app.py': 'def main():\n  return 0\n' },
     });
-    strict_1.default.strictEqual(resolved, plugin);
-    strict_1.default.ok(detection);
-    strict_1.default.strictEqual(detection?.lang, 'python');
-    strict_1.default.strictEqual(detection?.confidence, 'high');
-    strict_1.default.ok(detection?.matchedFiles?.includes('src/app.py'));
+    assert.strictEqual(resolved, plugin);
+    assert.ok(detection);
+    assert.strictEqual(detection?.lang, 'python');
+    assert.strictEqual(detection?.confidence, 'high');
+    assert.ok(detection?.matchedFiles?.includes('src/app.py'));
 });
-(0, node_test_1.default)('resolveParserPlugin uses candidate languages when heuristics are unavailable', async () => {
-    (0, parsers_1.clearParserPlugins)();
+test('resolveParserPlugin uses candidate languages when heuristics are unavailable', async () => {
+    clearParserPlugins();
     const plugin = createStubPlugin('demo');
     plugin.detect = () => ({ lang: 'demo', confidence: 'medium', reason: 'mock-detect' });
-    (0, parsers_1.registerParserPlugin)(plugin);
-    const { plugin: resolved, detection } = await (0, parsers_1.resolveParserPlugin)({
+    registerParserPlugin(plugin);
+    const { plugin: resolved, detection } = await resolveParserPlugin({
         lang: 'auto',
         files: { 'README.md': '# demo project' },
         candidates: ['demo'],
     });
-    strict_1.default.strictEqual(resolved, plugin);
-    strict_1.default.ok(detection);
-    strict_1.default.strictEqual(detection?.lang, 'demo');
-    strict_1.default.strictEqual(detection?.confidence, 'medium');
+    assert.strictEqual(resolved, plugin);
+    assert.ok(detection);
+    assert.strictEqual(detection?.lang, 'demo');
+    assert.strictEqual(detection?.confidence, 'medium');
 });
-(0, node_test_1.default)('resolveParserPlugin requires files when language is auto', async () => {
-    (0, parsers_1.clearParserPlugins)();
-    await strict_1.default.rejects((0, parsers_1.resolveParserPlugin)({ lang: 'auto' }), /requires files/);
+test('resolveParserPlugin requires files when language is auto', async () => {
+    clearParserPlugins();
+    await assert.rejects(resolveParserPlugin({ lang: 'auto' }), /requires files/);
 });
-(0, node_test_1.default)('resolveParserPlugin falls back to generic parser when no dedicated plugin exists', async () => {
-    (0, parsers_1.clearParserPlugins)();
+test('resolveParserPlugin falls back to generic parser when no dedicated plugin exists', async () => {
+    clearParserPlugins();
     const files = {
         'src/Main.java': 'public class Main { public static void main(String[] args) {} }',
     };
-    const { plugin, detection } = await (0, parsers_1.resolveParserPlugin)({ files });
-    strict_1.default.strictEqual(plugin.lang, 'java');
-    strict_1.default.ok(plugin.capabilities?.fallback);
-    strict_1.default.ok(detection);
-    strict_1.default.strictEqual(detection?.lang, 'java');
-    strict_1.default.strictEqual(detection?.confidence, 'medium');
-    strict_1.default.ok(detection?.reason?.includes('Main.java'));
+    const { plugin, detection } = await resolveParserPlugin({ files });
+    assert.strictEqual(plugin.lang, 'java');
+    assert.ok(plugin.capabilities?.fallback);
+    assert.ok(detection);
+    assert.strictEqual(detection?.lang, 'java');
+    assert.strictEqual(detection?.confidence, 'medium');
+    assert.ok(detection?.reason?.includes('Main.java'));
     const project = await plugin.parseProject(files);
-    strict_1.default.strictEqual(project.parserMeta?.implementation, 'fallback');
-    strict_1.default.ok(project.fixNotes?.some((note) => note.includes('fallback parser')));
+    assert.strictEqual(project.parserMeta?.implementation, 'fallback');
+    assert.ok(project.fixNotes?.some((note) => note.includes('fallback parser')));
 });

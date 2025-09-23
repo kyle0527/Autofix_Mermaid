@@ -1,22 +1,17 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const node_test_1 = __importDefault(require("node:test"));
-const strict_1 = __importDefault(require("node:assert/strict"));
-const index_1 = require("../index");
-(0, node_test_1.default)('detectPythonProject identifies python files with high confidence', () => {
-    const detection = index_1.pythonParserPlugin.detect?.({
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { parsePythonProject, pythonParserPlugin } from '../index';
+test('detectPythonProject identifies python files with high confidence', () => {
+    const detection = pythonParserPlugin.detect?.({
         'src/app.py': 'print("hi")',
         'README.md': '# docs',
     });
-    strict_1.default.ok(detection);
-    strict_1.default.strictEqual(detection?.lang, 'python');
-    strict_1.default.strictEqual(detection?.confidence, 'high');
-    strict_1.default.ok(detection?.matchedFiles?.includes('src/app.py'));
+    assert.ok(detection);
+    assert.strictEqual(detection?.lang, 'python');
+    assert.strictEqual(detection?.confidence, 'high');
+    assert.ok(detection?.matchedFiles?.includes('src/app.py'));
 });
-(0, node_test_1.default)('parsePythonProject builds modules, classes, functions and call edges', async () => {
+test('parsePythonProject builds modules, classes, functions and call edges', async () => {
     const files = {
         'pkg/app.py': `
 import os
@@ -31,24 +26,24 @@ def helper():
     return Greeter()
 `,
     };
-    const ir = await (0, index_1.parsePythonProject)(files);
+    const ir = await parsePythonProject(files);
     const mod = ir.modules['pkg.app'];
-    strict_1.default.ok(mod, 'module not found');
-    strict_1.default.ok(mod.imports.some((imp) => imp.includes('os')));
-    strict_1.default.ok(mod.imports.some((imp) => imp.includes('helper')));
-    strict_1.default.ok(mod.classes.some((cls) => cls.name === 'Greeter'));
+    assert.ok(mod, 'module not found');
+    assert.ok(mod.imports.some((imp) => imp.includes('os')));
+    assert.ok(mod.imports.some((imp) => imp.includes('helper')));
+    assert.ok(mod.classes.some((cls) => cls.name === 'Greeter'));
     const greet = mod.classes[0].methods.find((m) => m.name === 'greet');
-    strict_1.default.ok(greet, 'greet method not found');
-    strict_1.default.ok(greet.calls.includes('helper'));
-    strict_1.default.ok(mod.functions.some((fn) => fn.name === 'helper'));
+    assert.ok(greet, 'greet method not found');
+    assert.ok(greet.calls.includes('helper'));
+    assert.ok(mod.functions.some((fn) => fn.name === 'helper'));
 });
-(0, node_test_1.default)('parsePythonProject throws on syntax errors', async () => {
-    await strict_1.default.rejects(() => (0, index_1.parsePythonProject)({ 'broken.py': 'def nope(:\n    pass' }), /syntax error/i);
+test('parsePythonProject throws on syntax errors', async () => {
+    await assert.rejects(() => parsePythonProject({ 'broken.py': 'def nope(:\n    pass' }), /syntax error/i);
 });
-(0, node_test_1.default)('parsePythonProject throws when no python files are present', async () => {
-    await strict_1.default.rejects(() => (0, index_1.parsePythonProject)({ 'README.md': '# nothing here' }), /No Python source files/i);
+test('parsePythonProject throws when no python files are present', async () => {
+    await assert.rejects(() => parsePythonProject({ 'README.md': '# nothing here' }), /No Python source files/i);
 });
-(0, node_test_1.default)('parsePythonProject uses web-tree-sitter when configuration is provided', async () => {
+test('parsePythonProject uses web-tree-sitter when configuration is provided', async () => {
     const calls = [];
     const stubLanguage = { id: 'python' };
     const stubModule = {
@@ -90,10 +85,10 @@ def helper():
             },
         },
     };
-    const ir = await (0, index_1.parsePythonProject)(files, options);
-    strict_1.default.ok(ir.modules['pkg.app']);
-    strict_1.default.strictEqual(ir.parserMeta?.implementation, 'web-tree-sitter');
-    strict_1.default.strictEqual(ir.parserMeta?.runtime, 'browser');
-    strict_1.default.ok(calls.includes('init'));
-    strict_1.default.ok(calls.includes('load:http://example.com/tree-sitter-python.wasm'));
+    const ir = await parsePythonProject(files, options);
+    assert.ok(ir.modules['pkg.app']);
+    assert.strictEqual(ir.parserMeta?.implementation, 'web-tree-sitter');
+    assert.strictEqual(ir.parserMeta?.runtime, 'browser');
+    assert.ok(calls.includes('init'));
+    assert.ok(calls.includes('load:http://example.com/tree-sitter-python.wasm'));
 });

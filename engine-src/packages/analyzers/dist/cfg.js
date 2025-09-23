@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildCFG = buildCFG;
 let idc = 0;
 function nid(prefix) { idc += 1; return `${prefix}_${idc}`; }
-function buildCFG(fn) {
+export function buildCFG(fn) {
     idc = 0;
     const nodes = [];
     const edges = [];

@@ -1,17 +1,5 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ParserPluginNotFoundError = void 0;
-exports.registerParserPlugin = registerParserPlugin;
-exports.clearParserPlugins = clearParserPlugins;
-exports.listParserPlugins = listParserPlugins;
-exports.getRegisteredParserPlugin = getRegisteredParserPlugin;
-exports.loadParserPlugin = loadParserPlugin;
-exports.resolveParserPlugin = resolveParserPlugin;
-const node_path_1 = __importDefault(require("node:path"));
-const fallback_parser_1 = require("./fallback-parser");
+import path from 'node:path';
+import { createFallbackParserPlugin } from './fallback-parser';
 const registry = new Map();
 function normalizeLang(lang) {
     return lang.trim().toLowerCase();
@@ -57,7 +45,7 @@ const EXTENSION_HINTS = {
 function collectHeuristicCandidates(files) {
     const byLang = new Map();
     for (const filePath of Object.keys(files)) {
-        const ext = node_path_1.default.extname(filePath).toLowerCase();
+        const ext = path.extname(filePath).toLowerCase();
         if (!ext)
             continue;
         const hint = EXTENSION_HINTS[ext];
@@ -123,13 +111,13 @@ function candidateModuleIds(lang) {
     ids.add(`@diagrammender/parser-${normalized}`);
     ids.add(`@diagrammender/parsers/${normalized}`);
     ids.add(`diagrammender-parser-${normalized}`);
-    const localRoot = node_path_1.default.join(__dirname, '..', 'parsers', normalized);
+    const localRoot = path.join(__dirname, '..', 'parsers', normalized);
     ids.add(localRoot);
-    ids.add(node_path_1.default.join(localRoot, 'dist'));
-    ids.add(node_path_1.default.join(localRoot, 'dist', 'src'));
+    ids.add(path.join(localRoot, 'dist'));
+    ids.add(path.join(localRoot, 'dist', 'src'));
     return Array.from(ids);
 }
-class ParserPluginNotFoundError extends Error {
+export class ParserPluginNotFoundError extends Error {
     constructor(lang, attempted) {
         const fallback = attempted.length
             ? `Tried dynamic module ids: ${attempted.join(', ')}`
@@ -142,7 +130,6 @@ class ParserPluginNotFoundError extends Error {
         this.attempted = attempted;
     }
 }
-exports.ParserPluginNotFoundError = ParserPluginNotFoundError;
 function tryRequire(moduleId) {
     try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -159,7 +146,7 @@ function tryRequire(moduleId) {
         throw err;
     }
 }
-function registerParserPlugin(plugin) {
+export function registerParserPlugin(plugin) {
     const primary = normalizeLang(plugin.lang);
     registry.set(primary, plugin);
     if (plugin.aliases) {
@@ -169,16 +156,16 @@ function registerParserPlugin(plugin) {
     }
     return plugin;
 }
-function clearParserPlugins() {
+export function clearParserPlugins() {
     registry.clear();
 }
-function listParserPlugins() {
+export function listParserPlugins() {
     return Array.from(new Set(registry.values()));
 }
-function getRegisteredParserPlugin(lang) {
+export function getRegisteredParserPlugin(lang) {
     return registry.get(normalizeLang(lang));
 }
-async function loadParserPlugin(lang) {
+export async function loadParserPlugin(lang) {
     const normalized = normalizeLang(lang);
     const existing = registry.get(normalized);
     if (existing)
@@ -195,7 +182,7 @@ async function loadParserPlugin(lang) {
     }
     throw new ParserPluginNotFoundError(lang, attempted);
 }
-async function resolveParserPlugin(options) {
+export async function resolveParserPlugin(options) {
     const { lang, files, candidates = [], detect = true, allowHeuristics = true, } = options;
     if (lang && lang !== 'auto') {
         const normalizedLang = normalizeLang(lang);
@@ -209,7 +196,7 @@ async function resolveParserPlugin(options) {
         }
         catch (err) {
             if (err instanceof ParserPluginNotFoundError) {
-                const fallback = (0, fallback_parser_1.createFallbackParserPlugin)(normalizedLang, {
+                const fallback = createFallbackParserPlugin(normalizedLang, {
                     extensions: heuristics?.get(normalizedLang)?.extensions,
                 });
                 plugin = registerParserPlugin(fallback);
@@ -290,7 +277,7 @@ async function resolveParserPlugin(options) {
         if (missing.length) {
             const langId = normalizeLang(missing[0]);
             const heuristic = heuristics.get(langId);
-            const fallback = registerParserPlugin((0, fallback_parser_1.createFallbackParserPlugin)(langId, {
+            const fallback = registerParserPlugin(createFallbackParserPlugin(langId, {
                 extensions: heuristic?.extensions,
             }));
             return { plugin: fallback, detection: heuristic?.detection };

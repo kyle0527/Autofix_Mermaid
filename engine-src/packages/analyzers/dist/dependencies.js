@@ -1,10 +1,4 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildDependencyGraph = buildDependencyGraph;
-const node_path_1 = __importDefault(require("node:path"));
+import path from 'node:path';
 function normalizePath(filePath) {
     return filePath.replace(/\\/g, '/');
 }
@@ -226,8 +220,8 @@ function resolveJSImportTarget(mod, spec, pathToModule, moduleNames) {
     }
     if (normalized.startsWith('.')) {
         const fromPath = normalizePath(mod.path);
-        const baseDir = node_path_1.default.posix.dirname(fromPath);
-        const joined = node_path_1.default.posix.normalize(node_path_1.default.posix.join(baseDir, normalized));
+        const baseDir = path.posix.dirname(fromPath);
+        const joined = path.posix.normalize(path.posix.join(baseDir, normalized));
         const joinedNoExt = stripExtension(joined);
         const match = pathToModule.get(joinedNoExt)
             ?? pathToModule.get(`${joinedNoExt}/index`);
@@ -240,7 +234,7 @@ function resolveJSImportTarget(mod, spec, pathToModule, moduleNames) {
         }
     }
     else if (normalized.startsWith('/')) {
-        const absolute = stripExtension(node_path_1.default.posix.normalize(normalized));
+        const absolute = stripExtension(path.posix.normalize(normalized));
         const match = pathToModule.get(absolute)
             ?? pathToModule.get(`${absolute}/index`);
         if (match) {
@@ -274,7 +268,7 @@ function normalizeGenericDependency(mod, raw, moduleNames, pathToModule) {
     const resolution = resolveJSImportTarget(mod, raw, pathToModule, moduleNames);
     return { to: resolution.target, isExternal: resolution.isExternal };
 }
-function buildDependencyGraph(project) {
+export function buildDependencyGraph(project) {
     const modules = Object.values(project.modules || {});
     const moduleNames = new Set();
     const pathToModule = new Map();

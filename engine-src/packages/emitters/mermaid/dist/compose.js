@@ -1,6 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.composeMermaid = composeMermaid;
 const DIAGRAM_HEADERS = {
     flowchart: 'flowchart TD',
     classDiagram: 'classDiagram',
@@ -95,7 +92,7 @@ function buildLinkLines(diagram, fragments, links) {
     }
     return lines;
 }
-function composeMermaid(diagram, fragments, options) {
+export function composeMermaid(diagram, fragments, options) {
     const header = DIAGRAM_HEADERS[diagram] ?? 'flowchart TD';
     const include = options?.include?.length ? new Set(options.include) : undefined;
     const exclude = options?.exclude?.length ? new Set(options.exclude) : undefined;

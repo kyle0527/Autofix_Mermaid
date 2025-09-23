@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.UniqueIds = void 0;
-exports.UniqueIds = {
+export const UniqueIds = {
     name: 'UniqueIds', priority: 50,
     run(code, ctx) {
         const lines = code.split(/\r?\n/);

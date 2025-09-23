@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EnsureHeader = void 0;
-exports.EnsureHeader = {
+export const EnsureHeader = {
     name: 'EnsureHeader', priority: 10,
     run(code, ctx) {
         const trimmed = code.trim();

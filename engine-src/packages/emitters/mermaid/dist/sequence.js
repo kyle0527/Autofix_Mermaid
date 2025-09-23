@@ -1,12 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitSequenceFragments = emitSequenceFragments;
-exports.emitSequenceDiagram = emitSequenceDiagram;
-const compose_1 = require("./compose");
+import { composeMermaid } from './compose';
 function safeId(label) {
     return label.split('.').join('_');
 }
-function emitSequenceFragments(ir) {
+export function emitSequenceFragments(ir) {
     const participantLines = [];
     const seenParticipants = new Set();
     for (const mod of Object.values(ir.modules)) {
@@ -86,6 +82,6 @@ function emitSequenceFragments(ir) {
     }
     return fragments;
 }
-function emitSequenceDiagram(ir) {
-    return (0, compose_1.composeMermaid)('sequenceDiagram', emitSequenceFragments(ir));
+export function emitSequenceDiagram(ir) {
+    return composeMermaid('sequenceDiagram', emitSequenceFragments(ir));
 }
