@@ -10,7 +10,9 @@ export default [
       'docs/legacy/**',
       'DiagramMender_plus/**',
       'js/engine.browser.js',
-      'js/ai/**'
+      'js/ai/**',
+      'test-temp-multi/**',
+      'test-temp-quick/**'
     ]
   },
   {

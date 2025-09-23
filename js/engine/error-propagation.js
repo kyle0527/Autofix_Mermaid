@@ -238,6 +238,7 @@ export class ErrorPropagationManager {
     this.errorHistory = [];              // 錯誤歷史記錄
     this.handlers = new Map();           // 錯誤處理器
     this.interceptors = [];              // 錯誤攔截器
+    this.listeners = [];                 // 事件監聽器
     this.config = {
       maxHistorySize: 1000,              // 最大歷史記錄數
       enableAutoRecovery: true,          // 啟用自動恢復
@@ -297,6 +298,9 @@ export class ErrorPropagationManager {
     // 觸發處理器
     this._triggerHandlers(context);
     
+    // 觸發事件監聽器
+    this._emit('error', context);
+    
     return context;
   }
 
@@ -344,7 +348,31 @@ export class ErrorPropagationManager {
   }
 
   /**
-   * 🔍 查找錯誤上下文
+   * � 添加事件監聽器
+   */
+  addListener(eventType, listener) {
+    if (typeof listener === 'function') {
+      this.listeners.push({ eventType, listener });
+    }
+  }
+
+  /**
+   * 📢 觸發事件
+   */
+  _emit(eventType, data) {
+    this.listeners.forEach(({ eventType: type, listener }) => {
+      if (type === eventType || type === '*') {
+        try {
+          listener(data);
+        } catch (error) {
+          console.warn('Event listener error:', error);
+        }
+      }
+    });
+  }
+
+  /**
+   * �🔍 查找錯誤上下文
    */
   findContext(errorId) {
     return this.activeContexts.get(errorId) || 

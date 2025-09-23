@@ -7,11 +7,8 @@
 
 import { 
   ErrorContext, 
-  ErrorPropagationManager,
   globalErrorManager,
-  createErrorContext,
-  propagateError,
-  chainError 
+  createErrorContext
 } from './error-propagation.js';
 
 /**
@@ -134,7 +131,7 @@ export class EnhancedErrorPolicy {
   /**
    * 🔧 建立錯誤鏈
    */
-  createErrorChain(newError, parentError, context = {}) {
+  createErrorChain(newError, parentError) {
     return this.manager.chainError(newError, parentError);
   }
 
