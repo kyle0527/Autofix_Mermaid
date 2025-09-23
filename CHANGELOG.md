@@ -44,6 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 影響範圍：JavaScript、TypeScript、Python 解析器配置
   - 確保與 TypeScript 5.x 版本的完全相容性
 
+- **Export UI 系統重構** - 完全重寫損壞的導出模組，提供雙API架構
+  - 解決merge衝突造成的嚴重檔案損壞問題（`autofix/ui/exporter.py`）
+  - 新增現代化 `Exporter`, `ExportConfig`, `DiagramBundle` 類別
+  - 支援多格式同步導出：Mermaid, HTML, PNG, JSON, CSV
+  - 實作原子檔案操作與SHA256完整性校驗
+  - 保持100%向後相容性，現有CLI和API調用無需修改
+  - 移除對第三方套件的依賴，純標準庫實作
+  - 新增自動MANIFEST追蹤與錯誤容忍機制
+
 ## [3.7] - 2025-09-16
 
 ### Added

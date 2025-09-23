@@ -5,3 +5,7 @@ node_modules/
 npm-debug.log
 coverage/
 test-output/
+__pycache__/
+*.pyc
+export_out/
+test_out/
