@@ -1,0 +1,70 @@
+flowchart TD
+    %% AutoFix Mermaid 架構問題分析圖
+    A[輸入程式碼] --> B{語言偵測}
+    
+    subgraph "🔍 程式分析層 - 已知問題"
+        B --> C[Tree-sitter Parser]
+        B --> D[Regex Fallback Parser]
+        C --> E[AST 解析]
+        D --> F[正則表達式解析]
+        E --> G[IR 統一表示]
+        F --> G
+        
+        %% 問題標註
+        C -.->|問題1: WASM載入失敗| H1[Tree-sitter WASM 載入不穩定]
+        E -.->|問題2: 語法覆蓋不完整| H2[部分語法結構遺漏]
+        F -.->|問題3: 精確度不足| H3[Fallback 解析精度低]
+        G -.->|問題4: IR結構不完整| H4[關係分析深度不足]
+    end
+    
+    subgraph "🔄 語法轉換層 - 已知問題"
+        G --> I[圖表類型選擇]
+        I --> J[Class Diagram Generator]
+        I --> K[Flowchart Generator] 
+        I --> L[Sequence Diagram Generator]
+        
+        %% 問題標註
+        J -.->|問題5: 類別關係不完整| I1[繼承/實作關係遺漏]
+        K -.->|問題6: 控制流分析缺失| I2[CFG建構不完整]
+        L -.->|問題7: 呼叫序列推斷弱| I3[方法呼叫鏈不準確]
+        I -.->|問題8: 跨模組分析不足| I4[模組間依賴關係簡化]
+    end
+    
+    subgraph "🛠️ 錯誤修正層 - 已知問題"
+        J --> M[AutoFix Engine]
+        K --> M
+        L --> M
+        M --> N[語法修復規則]
+        M --> O[格式正規化]
+        M --> P[節點ID修復]
+        
+        %% 問題標註
+        N -.->|問題9: 修復規則有限| M1[只有11種基礎規則]
+        O -.->|問題10: 格式化不智能| M2[缺乏上下文感知]
+        P -.->|問題11: 關鍵字衝突處理| M3[保留字替換策略單一]
+        M -.->|問題12: 錯誤恢復機制弱| M4[修復失敗後無備案]
+    end
+    
+    subgraph "🏗️ 模組組合層 - 已知問題"
+        M --> Q[Pipeline Orchestrator]
+        Q --> R[Stage Management]
+        Q --> S[Error Handling]
+        Q --> T[Result Aggregation]
+        
+        %% 問題標註
+        R -.->|問題13: 階段間耦合| Q1[管線階段依賴性強]
+        S -.->|問題14: 錯誤隔離不足| Q2[單點故障影響全域]
+        T -.->|問題15: 結果合併邏輯| Q3[多圖表結果整合複雜]
+        Q -.->|問題16: 並行處理缺失| Q4[無法處理大型專案]
+    end
+    
+    T --> U[最終輸出]
+    
+    %% 樣式設定
+    classDef problemNode fill:#ffcccc,stroke:#ff0000,stroke-width:2px
+    classDef processNode fill:#cce5ff,stroke:#0066cc,stroke-width:2px
+    classDef outputNode fill:#ccffcc,stroke:#009900,stroke-width:2px
+    
+    class H1,H2,H3,H4,I1,I2,I3,I4,M1,M2,M3,M4,Q1,Q2,Q3,Q4 problemNode
+    class C,D,E,F,G,I,J,K,L,M,N,O,P,Q,R,S,T processNode
+    class A,B,U outputNode

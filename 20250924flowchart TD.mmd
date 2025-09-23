@@ -1,0 +1,24 @@
+flowchart TD
+    A["🚨 問題 1: WASM 載入穩定"] --> B["🚨 問題 2: IR 結構重構"]
+    A --> C["🚨 問題 3: 錯誤隔離"]
+    
+    B --> D["⚠️ 問題 4: 多語言支援"]
+    B --> E["⚠️ 問題 5: 圖表品質"]
+    D --> F["⚠️ 問題 6: 跨模組分析"]
+    
+    E --> G["🛠️ 問題 7: 自動修復"]
+    F --> H["🛠️ 問題 8: 架構解耦"]
+    
+    E --> I["💡 問題 9: 視覺化品質"]
+    C --> J["💡 問題 10: 並行處理"]
+    A --> K["💡 問題 11: Fallback 品質"]
+    
+    classDef urgent fill:#ffcccc,stroke:#ff0000,stroke-width:3px
+    classDef high fill:#ffe6cc,stroke:#ff9900,stroke-width:2px
+    classDef medium fill:#fff2cc,stroke:#ffcc00,stroke-width:2px
+    classDef low fill:#e6ffcc,stroke:#99cc00,stroke-width:1px
+    
+    class A,B,C urgent
+    class D,E,F high
+    class G,H medium
+    class I,J,K low

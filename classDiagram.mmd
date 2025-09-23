@@ -1,0 +1,305 @@
+classDiagram
+    %% AutoFix Mermaid 完整程式架構圖
+    
+    %% ============= 使用者介面層 =============
+    class WebUI {
+        -HTMLElement container
+        -ConfigPanel configPanel
+        -ExportControls exportControls
+        +initializeUI()
+        +handleFileUpload(files)
+        +renderMermaidDiagram(code)
+        +showResults(result)
+    }
+    
+    class ConfigPanel {
+        -RulePack[] availableRulePacks
+        -PromptPack[] availablePromptPacks
+        +loadManifest()
+        +selectRulePack(version)
+        +selectPromptPack(version)
+        +getConfiguration()
+    }
+    
+    class ExportControls {
+        -string[] supportedFormats
+        +exportAsSVG(content)
+        +exportAsPNG(content)
+        +exportAsMMD(content)
+        +exportLogs(logs)
+        +batchExport(results[])
+    }
+    
+    %% ============= 工作管線層 =============
+    class WorkerManager {
+        -Worker[] workers
+        -TaskQueue taskQueue
+        +createWorker(type)
+        +executeTask(task)
+        +getResult(taskId)
+        +terminateWorker(workerId)
+    }
+    
+    class PipelineOrchestrator {
+        -PipelineStage[] stages
+        -ErrorHandler errorHandler
+        +runPipeline(input, options)
+        +executeStage(stage, data)
+        +handleStageError(error, stage)
+        +aggregateResults(results[])
+    }
+    
+    class TaskQueue {
+        -Task[] pendingTasks
+        -Task[] completedTasks
+        +enqueue(task)
+        +dequeue()
+        +getStatus(taskId)
+        +cancel(taskId)
+    }
+    
+    %% ============= 程式分析層 =============
+    class LanguageDetector {
+        -DetectionRule[] rules
+        +detectLanguage(files)
+        +getConfidence(language, content)
+        +getSupportedLanguages()
+    }
+    
+    class TreeSitterLoader {
+        -Map parsers
+        -WASMModule[] loadedModules
+        +initialize()
+        +loadLanguage(language)
+        +createParser(language)
+        +isSupported(language)
+    }
+    
+    class JavaScriptAnalyzer {
+        -TreeSitterParser parser
+        -RegexFallbackParser fallbackParser
+        +analyzeProject(files, options)
+        +parseFile(filePath, content)
+        +extractEntities(ast)
+        +analyzeRelations(ir)
+    }
+    
+    class PythonAnalyzer {
+        -ASTParser parser
+        +analyzeProject(files, options)
+        +parseModule(content)
+        +extractClasses(ast)
+        +extractFunctions(ast)
+    }
+    
+    %% ============= 中間表示層 =============
+    class IRManager {
+        -IRProject currentProject
+        +createIR(meta)
+        +addEntity(entity)
+        +addRelation(relation)
+        +findEntity(id)
+        +validateIR(ir)
+    }
+    
+    class IRProject {
+        -IRMeta meta
+        -Entity[] entities
+        -Relation[] relations
+        -CallGraph callGraph
+        +getModules()
+        +getClasses()
+        +getFunctions()
+        +getStatistics()
+    }
+    
+    class Entity {
+        -string id
+        -EntityKind kind
+        -string name
+        -Location location
+        -Map data
+        +getId()
+        +getKind()
+        +getName()
+        +getData(key)
+    }
+    
+    class Relation {
+        -string from
+        -string to
+        -RelationType type
+        -Map data
+        +getFrom()
+        +getTo()
+        +getType()
+        +getData(key)
+    }
+    
+    %% ============= 圖表生成層 =============
+    class DiagramEmitter {
+        -EmitterStrategy[] strategies
+        +generateDiagram(ir, type, options)
+        +selectStrategy(type)
+        +applyLayout(diagram)
+    }
+    
+    class ClassDiagramEmitter {
+        +emitClassDiagram(ir, options)
+        +generateClass(entity)
+        +generateRelation(relation)
+        +applyClassLayout(diagram)
+    }
+    
+    class FlowchartEmitter {
+        +emitFlowchart(ir, options)
+        +generateNode(entity)
+        +generateEdge(relation)
+        +buildControlFlow(functions)
+    }
+    
+    class SequenceDiagramEmitter {
+        +emitSequenceDiagram(ir, options)
+        +generateParticipant(entity)
+        +generateMessage(call)
+        +orderInteractions(calls)
+    }
+    
+    %% ============= 錯誤修正層 =============
+    class AutoFixEngine {
+        -FixRule[] rules
+        -FixContext context
+        +applyFixes(code, options)
+        +validateSyntax(code)
+        +executeRule(rule, code)
+        +mergeResults(results[])
+    }
+    
+    class FixRule {
+        -string name
+        -int priority
+        -string[] applicableTypes
+        +applies(code, context)
+        +execute(code, context)
+        +getDescription()
+    }
+    
+    class SyntaxValidator {
+        -ValidationRule[] rules
+        +validateMermaid(code)
+        +checkNodeIds(code)
+        +checkSyntax(code)
+        +suggestFixes(errors[])
+    }
+    
+    %% ============= 規則管理層 =============
+    class RulePackManager {
+        -RulePack[] rulePacks
+        -Manifest manifest
+        +loadManifest()
+        +getRulePack(version)
+        +validateRulePack(pack)
+        +getAvailableVersions()
+    }
+    
+    class RulePack {
+        -string version
+        -RuleMetadata metadata
+        -PreprocessRule[] preprocessRules
+        -PostprocessRule[] postprocessRules
+        +getVersion()
+        +getRules()
+        +getMetadata()
+    }
+    
+    class PromptPackManager {
+        -PromptPack[] promptPacks
+        +getPromptPack(version)
+        +validatePromptPack(pack)
+        +executePrompt(prompt, context)
+    }
+    
+    %% ============= 錯誤處理層 =============
+    class ErrorHandler {
+        -ErrorRecoveryStrategy[] strategies
+        +handleError(error, context)
+        +recoverFromError(error)
+        +logError(error)
+        +getRecoveryStrategy(errorType)
+    }
+    
+    class ErrorRecoveryStrategy {
+        -string errorType
+        -RecoveryAction[] actions
+        +canRecover(error)
+        +recover(error, context)
+        +getActions()
+    }
+    
+    %% ============= 快取和效能層 =============
+    class CacheManager {
+        -Map cache
+        -CachePolicy policy
+        +get(key)
+        +set(key, value)
+        +invalidate(key)
+        +cleanup()
+    }
+    
+    class PerformanceMonitor {
+        -Map metrics
+        +startTiming(operation)
+        +endTiming(operation)
+        +recordMetric(name, value)
+        +getReport()
+    }
+    
+    %% ============= 關係定義 =============
+    
+    %% UI 層關係
+    WebUI --> ConfigPanel : manages
+    WebUI --> ExportControls : uses
+    WebUI --> WorkerManager : delegates to
+    
+    %% 管線層關係
+    WorkerManager --> PipelineOrchestrator : creates
+    WorkerManager --> TaskQueue : manages
+    PipelineOrchestrator --> ErrorHandler : uses
+    
+    %% 分析層關係
+    PipelineOrchestrator --> LanguageDetector : uses
+    PipelineOrchestrator --> JavaScriptAnalyzer : delegates to
+    PipelineOrchestrator --> PythonAnalyzer : delegates to
+    JavaScriptAnalyzer --> TreeSitterLoader : uses
+    JavaScriptAnalyzer --> IRManager : produces
+    PythonAnalyzer --> IRManager : produces
+    
+    %% IR 層關係
+    IRManager --> IRProject : creates
+    IRProject *-- Entity : contains
+    IRProject *-- Relation : contains
+    
+    %% 生成層關係
+    PipelineOrchestrator --> DiagramEmitter : uses
+    DiagramEmitter --> ClassDiagramEmitter : delegates to
+    DiagramEmitter --> FlowchartEmitter : delegates to
+    DiagramEmitter --> SequenceDiagramEmitter : delegates to
+    
+    %% 修正層關係
+    PipelineOrchestrator --> AutoFixEngine : uses
+    AutoFixEngine --> FixRule : executes
+    AutoFixEngine --> SyntaxValidator : uses
+    
+    %% 規則層關係
+    ConfigPanel --> RulePackManager : uses
+    ConfigPanel --> PromptPackManager : uses
+    RulePackManager --> RulePack : manages
+    AutoFixEngine --> RulePackManager : uses
+    
+    %% 錯誤處理關係
+    PipelineOrchestrator --> ErrorHandler : uses
+    ErrorHandler --> ErrorRecoveryStrategy : uses
+    
+    %% 效能監控關係
+    PipelineOrchestrator --> PerformanceMonitor : reports to
+    PipelineOrchestrator --> CacheManager : uses
