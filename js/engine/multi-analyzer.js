@@ -11,6 +11,14 @@ import { analyzePythonProject } from './python-analyzer.js';
  * 多語言專案分析
  */
 async function analyzeMultiLanguageProject(projectPath, options = {}) {
+  const combinedMetadata = {
+    name: 'multi-language-analysis',
+    timestamp: new Date().toISOString(),
+    analyzer: 'multi-language',
+    version: '1.0.0',
+    languages: []
+  };
+
   const results = {
     javascript: null,
     python: null,
@@ -18,13 +26,7 @@ async function analyzeMultiLanguageProject(projectPath, options = {}) {
       ir: {
         entities: [],
         relations: [],
-        metadata: {
-          name: 'multi-language-analysis',
-          timestamp: new Date().toISOString(),
-          analyzer: 'multi-language',
-          version: '1.0.0',
-          languages: []
-        }
+        metadata: combinedMetadata
       },
       stats: {
         totalFiles: 0,
@@ -32,7 +34,8 @@ async function analyzeMultiLanguageProject(projectPath, options = {}) {
         totalRelations: 0,
         totalErrors: 0,
         languages: {}
-      }
+      },
+      metadata: combinedMetadata
     }
   };
 

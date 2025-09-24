@@ -3,6 +3,8 @@
 // js/engine/processor.js - 主要處理引擎
 // 整合分析器、生成器和修復器，提供完整的程式碼到 Mermaid 轉換流程
 
+import fs from 'fs/promises';
+import path from 'path';
 import { analyzeJavaScriptProject } from './analyzer.js';
 import { generateMermaidDiagram } from './emitter.js';
 import { applyFixes } from '../autofix.js';
@@ -47,9 +49,14 @@ export async function processCodeToMermaid(input, options = {}) {
     // 階段 3: 分析程式碼結構
     result.trace.push({ stage: 'analyze', timestamp: Date.now() });
     const analyzer = getAnalyzer(detection.language);
-    const ir = await analyzer(files, options.analyzeOptions || {});
-    
-    result.stats.analysis = ir.meta.stats;
+    const analysisResult = await analyzer(files, options.analyzeOptions || {});
+    const ir = analysisResult?.ir || analysisResult;
+
+    if (!ir || !ir.entities) {
+      throw new Error('Analyzer did not return a valid IR structure');
+    }
+
+    result.stats.analysis = analysisResult?.stats || ir.meta?.stats || {};
 
     // 階段 4: 生成 Mermaid 圖表
     result.trace.push({ stage: 'generate', timestamp: Date.now() });
@@ -64,6 +71,7 @@ export async function processCodeToMermaid(input, options = {}) {
     result.success = true;
     result.data = {
       ir,
+      analysis: analysisResult,
       mermaid: {
         raw: generation.code,
         fixed: fixResult.code,
@@ -75,6 +83,10 @@ export async function processCodeToMermaid(input, options = {}) {
       ],
       errors: fixResult.errors
     };
+
+    result.mermaid = fixResult.code;
+    result.mermaidRaw = generation.code;
+    result.notes = result.data.notes;
 
     // 收集警告
     if (generation.notes.includes('no_classes_found')) {
@@ -110,29 +122,101 @@ export async function processCodeToMermaid(input, options = {}) {
 async function prepareFiles(input) {
   const files = {};
 
-  if (input instanceof FileList) {
+  if (typeof FileList !== 'undefined' && input instanceof FileList) {
     // 處理瀏覽器 FileList
     for (let i = 0; i < input.length; i++) {
       const file = input[i];
-      const path = file.webkitRelativePath || file.name;
-      
-      if (isSupportedFile(path)) {
+      const relativePath = file.webkitRelativePath || file.name;
+
+      if (isSupportedFile(relativePath)) {
         try {
-          files[path] = await file.text();
+          files[relativePath] = await file.text();
         } catch (error) {
-          console.warn(`Failed to read file ${path}:`, error);
+          console.warn(`Failed to read file ${relativePath}:`, error);
         }
       }
     }
-  } else if (typeof input === 'object') {
+  } else if (input && typeof input === 'object') {
     // 處理檔案物件
     Object.assign(files, input);
   } else if (typeof input === 'string') {
-    // 處理單一程式碼字串
-    files['main.js'] = input;
+    const candidatePath = await resolvePathCandidate(input);
+
+    if (candidatePath) {
+      const stat = await safeStat(candidatePath);
+
+      if (stat?.isDirectory()) {
+        await collectFilesFromDirectory(candidatePath, files);
+      } else if (stat?.isFile()) {
+        if (isSupportedFile(candidatePath)) {
+          try {
+            files[candidatePath] = await fs.readFile(candidatePath, 'utf-8');
+          } catch (error) {
+            console.warn(`Failed to read file ${candidatePath}:`, error);
+          }
+        }
+      }
+    }
+
+    if (Object.keys(files).length === 0) {
+      // 將輸入視為程式碼字串
+      files['main.js'] = input;
+    }
   }
 
   return files;
+}
+
+async function resolvePathCandidate(input) {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const directStat = await safeStat(trimmed);
+  if (directStat) {
+    return trimmed;
+  }
+
+  try {
+    const resolved = path.resolve(trimmed);
+    const resolvedStat = await safeStat(resolved);
+    return resolvedStat ? resolved : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function safeStat(targetPath) {
+  try {
+    return await fs.stat(targetPath);
+  } catch (error) {
+    return null;
+  }
+}
+
+async function collectFilesFromDirectory(dirPath, files) {
+  const ignoreDirs = new Set(['node_modules', '.git', '.svn', 'dist', 'build', '.venv', 'venv', 'env', '__pycache__']);
+
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        if (!ignoreDirs.has(entry.name)) {
+          await collectFilesFromDirectory(fullPath, files);
+        }
+      } else if (entry.isFile() && isSupportedFile(fullPath)) {
+        try {
+          files[fullPath] = await fs.readFile(fullPath, 'utf-8');
+        } catch (error) {
+          console.warn(`Failed to read file ${fullPath}:`, error);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn(`Failed to scan directory ${dirPath}:`, error);
+  }
 }
 
 /**

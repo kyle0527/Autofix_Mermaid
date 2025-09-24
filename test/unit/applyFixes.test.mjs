@@ -18,4 +18,33 @@ describe('applyFixes', () => {
     assert.ok(!res.code.trim().endsWith(';'));
     assert.ok(res.notes.some(n => n.includes('removeTrailingSemicolons') || n.includes('upgradeGraphKeyword')));
   });
+
+  it('renames keyword nodes and updates references consistently', () => {
+    const input = `
+flowchart TD
+  start((Start))
+  end((End))
+  start -->|go to end| end
+  class end highlight
+  subgraph cluster
+    start --> end
+  end
+`;
+
+    const res = applyFixes(input);
+    const code = res.code;
+
+    assert.ok(code.includes('startNode((Start))'));
+    assert.ok(code.includes('endNode((End))'));
+    assert.ok(code.includes('startNode -->|go to end| endNode'));
+    assert.ok(code.includes('class endNode highlight'));
+    assert.ok(code.includes('|go to end|'));
+    assert.ok(!code.includes('|go to endNode|'));
+    assert.ok(code.includes('startNode --> endNode'));
+
+    const trimmedLines = code.split('\n').map(line => line.trim());
+    assert.ok(trimmedLines.includes('end'));
+    assert.ok(res.notes.includes('fixKeywordNodeId(end)'));
+    assert.ok(res.notes.includes('fixKeywordNodeId(start)'));
+  });
 });

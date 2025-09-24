@@ -184,19 +184,132 @@ function normalizeFormatting(code, notes, options) {
  */
 function fixNodeIds(code, notes) {
   let s = code;
-  
+
   // 修復使用 Mermaid 關鍵字作為節點 ID
   const keywords = ['end', 'start', 'if', 'else', 'class', 'subgraph'];
-  
+  const renamedMap = new Map();
+  const noteSet = new Set();
+
   for (const keyword of keywords) {
-    const regex = new RegExp(`\\b${keyword}\\(\\(`, 'g');
-    if (regex.test(s)) {
-      s = s.replace(regex, `${keyword}Node((`);
-      notes.push(`fixKeywordNodeId(${keyword})`);
+    const pattern = new RegExp(`\\b${escapeRegExp(keyword)}(\\(\\()`, 'g');
+    let hasReplacement = false;
+    s = s.replace(pattern, (match, shape) => {
+      hasReplacement = true;
+      renamedMap.set(keyword, `${keyword}Node`);
+      return `${keyword}Node${shape}`;
+    });
+    if (hasReplacement) {
+      noteSet.add(`fixKeywordNodeId(${keyword})`);
     }
   }
 
+  if (renamedMap.size > 0) {
+    const keywordPattern = Array.from(renamedMap.keys())
+      .map(escapeRegExp)
+      .join('|');
+    const idRegex = new RegExp(`\\b(${keywordPattern})\\b`, 'g');
+
+    s = s.replace(idRegex, (match, id, offset, full) => {
+      const newId = renamedMap.get(id);
+      if (!newId || match === newId) {
+        return match;
+      }
+
+      if (!shouldReplaceRenamedId(full, offset, match.length, id)) {
+        return match;
+      }
+
+      return newId;
+    });
+  }
+
+  for (const note of noteSet) {
+    notes.push(note);
+  }
+
   return s;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\$&');
+}
+
+function shouldReplaceRenamedId(source, index, length, id) {
+  const lineStart = source.lastIndexOf('\n', index);
+  const start = lineStart === -1 ? 0 : lineStart + 1;
+  let lineEnd = source.indexOf('\n', index + length);
+  if (lineEnd === -1) lineEnd = source.length;
+
+  const line = source.slice(start, lineEnd);
+  const offsetInLine = index - start;
+  const beforeToken = line.slice(0, offsetInLine);
+
+  if (isInComment(beforeToken)) {
+    return false;
+  }
+
+  if (
+    isInsideDelimiter(beforeToken, '"') ||
+    isInsideDelimiter(beforeToken, "'") ||
+    isInsideDelimiter(beforeToken, '|')
+  ) {
+    return false;
+  }
+
+  const trimmed = line.trim();
+
+  if (id === 'end') {
+    if (trimmed === 'end' || trimmed.startsWith('end%%') || trimmed.startsWith('end %%')) {
+      return false;
+    }
+  }
+
+  const nextChar = getNextNonWhitespaceChar(line, offsetInLine + length);
+  if (id === 'class' || id === 'subgraph') {
+    if (isAtLineStart(line, offsetInLine) && nextChar && /[A-Za-z0-9_]/.test(nextChar)) {
+      return false;
+    }
+  }
+
+  if ((id === 'if' || id === 'else') && nextChar === '(') {
+    return false;
+  }
+
+  return true;
+}
+
+function isInComment(prefix) {
+  const commentIndex = prefix.indexOf('%%');
+  return commentIndex !== -1;
+}
+
+function isInsideDelimiter(prefix, delimiter) {
+  let count = 0;
+  for (let i = 0; i < prefix.length; i += 1) {
+    if (prefix[i] === delimiter) {
+      count += 1;
+    }
+  }
+  return count % 2 === 1;
+}
+
+function getNextNonWhitespaceChar(line, startIndex) {
+  for (let i = startIndex; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch && !/\s/.test(ch)) {
+      return ch;
+    }
+  }
+  return '';
+}
+
+function isAtLineStart(line, offset) {
+  for (let i = 0; i < offset; i += 1) {
+    if (!/\s/.test(line[i])) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
