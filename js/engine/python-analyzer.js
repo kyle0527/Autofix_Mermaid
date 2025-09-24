@@ -6,6 +6,7 @@
 // 導入依賴
 import { TreeSitterLoader } from './tree-sitter-loader.js';
 import { addEntity, addRelation } from './ir.js';
+import { globalEventBus, SystemEventTypes } from '../modern/events/EventBus.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -39,20 +40,47 @@ async function analyzePythonProject(projectPath) {
   };
 
   try {
+    const analysisStart = Date.now();
     console.log(`[Python Analyzer] 開始分析專案: ${projectPath}`);
+    
+    // 發送分析開始事件
+    globalEventBus.emitWithStats(SystemEventTypes.ANALYSIS_STARTED, {
+      projectPath,
+      language: 'python'
+    }, { source: 'python-analyzer' });
     
     // 嘗試初始化 Tree-sitter
     let loader = null;
     let useTreeSitter = false;
     
     try {
+      globalEventBus.emitWithStats(SystemEventTypes.TREESITTER_INIT_START, {
+        language: 'python'
+      }, { source: 'python-analyzer' });
+      
       loader = new TreeSitterLoader();
       await loader.loadLanguage('python', 'js/wasm/tree-sitter-python.wasm');
       useTreeSitter = true;
       console.log(`[Python Analyzer] Tree-sitter 初始化成功`);
+      
+      globalEventBus.emitWithStats(SystemEventTypes.TREESITTER_INIT_SUCCESS, {
+        language: 'python'
+      }, { source: 'python-analyzer' });
+      
     } catch (error) {
       console.warn(`[Python Analyzer] Tree-sitter 初始化失敗，將使用正則表達式解析:`, error.message);
       useTreeSitter = false;
+      
+      globalEventBus.emitWithStats(SystemEventTypes.TREESITTER_INIT_FAILED, {
+        language: 'python',
+        error: error.message,
+        fallback: 'regex'
+      }, { source: 'python-analyzer' });
+      
+      globalEventBus.emitWithStats(SystemEventTypes.TREESITTER_FALLBACK, {
+        language: 'python',
+        reason: error.message
+      }, { source: 'python-analyzer' });
     }
 
     const files = await getAllPythonFiles(projectPath);
@@ -66,6 +94,14 @@ async function analyzePythonProject(projectPath) {
         if (useTreeSitter && loader) {
           await parsePythonFile(loader, ir, filePath, content, moduleName, stats);
         } else {
+          // 發送解析器切換事件
+          globalEventBus.emitWithStats(SystemEventTypes.PARSER_SWITCH, {
+            from: 'tree-sitter',
+            to: 'regex',
+            file: filePath,
+            reason: 'tree-sitter not available'
+          }, { source: 'python-analyzer' });
+          
           parsePythonWithRegex(ir, filePath, content, moduleName, stats);
         }
         
@@ -86,11 +122,45 @@ async function analyzePythonProject(projectPath) {
     
     console.log(`[Python Analyzer] 完成分析 - 檔案: ${stats.filesProcessed}, 實體: ${stats.entitiesFound}, 關係: ${stats.relationsFound}`);
     
+    // 發送分析完成事件
+    globalEventBus.emitWithStats(SystemEventTypes.ANALYSIS_COMPLETED, {
+      projectPath,
+      language: 'python',
+      stats: {
+        filesProcessed: stats.filesProcessed,
+        entitiesFound: stats.entitiesFound,
+        relationsFound: stats.relationsFound,
+        errorsFound: stats.errorsFound,
+        useTreeSitter
+      }
+    }, { 
+      source: 'python-analyzer',
+      performance: {
+        operation: 'python-analysis',
+        duration: Date.now() - analysisStart
+      }
+    });
+    
+    // 發送 IR 生成事件
+    globalEventBus.emitWithStats(SystemEventTypes.IR_GENERATED, {
+      language: 'python',
+      entityCount: ir.entities.length,
+      relationCount: ir.relations.length
+    }, { source: 'python-analyzer' });
+    
     return { ir, stats };
 
   } catch (error) {
     console.error('[Python Analyzer] 分析失敗:', error);
     stats.errorsFound++;
+    
+    // 發送分析失敗事件
+    globalEventBus.emitWithStats(SystemEventTypes.ANALYSIS_FAILED, {
+      projectPath,
+      language: 'python',
+      error: error.message,
+      stats
+    }, { source: 'python-analyzer' });
     stats.errors.push({
       error: error.message,
       type: 'analyzer_error'
@@ -134,9 +204,7 @@ async function parsePythonFile(loader, ir, filePath, content, moduleName, stats)
       walkPythonNode(ir, parseResult.tree.rootNode, content, moduleName, filePath, stats);
       
     } else {
-      // Tree-sitter 解析失敗，直接降級到 regex 
-      console.log(`🔄 Tree-sitter failed for ${filePath}, falling back to regex parser`);
-      throw new Error('TreeSitter parse failed'); // 觸發 catch 塊中的降級處理
+      throw new Error('Tree-sitter 解析失敗');
     }
 
   } catch (error) {

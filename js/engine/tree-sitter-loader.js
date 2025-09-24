@@ -246,90 +246,15 @@ class TreeSitterLoader {
   }
 
   /**
-   * 🔧 Node.js 環境載入（修復版）
+   * 🔧 Node.js 環境載入（增強版）
    */
   async _initializeNodeTreeSitter() {
     try {
-      // 🔧 修復：嘗試多種載入方式
-      let TreeSitter;
-      
-      try {
-        // 方法 1: 標準 ES6 導入
-        const module = await import('tree-sitter');
-        TreeSitter = module.default || module;
-      } catch (e1) {
-        try {
-          // 方法 2: CommonJS require (如果可用)
-          TreeSitter = require('tree-sitter');
-        } catch (e2) {
-          throw new Error(`Failed to load tree-sitter: ${e1.message}, ${e2.message}`);
-        }
-      }
-      
-      // 🔧 修復：建立相容的 TreeSitter 物件
-      if (!TreeSitter) {
-        throw new Error('TreeSitter module loaded but is undefined');
-      }
-      
-      // 確保有 Parser 類別
-      if (!TreeSitter.Parser) {
-        throw new Error('TreeSitter.Parser not found in loaded module');
-      }
-      
-      // 確保有 Language 類別或方法
-      if (!TreeSitter.Language) {
-        console.warn('TreeSitter.Language not found, creating minimal implementation');
-        TreeSitter.Language = {
-          load: async function(buffer) {
-            throw new Error('Language.load not implemented in this environment');
-          }
-        };
-      }
-      
+      const TreeSitter = (await import('tree-sitter')).default;
       this.TreeSitter = TreeSitter;
-      
     } catch (error) {
-      console.error('Node.js TreeSitter initialization failed:', error);
-      
-      // 🔧 建立最小降級實現
-      this.TreeSitter = this._createMinimalTreeSitter();
-      console.warn('Created minimal TreeSitter fallback for Node.js');
+      throw new Error('tree-sitter package not found. Install with: npm install tree-sitter');
     }
-  }
-  
-  /**
-   * 🆘 建立最小 TreeSitter 實現
-   */
-  _createMinimalTreeSitter() {
-    return {
-      Parser: class MinimalParser {
-        setLanguage(language) {
-          this.language = language;
-        }
-        
-        parse(code) {
-          return {
-            rootNode: {
-              hasError: false,
-              type: 'program',
-              children: [],
-              startPosition: { row: 0, column: 0 },
-              endPosition: { row: 0, column: code.length }
-            }
-          };
-        }
-      },
-      
-      Language: {
-        load: async function(buffer) {
-          return {
-            name: 'minimal',
-            id: 1,
-            type: 'minimal-language'
-          };
-        }
-      }
-    };
   }
 
   /**
@@ -450,41 +375,22 @@ class TreeSitterLoader {
   }
 
   /**
-   * ✅ 驗證初始化（修復版）
+   * ✅ 驗證初始化
    */
   async _validateInitialization() {
     if (!this.TreeSitter) {
       throw new Error('TreeSitter instance not found');
     }
     
-    // 🔧 修復：檢查不同的 API 形式
-    const hasLanguageLoad = 
-      (this.TreeSitter.Language && typeof this.TreeSitter.Language.load === 'function') ||
-      (this.TreeSitter.Language?.load) ||
-      (typeof this.TreeSitter.Language === 'function'); // 某些版本 Language 本身就是函數
-    
-    if (!hasLanguageLoad) {
-      // 🔧 嘗試恢復或建立替代方法
-      console.warn('TreeSitter.Language.load not available, attempting to create fallback');
-      
-      if (this.TreeSitter.Language && !this.TreeSitter.Language.load) {
-        // 為舊版本創建 load 方法
-        this.TreeSitter.Language.load = async function(buffer) {
-          return new this(buffer);
-        }.bind(this.TreeSitter.Language);
-      }
+    if (typeof this.TreeSitter.Language?.load !== 'function') {
+      throw new Error('TreeSitter.Language.load not available');
     }
     
     // 嘗試創建一個測試解析器
     try {
-      const parser = new this.TreeSitter.Parser();
-      // 測試基本功能
-      if (!parser.setLanguage || !parser.parse) {
-        throw new Error('Parser missing required methods');
-      }
+      new this.TreeSitter.Parser();
     } catch (error) {
-      console.warn(`Parser creation failed, entering compatibility mode: ${error.message}`);
-      // 不拋出錯誤，允許降級模式運行
+      throw new Error(`Parser creation failed: ${error.message}`);
     }
   }
 
@@ -817,7 +723,7 @@ class TreeSitterLoader {
   }
 
   /**
-   * 獲取或建立解析器（修復版）
+   * 獲取或建立解析器
    * @param {string} languageName - 語言名稱
    */
   async getParser(languageName) {
@@ -828,64 +734,27 @@ class TreeSitterLoader {
       return this.parsers.get(normalizedName);
     }
 
-    try {
-      // 載入語言並建立解析器
-      const language = await this.loadLanguage(normalizedName);
-      if (!language) {
-        throw new Error(`Failed to load language: ${normalizedName}`);
-      }
-      
-      // 🔧 修復：正確建立 Parser
-      const parser = new this.TreeSitter.Parser();
-      
-      // 🔧 修復：安全地設定語言
-      try {
-        parser.setLanguage(language);
-      } catch (error) {
-        throw new Error(`Failed to set language ${normalizedName}: ${error.message}`);
-      }
-      
-      this.parsers.set(normalizedName, parser);
-      return parser;
-      
-    } catch (error) {
-      console.error(`Failed to create parser for ${normalizedName}:`, error);
-      throw error;
-    }
+    // 載入語言並建立解析器
+    const language = await this.loadLanguage(normalizedName);
+    const parser = new this.TreeSitter();
+    parser.setLanguage(language);
+    
+    this.parsers.set(normalizedName, parser);
+    return parser;
   }
 
   /**
-   * 解析程式碼（修復版）
+   * 解析程式碼
    * @param {string} code - 程式碼內容
    * @param {string} languageName - 語言名稱
    */
   async parse(code, languageName) {
-    // 🔧 修復：驗證參數
-    if (typeof code !== 'string') {
-      throw new Error(`Invalid code parameter: expected string, got ${typeof code}`);
-    }
-    
-    if (!languageName || typeof languageName !== 'string') {
-      throw new Error(`Invalid languageName parameter: expected string, got ${typeof languageName}`);
-    }
-    
-    // 🔧 修復：檢測錯誤的參數順序（常見錯誤）
-    if (code.length < 10 && /^[a-z]+$/.test(code) && languageName.includes('(') && languageName.includes('{')) {
-      // 參數可能被交換了
-      console.warn('⚠️ Detected possible parameter swap, attempting to correct...');
-      [code, languageName] = [languageName, code]; // 交換參數
-    }
-    
     try {
       const parser = await this.getParser(languageName);
-      if (!parser) {
-        throw new Error(`Failed to get parser for language: ${languageName}`);
-      }
-      
       const tree = parser.parse(code);
       
       // 檢查解析錯誤
-      if (tree && tree.rootNode && tree.rootNode.hasError) {
+      if (tree.rootNode.hasError) {
         const error = this.findFirstError(tree.rootNode);
         const line = error ? error.startPosition.row + 1 : 0;
         const column = error ? error.startPosition.column + 1 : 0;

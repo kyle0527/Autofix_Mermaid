@@ -86,7 +86,7 @@ async function testTreeSitterLoader() {
     
     // 測試解析功能
     console.log('  🔍 測試 JavaScript 解析...');
-    const jsResult = await loader.parse('function test() { return 42; }', 'javascript');
+    const jsResult = await loader.parse('javascript', 'function test() { return 42; }');
     
     if (jsResult.success && jsResult.tree) {
       console.log('  ✅ JavaScript Tree-sitter 載入和解析成功');
@@ -205,7 +205,7 @@ async function testMultiLanguageAnalyzer() {
     
     console.log(`  📊 總統計: ${result.combined.stats.totalFiles} 檔案, ${result.combined.stats.totalEntities} 實體, ${result.combined.stats.totalRelations} 關係`);
     console.log(`  🔍 JavaScript 實體: ${jsEntities.length}, Python 實體: ${pyEntities.length}`);
-    console.log(`  🌐 支援語言: ${result.combined.ir.metadata.languages.join(', ')}`);
+    console.log(`  🌐 支援語言: ${result.combined.metadata.languages.join(', ')}`);
     
     // 清理
     await fs.rm(testDir, { recursive: true, force: true });
@@ -241,12 +241,12 @@ async function testQuickAnalyze() {
     const result = await quickAnalyze(testDir);
     
     console.log(`  📊 快速分析結果: ${result.combined.stats.totalFiles} 檔案, ${result.combined.stats.totalEntities} 實體`);
-    console.log(`  🌐 自動檢測語言: ${result.combined.ir.metadata.languages.join(', ')}`);
+    console.log(`  🌐 自動檢測語言: ${result.combined.metadata.languages.join(', ')}`);
     
     // 清理
     await fs.rm(testDir, { recursive: true, force: true });
     
-    if (result.combined.ir.metadata.languages.length >= 2) {
+    if (result.combined.metadata.languages.length >= 2) {
       console.log('  ✅ 快速分析測試成功');
       return true;
     } else {
