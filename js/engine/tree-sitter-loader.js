@@ -49,7 +49,9 @@ class TreeSitterLoader {
       loadTimes: new Map(),
       errorCounts: new Map(),
       cacheHits: 0,
-      cacheMisses: 0
+      cacheMisses: 0,
+      errors: new Map(),
+      retryStats: {}
     };
   }
 
@@ -381,14 +383,32 @@ class TreeSitterLoader {
     if (!this.TreeSitter) {
       throw new Error('TreeSitter instance not found');
     }
-    
-    if (typeof this.TreeSitter.Language?.load !== 'function') {
-      throw new Error('TreeSitter.Language.load not available');
+
+    const isBrowser = typeof window !== 'undefined';
+
+    if (isBrowser) {
+      if (typeof this.TreeSitter.Language?.load !== 'function') {
+        throw new Error('TreeSitter.Language.load not available');
+      }
+
+      try {
+        new this.TreeSitter.Parser();
+      } catch (error) {
+        throw new Error(`Parser creation failed: ${error.message}`);
+      }
+
+      return;
     }
-    
-    // 嘗試創建一個測試解析器
+
+    // Node.js 環境
+    const ParserCtor = this.TreeSitter.Parser || this.TreeSitter;
+
+    if (typeof ParserCtor !== 'function') {
+      throw new Error('TreeSitter parser constructor missing');
+    }
+
     try {
-      new this.TreeSitter.Parser();
+      new ParserCtor();
     } catch (error) {
       throw new Error(`Parser creation failed: ${error.message}`);
     }
@@ -497,9 +517,25 @@ class TreeSitterLoader {
    * 📊 錯誤記錄
    */
   _recordError(operation, error) {
-    const errorKey = `${operation}:${error.name}`;
+    const errorName = error?.name || 'Error';
+    const errorKey = `${operation}:${errorName}`;
     const currentCount = this.performanceMetrics.errorCounts.get(errorKey) || 0;
     this.performanceMetrics.errorCounts.set(errorKey, currentCount + 1);
+
+    if (this.performanceMetrics.errors instanceof Map) {
+      const timestamp = Date.now();
+      this.performanceMetrics.errors.set(timestamp, {
+        operation,
+        name: errorName,
+        message: error?.message || String(error),
+        timestamp
+      });
+
+      if (this.performanceMetrics.errors.size > 50) {
+        const oldestKey = this.performanceMetrics.errors.keys().next().value;
+        this.performanceMetrics.errors.delete(oldestKey);
+      }
+    }
   }
 
   /**
@@ -572,19 +608,32 @@ class TreeSitterLoader {
    */
   _validateLanguage(language) {
     if (!language) return false;
-    
+
     // 對於最小化語言，使用不同的驗證標準
     if (language.minimal === true) {
-      return (
-        typeof language.query === 'function' &&
-        language.nodeTypeInfo !== undefined
-      );
+      return typeof language.parse === 'function';
     }
-    
-    // 檢查完整 Tree-sitter 語言結構
-    if (typeof language.query !== 'function') return false;
-    if (!language.nodeTypeInfo || typeof language.nodeTypeInfo !== 'object') return false;
-    
+
+    const wrapperLanguage = language.language && typeof language.language === 'object'
+      ? language.language
+      : null;
+
+    if (!language.nodeTypeInfo && wrapperLanguage && wrapperLanguage.nodeTypeInfo) {
+      language.nodeTypeInfo = wrapperLanguage.nodeTypeInfo;
+    }
+
+    if (!language.query && wrapperLanguage && typeof wrapperLanguage.query === 'function') {
+      // 綁定 query 方便外部使用
+      language.query = wrapperLanguage.query.bind(wrapperLanguage);
+    }
+
+    const hasQuery = typeof language.query === 'function';
+    const hasWrapper = !!wrapperLanguage;
+
+    if (!hasQuery && !hasWrapper) {
+      return false;
+    }
+
     return true;
   }
 
@@ -647,6 +696,35 @@ class TreeSitterLoader {
   }
 
   /**
+   * 對應 Node.js 環境的語言模組
+   * @param {string} languageName
+   * @returns {{moduleName: string, exportName?: string}|null}
+   */
+  _resolveNodeLanguageModule(languageName) {
+    const normalized = languageName.toLowerCase();
+
+    switch (normalized) {
+      case 'javascript':
+      case 'js':
+      case 'jsx':
+        return { moduleName: 'tree-sitter-javascript' };
+
+      case 'typescript':
+      case 'ts':
+      case 'tsx':
+        // 若沒有安裝 TypeScript grammar，會在載入時回退
+        return { moduleName: 'tree-sitter-typescript', exportName: 'typescript' };
+
+      case 'python':
+      case 'py':
+        return { moduleName: 'tree-sitter-python' };
+
+      default:
+        return null;
+    }
+  }
+
+  /**
    * 🌐 Web 環境語言載入
    */
   async _loadLanguageFromWeb(languageName, wasmFile) {
@@ -686,10 +764,50 @@ class TreeSitterLoader {
    * 📦 Node.js 環境語言載入
    */
   async _loadLanguageFromNode(languageName) {
-    // 在 Node.js 環境下，直接返回最小化語言
-    // 因為真實的 Tree-sitter 包安裝和載入較為複雜
-    console.log(`📦 Creating minimal ${languageName} parser for Node.js environment`);
-    return this._createMinimalParser(languageName);
+    const moduleInfo = this._resolveNodeLanguageModule(languageName);
+
+    if (!moduleInfo) {
+      console.warn(`⚠️ No native grammar for ${languageName}. Using minimal parser.`);
+      return this._createMinimalParser(languageName);
+    }
+
+    const { moduleName, exportName } = moduleInfo;
+
+    try {
+      const languageModule = await import(moduleName);
+
+      let language = null;
+
+      if (exportName && languageModule[exportName]) {
+        language = languageModule[exportName];
+      } else if (languageModule.default) {
+        language = languageModule.default;
+      } else {
+        language = languageModule;
+      }
+
+      if (languageModule.nodeTypeInfo && language && !language.nodeTypeInfo) {
+        language.nodeTypeInfo = languageModule.nodeTypeInfo;
+      }
+
+      if (!this._validateLanguage(language)) {
+        throw new Error(`Invalid language module structure for ${moduleName}`);
+      }
+
+      return language;
+    } catch (error) {
+      if (error && (error.code === 'ERR_MODULE_NOT_FOUND' || /Cannot find module/.test(error.message))) {
+        if (moduleName === 'tree-sitter-typescript') {
+          console.warn('⚠️ tree-sitter-typescript not installed. Falling back to tree-sitter-javascript grammar.');
+          return this._loadLanguageFromNode('javascript');
+        }
+
+        console.warn(`⚠️ Missing tree-sitter package "${moduleName}". Falling back to minimal parser.`);
+        return this._createMinimalParser(languageName);
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -744,29 +862,101 @@ class TreeSitterLoader {
   }
 
   /**
-   * 解析程式碼
-   * @param {string} code - 程式碼內容
-   * @param {string} languageName - 語言名稱
+   * 解析程式碼（支援 (code, language) 或 (language, code) 參數順序）
    */
-  async parse(code, languageName) {
+  async parse(arg1, arg2) {
+    const { code, languageName } = this._normalizeParseArgs(arg1, arg2);
+
+    const normalizedCode = typeof code === 'string' ? code : String(code ?? '');
+    const bytesProcessed = normalizedCode.length;
+
+    const result = {
+      success: false,
+      language: languageName,
+      tree: null,
+      hadErrors: false,
+      bytesProcessed
+    };
+
     try {
       const parser = await this.getParser(languageName);
-      const tree = parser.parse(code);
-      
-      // 檢查解析錯誤
-      if (tree.rootNode.hasError) {
-        const error = this.findFirstError(tree.rootNode);
-        const line = error ? error.startPosition.row + 1 : 0;
-        const column = error ? error.startPosition.column + 1 : 0;
-        
-        console.warn(`⚠️ Parse error in ${languageName} at ${line}:${column}`);
-        // 不拋出錯誤，而是返回帶錯誤標記的樹
+      const tree = parser.parse(normalizedCode);
+
+      result.tree = tree;
+      result.success = true;
+      result.hadErrors = Boolean(tree?.rootNode?.hasError);
+
+      if (result.hadErrors) {
+        const errorNode = this.findFirstError(tree.rootNode);
+        result.error = {
+          message: 'Tree-sitter reported syntax errors',
+          line: errorNode ? errorNode.startPosition.row + 1 : undefined,
+          column: errorNode ? errorNode.startPosition.column + 1 : undefined,
+          type: errorNode ? errorNode.type : 'UNKNOWN'
+        };
+
+        console.warn(`⚠️ Parse error in ${languageName} at ${result.error.line ?? 0}:${result.error.column ?? 0}`);
       }
-      
-      return tree;
+
+      return result;
     } catch (error) {
-      throw new Error(`Failed to parse ${languageName} code: ${error.message}`);
+      result.error = {
+        message: error.message,
+        stack: error.stack
+      };
+
+      return result;
     }
+  }
+
+  /**
+   * 正規化 parse 參數
+   */
+  _normalizeParseArgs(arg1, arg2) {
+    if (typeof arg1 === 'undefined' || typeof arg2 === 'undefined') {
+      throw new Error('TreeSitterLoader.parse requires both code and language arguments');
+    }
+
+    const firstIsString = typeof arg1 === 'string';
+    const secondIsString = typeof arg2 === 'string';
+
+    if (!firstIsString && !secondIsString) {
+      throw new Error('TreeSitterLoader.parse expects string inputs');
+    }
+
+    const firstLower = firstIsString ? arg1.toLowerCase() : '';
+    const secondLower = secondIsString ? arg2.toLowerCase() : '';
+
+    const firstSupported = firstIsString && this.isLanguageSupported(firstLower);
+    const secondSupported = secondIsString && this.isLanguageSupported(secondLower);
+
+    let languageName;
+    let code;
+
+    if (firstSupported && !secondSupported) {
+      languageName = firstLower;
+      code = secondIsString ? arg2 : String(arg2);
+    } else if (!firstSupported && secondSupported) {
+      languageName = secondLower;
+      code = firstIsString ? arg1 : String(arg1);
+    } else if (firstSupported && secondSupported) {
+      languageName = firstLower;
+      code = secondIsString ? arg2 : String(arg2);
+    } else {
+      languageName = secondLower;
+      code = firstIsString ? arg1 : String(arg1);
+    }
+
+    if (!this.isLanguageSupported(languageName)) {
+      throw new Error(`Unsupported language: ${languageName}`);
+    }
+
+    const normalizedCode = typeof code === 'string' ? code : String(code ?? '');
+
+    return {
+      code: normalizedCode,
+      languageName
+    };
   }
 
   /**
@@ -952,7 +1142,9 @@ class TreeSitterLoader {
       },
       errors: {
         count: this.performanceMetrics.errors ? this.performanceMetrics.errors.size : 0,
-        recent: this.performanceMetrics.errors ? Array.from(this.performanceMetrics.errors.entries()).slice(-5) : []
+        recent: this.performanceMetrics.errors
+          ? Array.from(this.performanceMetrics.errors.values()).slice(-5)
+          : []
       },
       system: {
         browser: typeof window !== 'undefined' ? window.navigator?.userAgent || 'Unknown' : 'Node.js',
@@ -1034,7 +1226,16 @@ const treeSitterLoader = new TreeSitterLoader();
  * 便利函數：直接解析程式碼
  */
 export async function parseWithTreeSitter(code, languageName) {
-  return treeSitterLoader.parse(code, languageName);
+  const result = await treeSitterLoader.parse(code, languageName);
+
+  if (result.success && result.tree) {
+    return result.tree;
+  }
+
+  const message = result.error?.message || `Tree-sitter parse failed for ${languageName}`;
+  const error = new Error(message);
+  error.details = result;
+  throw error;
 }
 
 /**

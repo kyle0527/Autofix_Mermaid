@@ -56,7 +56,7 @@ export async function analyzeJavaScriptProject(filesOrPath, options = {}) {
       const moduleName = getModuleName(filePath);
       
       if (useTreeSitter) {
-        await parseFileWithTreeSitter(ir, filePath, content, moduleName, stats);
+        await parseFileWithTreeSitter(ir, filePath, content, stats);
       } else {
         parseWithRegexFallback(ir, filePath, content, moduleName, stats);
       }

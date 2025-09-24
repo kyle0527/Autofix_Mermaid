@@ -109,37 +109,48 @@ async function parsePythonFile(loader, ir, filePath, content, moduleName, stats)
     
     // 使用 Tree-sitter 解析
     const parseResult = await loader.parse(content, 'python');
-    
-    if (parseResult.success && parseResult.tree) {
-      console.log(`[Python Analyzer] 成功解析: ${filePath}`);
-      
-      // 加入模組實體
-      addEntity(ir, {
-        id: `module:${moduleName}`,
-        kind: 'module',
-        name: moduleName,
-        file: filePath,
-        line: 1,
-        data: {
-          type: 'python',
-          path: filePath,
-          size: content.length,
-          parser: 'tree-sitter'
-        }
-      });
-      
-      stats.modulesFound++;
-      
-      // 遍歷 AST
-      walkPythonNode(ir, parseResult.tree.rootNode, content, moduleName, filePath, stats);
-      
-    } else {
-      throw new Error('Tree-sitter 解析失敗');
+
+    if (!parseResult.success || !parseResult.tree) {
+      const reason = parseResult.error?.message || 'Tree-sitter 解析失敗';
+      throw new Error(reason);
     }
+
+    console.log(`[Python Analyzer] 成功解析: ${filePath}`);
+
+    // 加入模組實體
+    addEntity(ir, {
+      id: `module:${moduleName}`,
+      kind: 'module',
+      name: moduleName,
+      file: filePath,
+      line: 1,
+      data: {
+        type: 'python',
+        path: filePath,
+        size: content.length,
+        parser: 'tree-sitter'
+      }
+    });
+
+    stats.modulesFound++;
+
+    if (parseResult.hadErrors && parseResult.error) {
+      stats.errorsFound++;
+      stats.errors.push({
+        file: filePath,
+        error: parseResult.error.message,
+        type: 'tree_sitter_warning',
+        line: parseResult.error.line,
+        column: parseResult.error.column
+      });
+    }
+
+    // 遍歷 AST
+    walkPythonNode(ir, parseResult.tree.rootNode, content, moduleName, filePath, stats);
 
   } catch (error) {
     console.error(`[Python Analyzer] 解析 ${filePath} 時發生錯誤:`, error);
-    
+
     // 回退到正則表達式解析
     try {
       console.warn(`🔄 Tree-sitter failed for ${filePath}, falling back to regex parser`);
