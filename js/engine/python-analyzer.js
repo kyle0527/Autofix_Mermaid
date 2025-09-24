@@ -134,7 +134,9 @@ async function parsePythonFile(loader, ir, filePath, content, moduleName, stats)
       walkPythonNode(ir, parseResult.tree.rootNode, content, moduleName, filePath, stats);
       
     } else {
-      throw new Error('Tree-sitter 解析失敗');
+      // Tree-sitter 解析失敗，直接降級到 regex 
+      console.log(`🔄 Tree-sitter failed for ${filePath}, falling back to regex parser`);
+      throw new Error('TreeSitter parse failed'); // 觸發 catch 塊中的降級處理
     }
 
   } catch (error) {

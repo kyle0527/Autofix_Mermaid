@@ -12,6 +12,7 @@ import { AsyncProcessingPipeline, createPipeline } from './async-processing-pipe
 import { processCodeToMermaid } from './processor.js';
 import { globalErrorManager } from './error-propagation.js';
 import { memoryManager as resourceManager } from './memory-management.js';
+import { eventBus, PipelineEvents, ErrorEvents } from './event-bus.js';
 
 /**
  * 🏭 Mermaid 處理管線
@@ -33,6 +34,9 @@ export class MermaidProcessingPipeline extends AsyncProcessingPipeline {
       memoryUsage: []
     };
 
+    this.pipelineId = options.pipelineId || 'mermaid-core';
+    this.pipelineLabel = options.pipelineLabel || 'MermaidProcessingPipeline';
+
     // 監聽任務事件
     this.setupEventListeners();
   }
@@ -41,6 +45,28 @@ export class MermaidProcessingPipeline extends AsyncProcessingPipeline {
    * 🎧 設定事件監聽器
    */
   setupEventListeners() {
+    const toTaskPayload = (task) => ({
+      id: task.id,
+      status: task.status,
+      priority: task.priority,
+      retryCount: task.retryCount,
+      dependencies: Array.isArray(task.dependencies) ? [...task.dependencies] : [],
+      metadata: {
+        projectId: task.options?.projectId || null,
+        batchId: task.options?.batchId || null,
+        type: task.options?.type || null,
+        source: task.options?.source || null
+      }
+    });
+
+    this.on('taskAdded', (task) => {
+      eventBus.publish(PipelineEvents.TASK_QUEUED, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        task: toTaskPayload(task)
+      });
+    });
+
     this.on('taskStarted', (task) => {
       // 記錄記憶體使用
       const memUsage = resourceManager.getStatistics();
@@ -50,9 +76,11 @@ export class MermaidProcessingPipeline extends AsyncProcessingPipeline {
         memory: memUsage.memory?.current?.heapUsed || 0
       });
 
-      console.log(`Pipeline task started: ${task.id}`, {
-        priority: task.priority,
-        dependencies: task.dependencies
+      eventBus.publish(PipelineEvents.TASK_STARTED, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        task: toTaskPayload(task),
+        memory: memUsage
       });
     });
 
@@ -60,26 +88,78 @@ export class MermaidProcessingPipeline extends AsyncProcessingPipeline {
       this.processingStats.totalProcessed++;
       this.processingStats.totalTime += task.getDuration() || 0;
 
-      console.log(`Pipeline task completed: ${task.id}`, {
-        duration: task.getDuration(),
-        result: task.result?.success || false
+      eventBus.publish(PipelineEvents.TASK_COMPLETED, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        task: {
+          ...toTaskPayload(task),
+          duration: task.getDuration(),
+          success: task.result?.success ?? true
+        }
+      });
+
+      eventBus.publish(PipelineEvents.PIPELINE_STATS, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        stats: this.getProcessingStats()
       });
     });
 
     this.on('taskFailed', (task) => {
       this.processingStats.totalErrors++;
-      
-      console.error('Pipeline task failed', task.error, {
-        taskId: task.id,
-        retryCount: task.retryCount,
-        data: task.data
+
+      const rawError = task.error instanceof Error
+        ? task.error
+        : new Error(typeof task.error === 'string' ? task.error : 'Pipeline task failed');
+
+      if (task.error && !(task.error instanceof Error)) {
+        rawError.originalPayload = task.error;
+      }
+
+      const errorContext = globalErrorManager.propagateError(rawError, {
+        stage: 'pipeline',
+        component: this.pipelineLabel,
+        function: 'executeTask',
+        operation: task.options?.operation || task.options?.type || 'pipeline_task',
+        metadata: {
+          taskId: task.id,
+          projectId: task.options?.projectId || null,
+          batchId: task.options?.batchId || null,
+          retryCount: task.retryCount
+        }
+      });
+
+      eventBus.publish(PipelineEvents.TASK_FAILED, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        task: toTaskPayload(task),
+        error: errorContext.toJSON()
+      });
+
+      eventBus.publish(ErrorEvents.ISOLATED, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        error: errorContext.toJSON()
       });
     });
 
     this.on('taskRetrying', (task) => {
-      console.warn(`Pipeline task retrying: ${task.id}`, {
-        retryCount: task.retryCount,
-        maxRetries: task.maxRetries
+      eventBus.publish(PipelineEvents.TASK_RETRYING, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        task: {
+          ...toTaskPayload(task),
+          retryCount: task.retryCount,
+          maxRetries: task.maxRetries
+        }
+      });
+    });
+
+    this.onProgress((progress) => {
+      eventBus.publish(PipelineEvents.BATCH_PROGRESS, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        progress
       });
     });
   }
@@ -97,18 +177,34 @@ export class MermaidProcessingPipeline extends AsyncProcessingPipeline {
         type: 'project'
       });
       
-      return {
+      const payload = {
         success: true,
         projectId,
         ...result
       };
+
+      eventBus.publish(PipelineEvents.PROJECT_SUCCESS, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        result: payload
+      });
+
+      return payload;
     } catch (error) {
-      return {
+      const failure = {
         success: false,
         projectId,
         error: error.message,
         details: error
       };
+
+      eventBus.publish(PipelineEvents.PROJECT_FAILURE, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        result: failure
+      });
+
+      return failure;
     }
   }
 
@@ -131,7 +227,7 @@ export class MermaidProcessingPipeline extends AsyncProcessingPipeline {
         batchId
       });
 
-      return {
+      const payload = {
         success: true,
         batchId,
         results: results.map(r => ({
@@ -141,14 +237,37 @@ export class MermaidProcessingPipeline extends AsyncProcessingPipeline {
         })),
         stats: this.getProcessingStats()
       };
+
+      eventBus.publish(PipelineEvents.BATCH_COMPLETED, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        batchId,
+        results: payload.results
+      });
+
+      eventBus.publish(PipelineEvents.PIPELINE_STATS, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        stats: payload.stats
+      });
+
+      return payload;
     } catch (error) {
-      return {
+      const failure = {
         success: false,
         batchId,
         error: error.message,
         results: [],
         stats: this.getProcessingStats()
       };
+
+      eventBus.publish(PipelineEvents.PROJECT_FAILURE, {
+        pipeline: this.pipelineId,
+        label: this.pipelineLabel,
+        result: failure
+      });
+
+      return failure;
     }
   }
 
@@ -226,6 +345,12 @@ export class MermaidProcessingPipeline extends AsyncProcessingPipeline {
     
     // 觸發記憶體清理
     resourceManager.cleanup();
+
+    eventBus.publish(PipelineEvents.PIPELINE_STATS, {
+      pipeline: this.pipelineId,
+      label: this.pipelineLabel,
+      stats: this.getProcessingStats()
+    });
   }
 }
 
