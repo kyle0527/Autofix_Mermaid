@@ -2,6 +2,8 @@ import { t, onLocaleChange, getLocale } from './i18n/index.js';
 import { applyLayoutSelection } from './layout.js';
 import { exportPDF } from './exporters/pdf.js';
 import { exportZIP } from './exporters/zip.js';
+import { preprocessMermaid, getRuleVersions } from './rules/client.js';
+import { getRuleConfig } from './rules/state.js';
 
 
 /**
@@ -854,7 +856,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
 
         let processedInput = inputText;
         try {
-          processedInput = await preprocessRulepack(inputText);
+          processedInput = await preprocessMermaid(inputText);
         } catch (error) {
           console.warn('Rule preprocess step failed:', error);
         }
