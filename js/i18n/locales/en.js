@@ -44,6 +44,8 @@ const en = {
   'toolbar.export.mmd': 'Export MMD',
   'toolbar.export.svg': 'Export SVG',
   'toolbar.export.png': 'Export PNG',
+  'toolbar.export.pdf': 'Export PDF',
+  'toolbar.export.zip': 'Export ZIP',
   'toolbar.export.errors': 'Export errors.json',
   'toolbar.export.fixlog': 'Export fixlog.json',
   'panel.debug.title': 'Debug panel',
