@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AutoFixMermaid</title>
     <link rel="stylesheet" href="css/styles.css" />
+    <script src="./assets/mermaid-11.12.0/mermaid.min.js"></script>
     <script type="importmap">
       {
         "imports": {
-          "mermaid": "./assets/mermaid-11.12.0/mermaid.esm.min.mjs"
+          "mermaid": "./js/vendor/mermaid-shim.js"
         }
       }
     </script>
@@ -268,7 +269,9 @@
     </main>
 
     <!-- Mermaid 11.12.0 ESM loaded via import map -->
-    <!-- Optional offline canvg: <script src="js/vendor/canvg.min.js"></script> -->
+    <!-- Offline canvg for better PNG export -->
+    <script src="js/vendor/stackblur.min.js"></script>
+    <script src="js/vendor/canvg.min.js"></script>
     <!-- PDF/ZIP Export dependencies -->
     <script src="js/vendor/jspdf.umd.min.js"></script>
     <script src="js/vendor/jszip.min.js"></script>
