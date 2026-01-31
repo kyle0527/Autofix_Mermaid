@@ -4,6 +4,7 @@ import { exportPDF } from './exporters/pdf.js';
 import { exportZIP } from './exporters/zip.js';
 import { preprocessMermaid, getRuleVersions } from './rules/client.js';
 import { getRuleConfig } from './rules/state.js';
+import { renderPlantUML, isLikelyPlantUML } from './renderers/plantuml.js';
 
 
 /**
@@ -849,6 +850,59 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         }
       } catch (error) {
         console.warn('Failed to apply layout selection:', error);
+      }
+
+      // PlantUML Rendering Path
+      if (!shouldForceWorker && !hasFiles && isLikelyPlantUML(inputText)) {
+        try {
+          const { svg, url } = await renderPlantUML(inputText);
+
+          if (svgContainer) {
+            // Check if SVG is valid (PlantUML server returns SVG even on error sometimes, but usually valid XML)
+            if (svg.includes('<svg')) {
+               svgContainer.innerHTML = svg;
+            } else {
+               // If not SVG (maybe error text), show it
+               svgContainer.textContent = svg;
+            }
+          }
+
+          if (logElement) logElement.textContent = `PlantUML URL: ${url}\n\n${inputText}`;
+
+          enableExportButtons();
+          setStatus(true, 'status.directRenderSuccess'); // Reuse success status
+
+          const plantUMLResult = {
+            code: inputText,
+            rawCode: inputText,
+            errors: [],
+            log: [],
+            dtype: 'plantuml',
+            trace: [],
+            fragments: [],
+            links: [],
+            notes: [],
+            detection: { lang: 'plantuml', confidence: 1.0 },
+            plugin: null,
+            engine: {
+              source: 'plantuml-server',
+              version: 'latest',
+              attempts: [],
+              error: null,
+            },
+            svg: svg,
+            debugMeta: { reason: 'plantuml' },
+          };
+          lastResult = { ...initialLastResult, ...plantUMLResult };
+          updateDebugPanel(lastResult);
+          updateAnalysisPanel(lastResult);
+          return lastResult;
+        } catch (error) {
+           console.error('PlantUML render failed:', error);
+           setStatus(false, error.message);
+           // Fallthrough? No, usually stop here if it was detected as PlantUML
+           throw error;
+        }
       }
 
       // Direct Mermaid rendering path
