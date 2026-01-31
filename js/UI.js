@@ -703,6 +703,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       existing.svgH = $('svgH')?.value || '';
       existing.pngBG = $('pngBG')?.value || 'transparent';
       existing.diagramType = $('diagramType')?.value || 'flowchart';
+      existing.plantumlServer = $('plantumlServer')?.value || '';
       existing.secLevel = $('secLevel')?.value || 'strict';
       existing.engineSelect = $('engineSelect')?.value || 'rules';
       existing.aiProvider = $('aiProvider')?.value || 'none';
@@ -855,7 +856,8 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
       // PlantUML Rendering Path
       if (!shouldForceWorker && !hasFiles && isLikelyPlantUML(inputText)) {
         try {
-          const { svg, url } = await renderPlantUML(inputText);
+          const plantumlServer = $('plantumlServer')?.value || 'https://www.plantuml.com/plantuml';
+          const { svg, url } = await renderPlantUML(inputText, plantumlServer);
 
           if (svgContainer) {
             // Check if SVG is valid (PlantUML server returns SVG even on error sometimes, but usually valid XML)
@@ -1361,7 +1363,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     }
 
     // Input change handlers for auto-render
-    const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'secLevel', 'engineSelect', 'aiProvider', 'layoutSelect'];
+    const inputElements = ['src', 'svgW', 'svgH', 'pngBG', 'diagramType', 'plantumlServer', 'secLevel', 'engineSelect', 'aiProvider', 'layoutSelect'];
     
     for (const elementId of inputElements) {
       const element = $(elementId);
@@ -1739,6 +1741,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
     if ($('svgH') && s.svgH) $('svgH').value = s.svgH;
     if ($('pngBG') && s.pngBG) $('pngBG').value = s.pngBG;
     if ($('diagramType') && s.diagramType) $('diagramType').value = s.diagramType;
+    if ($('plantumlServer') && s.plantumlServer) $('plantumlServer').value = s.plantumlServer;
     if ($('secLevel') && s.secLevel) $('secLevel').value = s.secLevel;
     if ($('engineSelect') && s.engineSelect) $('engineSelect').value = s.engineSelect;
     if ($('aiProvider') && s.aiProvider) $('aiProvider').value = s.aiProvider;

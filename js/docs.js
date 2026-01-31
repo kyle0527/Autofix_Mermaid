@@ -2,8 +2,23 @@
 export async function loadDocList() {
   // The docs are local files under ./docs/
   const files = [
-    'flowchart.md','sequenceDiagram.md','stateDiagram.md','classDiagram.md','erDiagram.md','gantt.md',
-    'architecture.md','c4.md','timeline.md','treemap.md','xychart.md','mindmap.md','pie.md','user-journey.md','quadrantChart.md'
+    'guides/USER_MANUAL.md',
+    'guides/plantuml-offline.md',
+    'diagrams/flowchart.md',
+    'diagrams/sequenceDiagram.md',
+    'diagrams/stateDiagram.md',
+    'diagrams/classDiagram.md',
+    'diagrams/erDiagram.md',
+    'diagrams/gantt.md',
+    'diagrams/architecture.md',
+    'diagrams/c4.md',
+    'diagrams/timeline.md',
+    'diagrams/treemap.md',
+    'diagrams/xychart.md',
+    'diagrams/mindmap.md',
+    'diagrams/pie.md',
+    'diagrams/user-journey.md',
+    'diagrams/quadrantChart.md'
   ];
   return files;
 }

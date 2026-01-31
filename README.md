@@ -7,7 +7,8 @@
 ![Tree-sitter](https://img.shields.io/badge/tree--sitter-integrated-orange.svg)
 ![Multi-Language](https://img.shields.io/badge/multi--language-JS%7CTS%7CPython-brightgreen.svg)
 
-> 延伸詳細功能與里程碑請見： [FEATURES_AND_ROADMAP.md](./FEATURES_AND_ROADMAP.md)
+> 延伸詳細功能與里程碑請見： [FEATURES_AND_ROADMAP.md](./docs/project/FEATURES_AND_ROADMAP.md)
+> 📘 **使用者手冊與離線設定請見： [USER_MANUAL.md](./docs/guides/USER_MANUAL.md)**
 
 ---
 
@@ -163,7 +164,7 @@ npm run validate:packs
    - 檢查 import 語句中的類型引入
    - 考慮向後相容性需求
 
-> 💡 **提示**：詳細的修復步驟和解決方案請參考 [NOTE.md](./NOTE.md) 檔案
+> 💡 **提示**：詳細的修復步驟和解決方案請參考 [NOTE.md](./docs/reports/NOTE.md) 檔案
 
 ---
 

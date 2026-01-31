@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node ./scripts/start-server.js",
+    "start:plantuml": "node ./scripts/start-plantuml.js",
     "launch": "node ./scripts/desktop-launcher.js",
     "dev": "node --input-type=module scripts/dev-server.mjs",
     "build:engine": "node ./scripts/build-engine-browser.mjs",
