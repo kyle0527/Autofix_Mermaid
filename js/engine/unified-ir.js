@@ -124,6 +124,20 @@ export class UnifiedIR {
   }
 
   /**
+   * 🔍 建立關係索引 (優化效能)
+   */
+  _indexRelations(relations) {
+    const index = new Map();
+    for (const relation of relations) {
+      if (!index.has(relation.from)) {
+        index.set(relation.from, []);
+      }
+      index.get(relation.from).push(relation);
+    }
+    return index;
+  }
+
+  /**
    * 🔧 執行舊版到新版的轉換
    */
   _performLegacyConversion(legacyIR) {
@@ -144,13 +158,16 @@ export class UnifiedIR {
       }
     };
 
+    // 建立關係索引以優化查詢效能
+    const relationIndex = this._indexRelations(legacyIR.relations);
+
     // 按檔案分組 entities
     const entityGroups = this._groupEntitiesByFile(legacyIR.entities);
     
     // 為每個檔案建立 IRModule
     for (const [filePath, entities] of Object.entries(entityGroups)) {
       const moduleName = this._filePathToModuleName(filePath);
-      const module = this._createModuleFromEntities(moduleName, filePath, entities, legacyIR.relations);
+      const module = this._createModuleFromEntities(moduleName, filePath, entities, relationIndex);
       project.modules[moduleName] = module;
     }
 
@@ -228,9 +245,12 @@ export class UnifiedIR {
    * 🏛️ 轉換 entity 為 IRClass
    */
   _convertEntityToIRClass(entity, relations) {
+    // 從索引中獲取該實體的關係
+    const entityRelations = relations.get(entity.id) || [];
+
     // 找出繼承關係
-    const bases = relations
-      .filter(r => r.from === entity.id && (r.type === 'EXTENDS' || r.type === 'IMPLEMENTS'))
+    const bases = entityRelations
+      .filter(r => r.type === 'EXTENDS' || r.type === 'IMPLEMENTS')
       .map(r => {
         // 從關係中找出目標類別名稱 - 這裡需要找到目標 entity
         // 暫時使用關係的 to 字段，後續可以加強查詢邏輯
@@ -256,9 +276,12 @@ export class UnifiedIR {
    * ⚙️ 轉換 entity 為 IRFunction
    */
   _convertEntityToIRFunction(entity, relations) {
+    // 從索引中獲取該實體的關係
+    const entityRelations = relations.get(entity.id) || [];
+
     // 找出函數呼叫關係
-    const calls = relations
-      .filter(r => r.from === entity.id && r.type === 'CALLS')
+    const calls = entityRelations
+      .filter(r => r.type === 'CALLS')
       .map(r => r.to);
 
     return {
