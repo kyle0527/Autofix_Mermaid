@@ -7,8 +7,8 @@
 ![Tree-sitter](https://img.shields.io/badge/tree--sitter-integrated-orange.svg)
 ![Multi-Language](https://img.shields.io/badge/multi--language-JS%7CTS%7CPython-brightgreen.svg)
 
-> 延伸詳細功能與里程碑請見： [FEATURES_AND_ROADMAP.md](./docs/FEATURES_AND_ROADMAP.md)
-> 📘 **使用者手冊與離線設定請見： [USER_MANUAL.md](./docs/USER_MANUAL.md)**
+> 延伸詳細功能與里程碑請見： [FEATURES_AND_ROADMAP.md](./docs/project/FEATURES_AND_ROADMAP.md)
+> 📘 **使用者手冊與離線設定請見： [USER_MANUAL.md](./docs/guides/USER_MANUAL.md)**
 
 ---
 
