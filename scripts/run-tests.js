@@ -66,7 +66,7 @@ async function main() {
     }
 
     console.log('Validating schema definitions...');
-    await runCommand(process.execPath, ['validate-schema.js']);
+    await runCommand(process.execPath, ['scripts/validate-schema.js']);
 
     if (await pathExists('rules/rulepack.json') || await pathExists('rules/promptpack.json')) {
       console.log('Validating rule/prompt packs...');
