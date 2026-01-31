@@ -1,5 +1,10 @@
 import { t, onLocaleChange, getLocale } from './i18n/index.js';
 import { applyLayoutSelection } from './layout.js';
+import { exportPDF } from './exporters/pdf.js';
+import { exportZIP } from './exporters/zip.js';
+import { preprocessMermaid, getRuleVersions } from './rules/client.js';
+import { getRuleConfig } from './rules/state.js';
+import { renderPlantUML, isLikelyPlantUML } from './renderers/plantuml.js';
 
 
 /**
@@ -796,7 +801,7 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
    * Enable export buttons after successful rendering
    */
   function enableExportButtons() {
-    const exportButtons = ['btnExportImage', 'btnExportMMD', 'btnExportSVG', 'btnExportPNG', 'btnExportErrors', 'btnExportFixlog'];
+    const exportButtons = ['btnExportImage', 'btnExportMMD', 'btnExportSVG', 'btnExportPNG', 'btnExportErrors', 'btnExportFixlog', 'btnExportPDF', 'btnExportZIP'];
     exportButtons.forEach(buttonId => {
       const button = $(buttonId);
       if (button) {
@@ -847,12 +852,65 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         console.warn('Failed to apply layout selection:', error);
       }
 
+      // PlantUML Rendering Path
+      if (!shouldForceWorker && !hasFiles && isLikelyPlantUML(inputText)) {
+        try {
+          const { svg, url } = await renderPlantUML(inputText);
+
+          if (svgContainer) {
+            // Check if SVG is valid (PlantUML server returns SVG even on error sometimes, but usually valid XML)
+            if (svg.includes('<svg')) {
+               svgContainer.innerHTML = svg;
+            } else {
+               // If not SVG (maybe error text), show it
+               svgContainer.textContent = svg;
+            }
+          }
+
+          if (logElement) logElement.textContent = `PlantUML URL: ${url}\n\n${inputText}`;
+
+          enableExportButtons();
+          setStatus(true, 'status.directRenderSuccess'); // Reuse success status
+
+          const plantUMLResult = {
+            code: inputText,
+            rawCode: inputText,
+            errors: [],
+            log: [],
+            dtype: 'plantuml',
+            trace: [],
+            fragments: [],
+            links: [],
+            notes: [],
+            detection: { lang: 'plantuml', confidence: 1.0 },
+            plugin: null,
+            engine: {
+              source: 'plantuml-server',
+              version: 'latest',
+              attempts: [],
+              error: null,
+            },
+            svg: svg,
+            debugMeta: { reason: 'plantuml' },
+          };
+          lastResult = { ...initialLastResult, ...plantUMLResult };
+          updateDebugPanel(lastResult);
+          updateAnalysisPanel(lastResult);
+          return lastResult;
+        } catch (error) {
+           console.error('PlantUML render failed:', error);
+           setStatus(false, error.message);
+           // Fallthrough? No, usually stop here if it was detected as PlantUML
+           throw error;
+        }
+      }
+
       // Direct Mermaid rendering path
       if (!shouldForceWorker && !hasFiles && (sourceMode === 'mermaid' || (sourceMode === 'auto' && isLikelyMermaid(inputText)))) {
 
         let processedInput = inputText;
         try {
-          processedInput = await preprocessRulepack(inputText);
+          processedInput = await preprocessMermaid(inputText);
         } catch (error) {
           console.warn('Rule preprocess step failed:', error);
         }
@@ -1555,6 +1613,79 @@ function initializeUI(renderMermaid, svgToPNG, initMermaid) {
         console.error(t('alert.pngConvertFailed', { message }), error);
         alert(`${t('alert.pngConvertFailed', { message })}\n${t('alert.pngConvertReason')}`);
       }
+    });
+
+    $('btnExportPDF')?.addEventListener('click', async () => {
+      const svgElement = document.querySelector('#graphDiv svg') || document.querySelector('#svg svg');
+      if (!svgElement) {
+        alert(t('alert.noSvg'));
+        return;
+      }
+      const svgString = new XMLSerializer().serializeToString(svgElement);
+
+      const pngBackground = $('pngBG')?.value || 'transparent';
+      let pngWidth = parseInt($('svgW')?.value || '0', 10) || 0;
+      let pngHeight = parseInt($('svgH')?.value || '0', 10) || 0;
+
+      if (pngWidth === 0 || pngHeight === 0) {
+        const boundingRect = svgElement.getBoundingClientRect();
+        pngWidth = pngWidth || Math.ceil(boundingRect.width) || 1024;
+        pngHeight = pngHeight || Math.ceil(boundingRect.height) || 768;
+      }
+
+      try {
+        const pngBlob = await svgToPNG(svgString, {
+          width: pngWidth,
+          height: pngHeight,
+          background: pngBackground
+        });
+        const pdfBlob = await exportPDF(pngBlob);
+        downloadFile('diagram.pdf', pdfBlob, 'application/pdf');
+      } catch (error) {
+         console.error('PDF export failed:', error);
+         alert(t('notice.errorWithMessage', { message: error.message || error }));
+      }
+    });
+
+    $('btnExportZIP')?.addEventListener('click', async () => {
+       const svgElement = document.querySelector('#graphDiv svg') || document.querySelector('#svg svg');
+       let svgString = '';
+       let pngBlob = null;
+
+       if (svgElement) {
+         svgString = new XMLSerializer().serializeToString(svgElement);
+         const pngBackground = $('pngBG')?.value || 'transparent';
+         let pngWidth = parseInt($('svgW')?.value || '0', 10) || 0;
+         let pngHeight = parseInt($('svgH')?.value || '0', 10) || 0;
+         if (pngWidth === 0 || pngHeight === 0) {
+            const boundingRect = svgElement.getBoundingClientRect();
+            pngWidth = pngWidth || Math.ceil(boundingRect.width) || 1024;
+            pngHeight = pngHeight || Math.ceil(boundingRect.height) || 768;
+         }
+         try {
+            pngBlob = await svgToPNG(svgString, {
+              width: pngWidth,
+              height: pngHeight,
+              background: pngBackground
+            });
+         } catch(e) { console.warn('ZIP: Failed to generate PNG', e); }
+       }
+
+       const zipData = {
+         code: lastResult?.code || '',
+         svg: svgString,
+         pngBlob: pngBlob,
+         errors: lastResult?.errors,
+         log: lastResult?.log
+       };
+
+       try {
+         const zipBlob = await exportZIP(zipData);
+         downloadFile('project.zip', zipBlob, 'application/zip');
+       } catch (error) {
+         console.error('ZIP export failed:', error);
+         alert(t('notice.errorWithMessage', { message: error.message || error }));
+       }
     });
 
     $('analysisFragments')?.addEventListener('click', async (event) => {

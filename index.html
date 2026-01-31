@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AutoFixMermaid</title>
     <link rel="stylesheet" href="css/styles.css" />
+    <script src="./assets/mermaid-11.12.0/mermaid.min.js"></script>
+    <script src="./js/vendor/plantuml-encoder.min.js"></script>
     <script type="importmap">
       {
         "imports": {
-          "mermaid": "./assets/mermaid-11.12.0/mermaid.esm.min.mjs"
+          "mermaid": "./js/vendor/mermaid-shim.js"
         }
       }
     </script>
@@ -111,6 +113,8 @@
         <button class="btn" data-i18n="toolbar.export.mmd" disabled id="btnExportMMD">匯出 MMD</button>
         <button class="btn" data-i18n="toolbar.export.svg" disabled id="btnExportSVG">匯出 SVG</button>
         <button class="btn" data-i18n="toolbar.export.png" disabled id="btnExportPNG">匯出 PNG</button>
+        <button class="btn" data-i18n="toolbar.export.pdf" disabled id="btnExportPDF">匯出 PDF</button>
+        <button class="btn" data-i18n="toolbar.export.zip" disabled id="btnExportZIP">匯出 ZIP</button>
         <button class="btn" data-i18n="toolbar.export.errors" disabled id="btnExportErrors">匯出 errors.json</button>
         <button class="btn" data-i18n="toolbar.export.fixlog" disabled id="btnExportFixlog">匯出 fixlog.json</button>
         <span id="status">-</span>
@@ -266,7 +270,12 @@
     </main>
 
     <!-- Mermaid 11.12.0 ESM loaded via import map -->
-    <!-- Optional offline canvg: <script src="js/vendor/canvg.min.js"></script> -->
+    <!-- Offline canvg for better PNG export -->
+    <script src="js/vendor/stackblur.min.js"></script>
+    <script src="js/vendor/canvg.min.js"></script>
+    <!-- PDF/ZIP Export dependencies -->
+    <script src="js/vendor/jspdf.umd.min.js"></script>
+    <script src="js/vendor/jszip.min.js"></script>
     <!-- Application entry point -->
     <script type="module" src="./js/main.js"></script>
   </body>

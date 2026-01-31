@@ -14,7 +14,7 @@
     "test": "node ./scripts/run-tests.js",
     "test:ci": "npm run build:engine && npm run lint && npm run test && npm run validate:schema && npm run validate:packs",
     "test:curriculum": "node ./test-curriculum.cjs",
-    "validate:schema": "node ./validate-schema.js",
+    "validate:schema": "node ./scripts/validate-schema.js",
     "validate:packs": "node ./scripts/validate_packs.mjs",
     "package:desktop": "npm run build:engine && pkg ."
   },
@@ -38,7 +38,7 @@
       "assets/**/*",
       "docs/**/*",
       "rules/**/*",
-      "worker.rules-loader.stub.js"
+      "js/worker.rules-loader.stub.js"
     ]
   },
   "devDependencies": {

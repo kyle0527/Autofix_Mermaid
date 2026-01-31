@@ -1,4 +1,4 @@
-import { resolvePackSelection, applyPreprocessRules } from '../../worker.rules-loader.stub.js';
+import { resolvePackSelection, applyPreprocessRules } from '../worker.rules-loader.stub.js';
 
 const DEFAULT_MANIFEST_PATH = 'rules/manifest.json';
 const manifestCache = new Map();

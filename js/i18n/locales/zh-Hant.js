@@ -44,6 +44,8 @@ const zhHant = {
   'toolbar.export.mmd': '匯出 MMD',
   'toolbar.export.svg': '匯出 SVG',
   'toolbar.export.png': '匯出 PNG',
+  'toolbar.export.pdf': '匯出 PDF',
+  'toolbar.export.zip': '匯出 ZIP',
   'toolbar.export.errors': '匯出 errors.json',
   'toolbar.export.fixlog': '匯出 fixlog.json',
   'panel.debug.title': '除錯面板',
