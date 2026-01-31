@@ -6,15 +6,18 @@
 /**
  * Render PlantUML code to SVG
  * @param {string} code - PlantUML code
+ * @param {string} serverUrl - PlantUML server URL (optional, default: https://www.plantuml.com/plantuml)
  * @returns {Promise<Object>} { svg: string, url: string }
  */
-export async function renderPlantUML(code) {
+export async function renderPlantUML(code, serverUrl = 'https://www.plantuml.com/plantuml') {
   if (!window.plantumlEncoder) {
     throw new Error('PlantUML encoder library not loaded');
   }
 
   const encoded = window.plantumlEncoder.encode(code);
-  const url = `https://www.plantuml.com/plantuml/svg/${encoded}`;
+  // Ensure serverUrl doesn't end with slash to avoid double slashes
+  const baseUrl = serverUrl.replace(/\/$/, '');
+  const url = `${baseUrl}/svg/${encoded}`;
 
   try {
     const response = await fetch(url);
