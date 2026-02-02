@@ -2,6 +2,7 @@
 export async function loadDocList() {
   // The docs are local files under ./docs/
   const files = [
+    'guides/DIAGRAM_SYSTEMS_GUIDE.md',
     'guides/USER_MANUAL.md',
     'guides/plantuml-offline.md',
     'diagrams/flowchart.md',
